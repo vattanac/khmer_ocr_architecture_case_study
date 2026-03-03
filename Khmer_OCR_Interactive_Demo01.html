@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khmer OCR — Interactive Pipeline Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Khmer:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{--bg:#0a0e1a;--card:#111827;--card2:#1e293b;--border:#1e293b;--border2:#334155;--text:#e2e8f0;--dim:#64748b;--accent:#38bdf8;--green:#22c55e;--red:#ef4444;--purple:#a78bfa;--orange:#f59e0b;--pink:#ec4899;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:100;background:rgba(10,14,26,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;}
+  .nav-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;height:56px;gap:24px;}
+  .nav-logo{font-weight:800;font-size:1.1rem;background:linear-gradient(135deg,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .nav-tabs{display:flex;gap:4px;}
+  .nav-tab{padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;color:var(--dim);cursor:pointer;transition:all 0.2s;border:none;background:none;}
+  .nav-tab:hover{color:var(--text);background:var(--card2);}
+  .nav-tab.active{color:#38bdf8;background:rgba(56,189,248,0.1);}
+
+  /* SECTIONS */
+  .section{display:none;max-width:1300px;margin:0 auto;padding:32px 24px 80px;}
+  .section.active{display:block;}
+  .section-head{margin-bottom:32px;}
+  .section-head h2{font-size:1.8rem;font-weight:800;margin-bottom:6px;}
+  .section-head p{color:var(--dim);font-size:0.95rem;}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:28px;margin-bottom:20px;transition:box-shadow 0.3s;}
+  .card:hover{box-shadow:0 0 30px rgba(56,189,248,0.06);}
+  .card h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;}
+  .card p{font-size:0.88rem;color:#94a3b8;line-height:1.7;}
+
+  /* BUTTONS */
+  .btn{padding:10px 24px;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;}
+  .btn-primary{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,0.3);}
+  .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text);}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-sm{padding:6px 14px;font-size:0.78rem;border-radius:8px;}
+  .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+
+  /* PIPELINE VIS */
+  .pipeline-container{position:relative;}
+  .pipe-stages{display:flex;gap:0;overflow-x:auto;padding:20px 0;}
+  .pipe-stage-card{min-width:200px;flex:1;position:relative;text-align:center;}
+  .pipe-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.6rem;font-weight:800;color:white;transition:all 0.4s;cursor:pointer;position:relative;z-index:2;}
+  .pipe-icon.active{transform:scale(1.15);box-shadow:0 0 30px rgba(56,189,248,0.4);}
+  .pipe-icon.done{opacity:0.5;}
+  .pipe-connector{position:absolute;top:36px;left:calc(50% + 36px);width:calc(100% - 72px);height:4px;background:var(--border2);z-index:1;}
+  .pipe-connector .fill{height:100%;width:0%;transition:width 0.8s ease;border-radius:2px;}
+  .pipe-stage-card:last-child .pipe-connector{display:none;}
+  .pipe-name{font-size:0.78rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;}
+  .pipe-name.active{color:var(--accent);}
+
+  /* DETAIL PANEL */
+  .detail-panel{background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:32px;min-height:400px;position:relative;overflow:hidden;}
+  .detail-panel h3{font-size:1.3rem;font-weight:700;margin-bottom:8px;}
+  .detail-panel .subtitle{font-size:0.9rem;color:var(--dim);margin-bottom:20px;}
+
+  /* ANIMATION CANVAS */
+  .anim-area{background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:20px;margin:16px 0;min-height:200px;position:relative;overflow:hidden;}
+
+  /* FEATURE MAP GRID */
+  .fm-grid{display:grid;gap:2px;margin:12px 0;}
+  .fm-cell{border-radius:3px;transition:all 0.3s;aspect-ratio:1;}
+
+  /* KHMER TEXT DISPLAY */
+  .khmer-text{font-family:'Noto Sans Khmer',serif;font-size:2.2rem;color:var(--accent);text-align:center;padding:16px;letter-spacing:2px;}
+  .khmer-sm{font-family:'Noto Sans Khmer',serif;font-size:1.2rem;}
+
+  /* DECODER ANIMATION */
+  .decoder-output{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:16px 0;}
+  .decoder-char{display:flex;flex-direction:column;align-items:center;padding:8px 6px;background:var(--card2);border-radius:10px;border:2px solid transparent;transition:all 0.4s;min-width:50px;}
+  .decoder-char.revealed{border-color:var(--green);background:rgba(34,197,94,0.1);}
+  .decoder-char.current{border-color:var(--orange);background:rgba(245,158,11,0.15);animation:pulse 0.8s infinite;}
+  .decoder-char .char{font-family:'Noto Sans Khmer',serif;font-size:1.6rem;color:var(--text);}
+  .decoder-char .prob{font-size:0.65rem;color:var(--green);font-weight:700;margin-top:2px;}
+  .decoder-char .step-num{font-size:0.6rem;color:var(--dim);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.6;}}
+
+  /* CHUNK VISUALIZATION */
+  .chunk-timeline{position:relative;margin:20px 0;}
+  .chunk-bar{height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;margin:6px 0;transition:all 0.5s;cursor:pointer;position:relative;overflow:hidden;}
+  .chunk-bar .shimmer{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);animation:shimmer 2s infinite;}
+  @keyframes shimmer{0%{left:-100%;}100%{left:100%;}}
+
+  /* RESULTS */
+  .bar-chart{margin:16px 0;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin:8px 0;}
+  .bar-label{width:130px;font-size:0.78rem;color:#cbd5e1;text-align:right;flex-shrink:0;}
+  .bar-track{flex:1;height:28px;background:var(--bg);border-radius:8px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:0.75rem;font-weight:700;color:white;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);width:0;}
+  .bar-value{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:0.72rem;color:var(--dim);}
+
+  /* TRANSFER VIS */
+  .transfer-vis{display:flex;flex-direction:column;align-items:center;gap:16px;margin:20px 0;}
+  .transfer-center{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:700;box-shadow:0 0 40px rgba(59,130,246,0.3);}
+  .transfer-langs{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .transfer-lang{background:var(--card2);border-radius:12px;padding:16px;text-align:center;min-width:120px;border:1px solid var(--border2);transition:all 0.4s;cursor:pointer;}
+  .transfer-lang:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .transfer-lang .pct{font-size:1.5rem;font-weight:800;}
+  .transfer-lang h4{font-size:0.85rem;margin-top:4px;}
+  .transfer-lang p{font-size:0.7rem;color:var(--dim);}
+
+  /* TABS inside sections */
+  .inner-tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;}
+  .inner-tab{padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;color:var(--dim);cursor:pointer;border:1px solid transparent;transition:all 0.2s;background:var(--card);}
+  .inner-tab:hover{color:var(--text);}
+  .inner-tab.active{color:var(--accent);border-color:var(--accent);background:rgba(56,189,248,0.08);}
+  .inner-content{display:none;}
+  .inner-content.active{display:block;}
+
+  /* TOOLTIP */
+  .tip{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--card2);color:var(--dim);font-size:0.7rem;text-align:center;line-height:18px;cursor:help;font-weight:700;margin-left:4px;position:relative;}
+  .tip:hover::after{content:attr(data-tip);position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);padding:8px 12px;border-radius:8px;font-size:0.75rem;white-space:nowrap;z-index:10;color:var(--text);font-weight:400;}
+
+  /* PROGRESS */
+  .progress-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:8px 0;}
+  .progress-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    .pipe-stages{flex-direction:column;align-items:center;}
+    .pipe-connector{display:none!important;}
+    .nav-tabs{overflow-x:auto;}
+    .detail-panel{padding:20px;}
+  }
+
+  /* INTRO ANIMATION */
+  .fade-in{animation:fadeIn 0.6s ease forwards;opacity:0;}
+  @keyframes fadeIn{to{opacity:1;}}
+  .slide-up{animation:slideUp 0.5s ease forwards;opacity:0;transform:translateY(20px);}
+  @keyframes slideUp{to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">Khmer OCR Demo</div>
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-tab="pipeline">Pipeline</button>
+      <button class="nav-tab" data-tab="chunking">Chunking</button>
+      <button class="nav-tab" data-tab="results">Results</button>
+      <button class="nav-tab" data-tab="transfer">Transfer</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ SECTION 1: PIPELINE ═══════════════ -->
+<div class="section active" id="sec-pipeline">
+  <div class="section-head">
+    <h2 class="fade-in">Interactive OCR Pipeline</h2>
+    <p class="fade-in" style="animation-delay:0.1s;">Click each stage to see how Khmer text is recognized step by step.</p>
+  </div>
+
+  <!-- Sample selector -->
+  <div class="card slide-up" style="animation-delay:0.15s;">
+    <h3>Choose a Khmer text sample:</h3>
+    <div class="btn-group" id="sampleBtns">
+      <button class="btn btn-outline btn-sm active" data-sample="0">ស្ត្រី (woman)</button>
+      <button class="btn btn-outline btn-sm" data-sample="1">កម្ពុជា (Cambodia)</button>
+      <button class="btn btn-outline btn-sm" data-sample="2">សាកលវិទ្យាល័យ (University)</button>
+      <button class="btn btn-outline btn-sm" data-sample="3">ជំរាបសួរពិភពលោក (Hello World)</button>
+    </div>
+    <div class="khmer-text" id="selectedText">ស្ត្រី</div>
+  </div>
+
+  <!-- Pipeline stages -->
+  <div class="pipeline-container slide-up" style="animation-delay:0.2s;">
+    <div class="pipe-stages" id="pipeStages">
+      <!-- Built by JS -->
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="detail-panel slide-up" style="animation-delay:0.25s;" id="detailPanel">
+    <!-- Filled by JS -->
+  </div>
+
+  <!-- Auto-play -->
+  <div style="text-align:center;margin-top:20px;">
+    <button class="btn btn-primary" id="autoPlayBtn">▶ Auto-Play Full Pipeline</button>
+    <button class="btn btn-outline" id="resetBtn" style="margin-left:8px;">↺ Reset</button>
+  </div>
+</div>
+
+<!-- ═══════════════ SECTION 2: CHUNKING ═══════════════ -->
+<div class="section" id="sec-chunking">
+  <div class="section-head">
+    <h2>Image Chunking & Merging</h2>
+    <p>See how long text lines are split into overlapping chunks for efficient processing.</p>
+  </div>
+
+  <div class="card">
+    <h3>Configure Chunking Parameters</h3>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin:16px 0;">
+      <div>
+        <label style="font-size:0.82rem;color:var(--dim);">Image Width (px)</label><br>
+        <input type="range" id="imgWidth" min="200" max="2500" value="1200" style="width:200px;accent-color:var(--accent);">
+        <span id="imgWidthVal" style="font-size:0.85rem;font-weight:700;color:var(--accent);margin-left:8px;">1200</span>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--dim);">Chunk Width (px)</label><br>
+        <input type="range" id="chunkWidth" min="50" max="500" value="300" style="width:200px;accent-color:var(--purple);">
+        <span id="chunkWidthVal" style="font-size:0.85rem;font-weight:700;color:var(--purple);margin-left:8px;">300</span>
+      </div>
+      <div>
+        <label style="font-size:0.82rem;color:var(--dim);">Overlap (px)</label><br>
+        <input type="range" id="overlapWidth" min="0" max="100" value="50" style="width:200px;accent-color:var(--orange);">
+        <span id="overlapWidthVal" style="font-size:0.85rem;font-weight:700;color:var(--orange);margin-left:8px;">50</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="runChunking">Run Chunking Animation</button>
+  </div>
+
+  <!-- Chunking visualization -->
+  <div class="card" id="chunkingVis">
+    <h3>Step 1 — Original Image</h3>
+    <div class="anim-area" id="chunkAnimArea">
+      <div id="chunkOriginal" style="height:56px;border-radius:8px;background:linear-gradient(90deg,#1e3a5f,#1e3a5f);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans Khmer',serif;font-size:1.1rem;color:#93c5fd;letter-spacing:2px;transition:all 0.5s;">
+        ជំរាបសួរ អ្នកទាំងអស់គ្នា រស់នៅសុខសប្បាយ នេះជាប្រយោគវែងមួយ ដើម្បីសាកល្បង
+      </div>
+      <div id="chunkPieces" style="margin-top:16px;display:none;"></div>
+      <div id="chunkProcessed" style="margin-top:16px;display:none;"></div>
+      <div id="chunkMerged" style="margin-top:16px;display:none;"></div>
+    </div>
+
+    <!-- Complexity comparison -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;" id="complexityCards">
+      <div style="background:var(--bg);border-radius:12px;padding:20px;border:1px solid var(--red);text-align:center;">
+        <div style="font-size:0.75rem;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Without Chunking</div>
+        <div id="noChunkOps" style="font-size:2rem;font-weight:800;color:#fca5a5;margin:8px 0;">—</div>
+        <div style="font-size:0.75rem;color:var(--dim);">attention operations</div>
+      </div>
+      <div style="background:var(--bg);border-radius:12px;padding:20px;border:1px solid var(--green);text-align:center;">
+        <div style="font-size:0.75rem;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px;">With Chunking</div>
+        <div id="withChunkOps" style="font-size:2rem;font-weight:800;color:#86efac;margin:8px 0;">—</div>
+        <div style="font-size:0.75rem;color:var(--dim);">attention operations</div>
+        <div id="speedup" style="font-size:0.85rem;color:var(--green);font-weight:700;margin-top:4px;">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SECTION 3: RESULTS ═══════════════ -->
+<div class="section" id="sec-results">
+  <div class="section-head">
+    <h2>Results & Performance</h2>
+    <p>Interactive comparison of CER (Character Error Rate) across all datasets and models.</p>
+  </div>
+
+  <div class="inner-tabs" id="resultTabs">
+    <div class="inner-tab active" data-rtab="idcard">ID Card</div>
+    <div class="inner-tab" data-rtab="khob">KHOB</div>
+    <div class="inner-tab" data-rtab="sleuk">Sleuk Rith</div>
+    <div class="inner-tab" data-rtab="height">Image Height</div>
+    <div class="inner-tab" data-rtab="cerlen">CER vs Length</div>
+  </div>
+
+  <!-- ID Card Results -->
+  <div class="inner-content active" id="rtab-idcard">
+    <div class="card">
+      <h3>Khmer ID Card — Name Field <span class="tip" data-tip="CER = Character Error Rate. Lower is better.">?</span></h3>
+      <p>Real ID card images captured by smartphone cameras.</p>
+      <div class="bar-chart" id="idCardChart"></div>
+    </div>
+  </div>
+
+  <!-- KHOB -->
+  <div class="inner-content" id="rtab-khob">
+    <div class="card">
+      <h3>KHOB Digital Book Corpus</h3>
+      <p>Text line images from scanned PDF documents. Low resolution, compression artifacts.</p>
+      <div class="bar-chart" id="khobChart"></div>
+    </div>
+  </div>
+
+  <!-- Sleuk Rith -->
+  <div class="inner-content" id="rtab-sleuk">
+    <div class="card">
+      <h3>Sleuk Rith — Ancient Palm Leaf Manuscripts</h3>
+      <p>Historical handwritten manuscripts on dried palm leaves, dating back centuries.</p>
+      <div class="bar-chart" id="sleukChart"></div>
+    </div>
+  </div>
+
+  <!-- Image Height -->
+  <div class="inner-content" id="rtab-height">
+    <div class="card">
+      <h3>Impact of Image Height on CER</h3>
+      <p>Standard 32px used in English OCR fails for Khmer. The sweet spot is 64px.</p>
+      <div class="bar-chart" id="heightChart"></div>
+    </div>
+  </div>
+
+  <!-- CER vs Length -->
+  <div class="inner-content" id="rtab-cerlen">
+    <div class="card">
+      <h3>CER vs. Text Line Length — Chunking Impact</h3>
+      <p>Without chunking, errors explode on long lines. With chunking, errors stay flat.</p>
+      <div style="display:flex;gap:8px;margin:12px 0;">
+        <span style="display:inline-block;width:14px;height:14px;background:var(--red);border-radius:3px;"></span>
+        <span style="font-size:0.8rem;color:#fca5a5;">Without Chunking</span>
+        <span style="display:inline-block;width:14px;height:14px;background:var(--green);border-radius:3px;margin-left:12px;"></span>
+        <span style="font-size:0.8rem;color:#86efac;">With Chunking</span>
+      </div>
+      <div id="cerLenChart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SECTION 4: TRANSFER ═══════════════ -->
+<div class="section" id="sec-transfer">
+  <div class="section-head">
+    <h2>Cross-Language Transfer Learning</h2>
+    <p>The Khmer model transfers knowledge to 5 other scripts. Click each language to see details.</p>
+  </div>
+
+  <div class="card">
+    <div class="transfer-vis">
+      <div class="transfer-center">
+        <div style="font-size:1.1rem;">Khmer</div>
+        <div style="font-size:0.65rem;opacity:0.8;">Pre-trained</div>
+        <div style="font-size:0.65rem;opacity:0.8;">2.8M images</div>
+      </div>
+      <div style="font-size:1.2rem;color:var(--dim);">↓ fine-tune with 100K images ↓</div>
+      <div class="transfer-langs" id="transferLangs">
+        <!-- Built by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail card -->
+  <div class="card" id="transferDetail" style="display:none;">
+    <h3 id="transferDetailTitle">—</h3>
+    <div id="transferDetailContent"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ DATA ═══════════════
+const SAMPLES = [
+  { text: 'ស្ត្រី', meaning: 'woman', chars: ['ស','្','ត','្','រ','ី'], unicode: ['U+179F','U+17D2','U+178F','U+17D2','U+179A','U+17B8'] },
+  { text: 'កម្ពុជា', meaning: 'Cambodia', chars: ['ក','ម','្','ព','ុ','ជ','ា'], unicode: ['U+1780','U+1798','U+17D2','U+1796','U+17BB','U+1787','U+17B6'] },
+  { text: 'សាកលវិទ្យាល័យ', meaning: 'University', chars: ['សា','ក','ល','វិ','ទ្យា','ល័','យ'], unicode: ['U+179F+17B6','U+1780','U+179B','U+179C+17B7','U+1791+17D2+1799+17B6','U+179B+17B0','U+1799'] },
+  { text: 'ជំរាបសួរពិភពលោក', meaning: 'Hello World', chars: ['ជំ','រា','ប','សួ','រ','ពិ','ភ','ព','លោ','ក'], unicode: ['U+1787+17C6','U+179A+17B6','U+1794','U+179F+17BD','U+179A','U+1796+17B7','U+1797','U+1796','U+179B+17C4','U+1780'] },
+];
+
+const STAGES = [
+  { id: 'input', name: 'Input', icon: '📷', color: '#f59e0b' },
+  { id: 'cnn', name: 'CNN', icon: '🔍', color: '#3b82f6' },
+  { id: 'patch', name: 'Patch', icon: '🧩', color: '#8b5cf6' },
+  { id: 'encode', name: 'Encoder', icon: '🧠', color: '#10b981' },
+  { id: 'decode', name: 'Decoder', icon: '✍️', color: '#ec4899' },
+  { id: 'output', name: 'Output', icon: '✅', color: '#06b6d4' },
+];
+
+const RESULTS = {
+  idcard: [
+    { name: 'Tesseract 5', cer: 27.78, color: '#ef4444' },
+    { name: 'CRNN', cer: 7.34, color: '#f59e0b' },
+    { name: 'TRBC', cer: 6.80, color: '#f59e0b' },
+    { name: 'TRBA', cer: 7.23, color: '#f59e0b' },
+    { name: '1D-VGG', cer: 4.31, color: '#22c55e' },
+    { name: '1D-ResNet', cer: 4.24, color: '#22c55e' },
+    { name: '2D-VGG (Ours)', cer: 3.47, color: '#06b6d4' },
+    { name: '2D-ResNet (Ours)', cer: 3.00, color: '#38bdf8' },
+  ],
+  khob: [
+    { name: 'Tesseract 5', cer: 11.37, color: '#ef4444' },
+    { name: 'CRNN', cer: 6.17, color: '#f59e0b' },
+    { name: 'TRBC', cer: 5.42, color: '#f59e0b' },
+    { name: 'TRBA', cer: 7.77, color: '#f59e0b' },
+    { name: '1D-VGG', cer: 3.32, color: '#22c55e' },
+    { name: '1D-ResNet', cer: 2.55, color: '#22c55e' },
+    { name: '2D-VGG (Ours)', cer: 3.03, color: '#06b6d4' },
+    { name: '2D-ResNet (Ours)', cer: 3.41, color: '#38bdf8' },
+  ],
+  sleuk: [
+    { name: 'Tesseract 5', cer: 94.88, color: '#ef4444' },
+    { name: 'CRNN', cer: 4.81, color: '#f59e0b' },
+    { name: 'TRBC', cer: 3.26, color: '#f59e0b' },
+    { name: 'TRBA', cer: 3.80, color: '#f59e0b' },
+    { name: '1D-VGG', cer: 2.92, color: '#22c55e' },
+    { name: '1D-ResNet', cer: 2.46, color: '#22c55e' },
+    { name: '2D-VGG (Ours)', cer: 2.66, color: '#06b6d4' },
+    { name: '2D-ResNet (Ours)', cer: 2.46, color: '#38bdf8' },
+  ],
+  height: [
+    { name: '16 px', cer: 22.4, color: '#ef4444' },
+    { name: '32 px (standard)', cer: 12.1, color: '#ef4444' },
+    { name: '48 px', cer: 5.8, color: '#f59e0b' },
+    { name: '64 px ★', cer: 3.1, color: '#38bdf8' },
+    { name: '80 px', cer: 3.0, color: '#22c55e' },
+    { name: '96 px', cer: 3.0, color: '#22c55e' },
+  ],
+};
+
+const TRANSFER = [
+  { lang: 'Lao', flag: '🇱🇦', from: 7.89, to: 3.56, pct: 55, script: 'Abugida', note: 'Most similar to Khmer. Same family, no word spaces, stacked characters.' },
+  { lang: 'Thai', flag: '🇹🇭', from: 8.43, to: 4.21, pct: 50, script: 'Abugida', note: 'No word spaces, above/below diacritics. Closely related historically.' },
+  { lang: 'Burmese', flag: '🇲🇲', from: 9.12, to: 4.88, pct: 46, script: 'Abugida', note: 'Stacked characters, circular letterforms, complex consonant clusters.' },
+  { lang: 'Hindi', flag: '🇮🇳', from: 6.78, to: 4.02, pct: 41, script: 'Devanagari', note: 'Subscript consonants (halant), above-base vowel marks. Uses word spaces.' },
+  { lang: 'Vietnamese', flag: '🇻🇳', from: 5.34, to: 3.89, pct: 27, script: 'Latin+Diacritics', note: 'Latin alphabet with many diacritics. Most different from Khmer.' },
+];
+
+// ═══════════════ NAV ═══════════════
+let currentSample = 0;
+let currentStage = 0;
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('sec-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'results') animateResults();
+    if (tab.dataset.tab === 'transfer') buildTransfer();
+  });
+});
+
+// ═══════════════ SAMPLE SELECTION ═══════════════
+document.getElementById('sampleBtns').addEventListener('click', e => {
+  if (!e.target.dataset.sample) return;
+  currentSample = +e.target.dataset.sample;
+  document.querySelectorAll('#sampleBtns .btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('selectedText').textContent = SAMPLES[currentSample].text;
+  resetPipeline();
+  showStageDetail(0);
+});
+
+// ═══════════════ PIPELINE STAGES ═══════════════
+function buildPipeline() {
+  const container = document.getElementById('pipeStages');
+  container.innerHTML = '';
+  STAGES.forEach((s, i) => {
+    container.innerHTML += `
+      <div class="pipe-stage-card" data-stage="${i}">
+        <div class="pipe-connector"><div class="fill" id="conn-${i}" style="background:${s.color};"></div></div>
+        <div class="pipe-icon" id="icon-${i}" style="background:${s.color};" onclick="goToStage(${i})">${s.icon}</div>
+        <div class="pipe-name" id="name-${i}">${s.name}</div>
+      </div>`;
+  });
+}
+buildPipeline();
+
+function resetPipeline() {
+  currentStage = 0;
+  STAGES.forEach((_, i) => {
+    document.getElementById('icon-' + i).classList.remove('active', 'done');
+    document.getElementById('name-' + i).classList.remove('active');
+    const conn = document.getElementById('conn-' + i);
+    if (conn) conn.style.width = '0%';
+  });
+}
+
+function goToStage(idx) {
+  currentStage = idx;
+  STAGES.forEach((_, i) => {
+    const icon = document.getElementById('icon-' + i);
+    const name = document.getElementById('name-' + i);
+    const conn = document.getElementById('conn-' + i);
+    icon.classList.remove('active', 'done');
+    name.classList.remove('active');
+    if (i < idx) { icon.classList.add('done'); if (conn) conn.style.width = '100%'; }
+    else if (i === idx) { icon.classList.add('active'); name.classList.add('active'); }
+    else { if (conn) conn.style.width = '0%'; }
+  });
+  showStageDetail(idx);
+}
+
+// ═══════════════ STAGE DETAILS ═══════════════
+function showStageDetail(idx) {
+  const panel = document.getElementById('detailPanel');
+  const s = SAMPLES[currentSample];
+  const html = stageContent[idx](s);
+  panel.innerHTML = html;
+  // Animate feature map if present
+  if (idx === 1) animateFeatureMap();
+  if (idx === 4) animateDecoder(s);
+}
+
+const stageContent = [
+  // 0: INPUT
+  (s) => `
+    <h3 style="color:#f59e0b;">Stage 0 — Input Image</h3>
+    <div class="subtitle">The raw text-line image is preprocessed before entering the model.</div>
+    <div class="anim-area" style="text-align:center;">
+      <div style="font-size:0.8rem;color:var(--dim);margin-bottom:8px;">Simulated input image (height = 64px)</div>
+      <div style="display:inline-block;background:linear-gradient(180deg,#1a1a2e,#16213e);border:2px solid #f59e0b;border-radius:8px;padding:16px 40px;position:relative;">
+        <div style="font-family:'Noto Sans Khmer',serif;font-size:2.4rem;color:#e2e8f0;letter-spacing:3px;">${s.text}</div>
+        <div style="position:absolute;left:-60px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;font-size:0.6rem;color:var(--dim);">
+          <span>0px</span><span>32px</span><span>64px</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:0.82rem;color:#94a3b8;">
+        Meaning: "<strong style="color:#fbbf24;">${s.meaning}</strong>" — ${s.chars.length} character components
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;">
+      <div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#f59e0b;">64</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Height (px)</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#f59e0b;">~${s.chars.length * 35}</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Est. Width (px)</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#f59e0b;">1</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Channels (grayscale)</div>
+      </div>
+    </div>`,
+
+  // 1: CNN
+  (s) => `
+    <h3 style="color:#3b82f6;">Stage 1 — CNN Feature Extraction (ResNet-45)</h3>
+    <div class="subtitle">The CNN scans the image and extracts visual features at multiple levels.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:0.85rem;font-weight:700;color:#93c5fd;margin-bottom:8px;">Layer-by-layer processing:</div>
+        <div style="font-size:0.8rem;color:#94a3b8;line-height:2.2;">
+          <div>📐 <strong>Conv Block 1:</strong> 64×${s.chars.length*9}×64 — detects edges</div>
+          <div>📐 <strong>Conv Block 2:</strong> 32×${s.chars.length*4}×128 — detects strokes</div>
+          <div>📐 <strong>Conv Block 3:</strong> 16×${Math.ceil(s.chars.length*2)}×256 — detects parts</div>
+          <div>📐 <strong>Conv Block 4:</strong> <span style="color:#38bdf8;">8×${s.chars.length}×512</span> — detects characters</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.85rem;font-weight:700;color:#93c5fd;margin-bottom:8px;">2D Feature Map (live):</div>
+        <div id="featureMapVis" class="fm-grid" style="grid-template-columns:repeat(${Math.min(s.chars.length, 10)}, 1fr);width:100%;max-width:300px;">
+        </div>
+        <div style="font-size:0.7rem;color:var(--dim);margin-top:6px;">Each cell = one feature map position. Color = activation intensity.</div>
+      </div>
+    </div>`,
+
+  // 2: PATCH
+  (s) => `
+    <h3 style="color:#8b5cf6;">Stage 2 — 2D Patching Module</h3>
+    <div class="subtitle">Feature maps are divided into column-wise patches that preserve vertical structure.</div>
+    <div class="anim-area">
+      <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;">
+        ${s.chars.map((c, i) => `
+          <div style="display:flex;flex-direction:column;gap:2px;text-align:center;">
+            <div style="font-size:0.6rem;color:var(--dim);">Patch ${i+1}</div>
+            ${[0,1,2,3,4,5,6,7].map(r => `<div style="width:28px;height:12px;border-radius:2px;background:hsl(${260 + i*20}, 60%, ${30 + r*5}%);"></div>`).join('')}
+            <div style="font-family:'Noto Sans Khmer',serif;font-size:0.9rem;color:#c4b5fd;margin-top:4px;">${c}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:0.82rem;color:#94a3b8;">
+        Each patch captures ALL 8 vertical rows → diacritics, base, subscripts all preserved!
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+      <div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">${s.chars.length}</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Patches generated</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;color:#a78bfa;">512</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Dimensions per patch</div>
+      </div>
+    </div>`,
+
+  // 3: ENCODER
+  (s) => `
+    <h3 style="color:#10b981;">Stage 3 — Transformer Encoder (12 Layers)</h3>
+    <div class="subtitle">Self-attention lets every patch "communicate" with every other patch.</div>
+    <div class="anim-area">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:0.85rem;font-weight:700;color:#6ee7b7;">Self-Attention Matrix (${s.chars.length}×${s.chars.length})</div>
+        <div style="font-size:0.75rem;color:var(--dim);">Brighter = stronger attention connection</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(s.chars.length, 10)}, 1fr);gap:2px;max-width:${Math.min(s.chars.length, 10) * 40}px;margin:0 auto;">
+        ${s.chars.map((_, i) => s.chars.map((_, j) => {
+          const dist = Math.abs(i - j);
+          const attn = Math.max(0.1, 1 - dist * 0.15 + Math.random() * 0.2);
+          return `<div style="aspect-ratio:1;border-radius:3px;background:rgba(16,185,129,${attn.toFixed(2)});"></div>`;
+        }).join('')).join('')}
+      </div>
+      <div style="display:flex;justify-content:center;gap:4px;margin-top:8px;">
+        ${s.chars.map(c => `<div style="width:${Math.min(360/s.chars.length, 40)}px;text-align:center;font-family:'Noto Sans Khmer',serif;font-size:0.75rem;color:#6ee7b7;">${c}</div>`).join('')}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;">
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:#10b981;">12</div><div style="font-size:0.7rem;color:var(--dim);">Layers</div></div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:#10b981;">8</div><div style="font-size:0.7rem;color:var(--dim);">Attn Heads</div></div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:#10b981;">512</div><div style="font-size:0.7rem;color:var(--dim);">Model Dim</div></div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:1.2rem;font-weight:800;color:#10b981;">2048</div><div style="font-size:0.7rem;color:var(--dim);">FFN Dim</div></div>
+    </div>`,
+
+  // 4: DECODER
+  (s) => `
+    <h3 style="color:#ec4899;">Stage 4 — Transformer Decoder (Auto-regressive)</h3>
+    <div class="subtitle">Characters are predicted one at a time. Watch the decoding process:</div>
+    <div class="decoder-output" id="decoderOutput">
+      ${s.chars.map((c, i) => `
+        <div class="decoder-char" id="dec-${i}">
+          <div class="step-num">Step ${i+1}</div>
+          <div class="char" style="opacity:0.15;">?</div>
+          <div class="prob" style="opacity:0;">—</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn btn-primary btn-sm" onclick="animateDecoder(SAMPLES[${currentSample}])">▶ Replay Decoding</button>
+    </div>`,
+
+  // 5: OUTPUT
+  (s) => `
+    <h3 style="color:#06b6d4;">Final Output — Recognized Text</h3>
+    <div class="subtitle">The model has successfully recognized the Khmer text!</div>
+    <div class="anim-area" style="text-align:center;">
+      <div style="font-size:0.8rem;color:var(--dim);margin-bottom:12px;">Predicted Unicode string:</div>
+      <div style="font-family:'Noto Sans Khmer',serif;font-size:3rem;color:#22d3ee;margin:20px 0;letter-spacing:4px;">${s.text}</div>
+      <div style="font-size:1.1rem;color:var(--green);font-weight:700;">✓ "${s.meaning}" — CER: 0.0%</div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="font-size:0.85rem;font-weight:700;color:#22d3ee;margin-bottom:8px;">Unicode breakdown:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${s.chars.map((c, i) => `
+          <div style="background:var(--bg);border-radius:8px;padding:8px 12px;text-align:center;border:1px solid var(--border2);">
+            <div style="font-family:'Noto Sans Khmer',serif;font-size:1.2rem;color:#22d3ee;">${c}</div>
+            <div style="font-size:0.6rem;color:var(--dim);margin-top:2px;">${s.unicode[i] || ''}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`,
+];
+
+// Feature map animation
+function animateFeatureMap() {
+  const vis = document.getElementById('featureMapVis');
+  if (!vis) return;
+  const s = SAMPLES[currentSample];
+  const cols = Math.min(s.chars.length, 10);
+  vis.innerHTML = '';
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'fm-cell';
+      cell.style.background = `hsl(210, 80%, ${20}%)`;
+      cell.style.transitionDelay = `${(r * cols + c) * 30}ms`;
+      vis.appendChild(cell);
+      setTimeout(() => {
+        const intensity = 20 + Math.random() * 50;
+        cell.style.background = `hsl(${200 + Math.random() * 40}, ${60 + Math.random() * 30}%, ${intensity}%)`;
+      }, 100 + (r * cols + c) * 50);
+    }
+  }
+}
+
+// Decoder animation
+function animateDecoder(s) {
+  s.chars.forEach((c, i) => {
+    const el = document.getElementById('dec-' + i);
+    if (!el) return;
+    el.classList.remove('revealed', 'current');
+    el.querySelector('.char').textContent = '?';
+    el.querySelector('.char').style.opacity = '0.15';
+    el.querySelector('.prob').style.opacity = '0';
+
+    setTimeout(() => {
+      el.classList.add('current');
+    }, i * 600);
+
+    setTimeout(() => {
+      el.classList.remove('current');
+      el.classList.add('revealed');
+      el.querySelector('.char').textContent = c;
+      el.querySelector('.char').style.opacity = '1';
+      el.querySelector('.prob').textContent = (0.88 + Math.random() * 0.11).toFixed(2);
+      el.querySelector('.prob').style.opacity = '1';
+    }, i * 600 + 400);
+  });
+}
+
+// Auto-play
+document.getElementById('autoPlayBtn').addEventListener('click', () => {
+  resetPipeline();
+  STAGES.forEach((_, i) => {
+    setTimeout(() => goToStage(i), i * 1800);
+  });
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  resetPipeline();
+  showStageDetail(0);
+});
+
+// Init
+showStageDetail(0);
+
+// ═══════════════ CHUNKING ═══════════════
+const imgWidthSlider = document.getElementById('imgWidth');
+const chunkWidthSlider = document.getElementById('chunkWidth');
+const overlapSlider = document.getElementById('overlapWidth');
+
+[imgWidthSlider, chunkWidthSlider, overlapSlider].forEach(sl => {
+  sl.addEventListener('input', () => {
+    document.getElementById('imgWidthVal').textContent = imgWidthSlider.value;
+    document.getElementById('chunkWidthVal').textContent = chunkWidthSlider.value;
+    document.getElementById('overlapWidthVal').textContent = overlapSlider.value;
+  });
+});
+
+document.getElementById('runChunking').addEventListener('click', () => {
+  const W = +imgWidthSlider.value;
+  const C = +chunkWidthSlider.value;
+  const O = +overlapSlider.value;
+  const step = C - O;
+  const numChunks = Math.ceil((W - O) / step);
+  const colors = ['#3b82f6','#8b5cf6','#10b981','#ec4899','#f59e0b','#06b6d4','#ef4444','#84cc16'];
+
+  // Compute complexity
+  const noChunk = W * W;
+  const withChunk = numChunks * C * C;
+  const speedupVal = (noChunk / withChunk).toFixed(1);
+
+  document.getElementById('noChunkOps').textContent = noChunk.toLocaleString();
+  document.getElementById('withChunkOps').textContent = withChunk.toLocaleString();
+  document.getElementById('speedup').textContent = speedupVal + '× faster!';
+
+  // Show pieces
+  const piecesDiv = document.getElementById('chunkPieces');
+  piecesDiv.style.display = 'block';
+  piecesDiv.innerHTML = `<div style="font-size:0.85rem;font-weight:700;color:#94a3b8;margin-bottom:8px;">Step 2 — Split into ${numChunks} overlapping chunks:</div>`;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:0;position:relative;';
+  for (let i = 0; i < numChunks; i++) {
+    const pct = (C / W * 100);
+    const left = (i * step / W * 100);
+    const piece = document.createElement('div');
+    piece.style.cssText = `position:absolute;left:${left}%;width:${pct}%;height:44px;border-radius:6px;background:${colors[i % colors.length]}22;border:2px solid ${colors[i % colors.length]};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:${colors[i % colors.length]};opacity:0;transition:opacity 0.4s;transition-delay:${i * 200}ms;`;
+    piece.textContent = `Chunk ${i + 1}`;
+    row.appendChild(piece);
+    setTimeout(() => { piece.style.opacity = '1'; }, 100);
+  }
+  row.style.height = '48px';
+  row.style.position = 'relative';
+  piecesDiv.appendChild(row);
+
+  // Show processed
+  setTimeout(() => {
+    const procDiv = document.getElementById('chunkProcessed');
+    procDiv.style.display = 'block';
+    procDiv.innerHTML = `<div style="font-size:0.85rem;font-weight:700;color:#94a3b8;margin-bottom:8px;">Step 3 — Each chunk processed independently:</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${Array.from({length:numChunks}, (_,i) => `
+        <div style="flex:1;min-width:80px;background:${colors[i%colors.length]}15;border:1px solid ${colors[i%colors.length]};border-radius:8px;padding:8px;text-align:center;font-size:0.7rem;color:${colors[i%colors.length]};">
+          ✓ Chunk ${i+1}<br><span style="font-size:0.6rem;color:var(--dim);">conf: ${(0.90 + Math.random()*0.09).toFixed(2)}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }, numChunks * 200 + 500);
+
+  // Show merged
+  setTimeout(() => {
+    const mergedDiv = document.getElementById('chunkMerged');
+    mergedDiv.style.display = 'block';
+    mergedDiv.innerHTML = `<div style="font-size:0.85rem;font-weight:700;color:#94a3b8;margin-bottom:8px;">Step 4 — Merged final output:</div>
+    <div style="height:48px;border-radius:8px;background:#14532d;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;color:#6ee7b7;font-size:0.9rem;font-weight:700;">
+      ✓ Complete text recognized — ${numChunks} chunks merged successfully
+    </div>`;
+  }, numChunks * 200 + 1200);
+});
+
+// ═══════════════ RESULTS ═══════════════
+document.querySelectorAll('.inner-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const parent = tab.closest('.section');
+    parent.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+    parent.querySelectorAll('.inner-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('rtab-' + tab.dataset.rtab).classList.add('active');
+    animateResults();
+  });
+});
+
+function animateResults() {
+  // Find active tab
+  const activeTab = document.querySelector('#sec-results .inner-tab.active');
+  if (!activeTab) return;
+  const key = activeTab.dataset.rtab;
+
+  if (key === 'cerlen') { animateCerLen(); return; }
+  if (!RESULTS[key]) return;
+
+  const container = document.getElementById(key + 'Chart') || document.getElementById(key.replace('-','') + 'Chart');
+  if (!container) return;
+  const maxCer = Math.max(...RESULTS[key].map(r => r.cer));
+
+  container.innerHTML = RESULTS[key].map(r => `
+    <div class="bar-row">
+      <div class="bar-label" style="${r.name.includes('Ours') ? 'color:#22d3ee;font-weight:700;' : ''}">${r.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="background:${r.color};" data-width="${Math.min(r.cer / maxCer * 100, 100)}">${r.cer}%</div>
+      </div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    container.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 50);
+}
+
+function animateCerLen() {
+  const data = [
+    { range: '1-10', no: 2.8, yes: 2.7 },
+    { range: '11-30', no: 3.1, yes: 3.0 },
+    { range: '31-60', no: 5.9, yes: 3.2 },
+    { range: '61-100', no: 9.4, yes: 3.5 },
+    { range: '100+', no: 14.7, yes: 4.1 },
+  ];
+  const container = document.getElementById('cerLenChart');
+  container.innerHTML = data.map(d => `
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;margin:6px 0;">
+      <div style="font-size:0.78rem;color:#94a3b8;text-align:right;">${d.range} chars</div>
+      <div class="bar-track"><div class="bar-fill" style="background:#ef4444;" data-width="${d.no/15*100}">${d.no}%</div></div>
+      <div class="bar-track"><div class="bar-fill" style="background:#22c55e;" data-width="${d.yes/15*100}">${d.yes}%</div></div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    container.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 50);
+}
+
+// ═══════════════ TRANSFER ═══════════════
+function buildTransfer() {
+  const container = document.getElementById('transferLangs');
+  container.innerHTML = TRANSFER.map((t, i) => `
+    <div class="transfer-lang" onclick="showTransferDetail(${i})">
+      <div style="font-size:1.5rem;">${t.flag}</div>
+      <h4>${t.lang}</h4>
+      <div class="pct" style="color:${t.pct >= 45 ? '#4ade80' : '#fbbf24'};">-${t.pct}%</div>
+      <p>${t.from}% → ${t.to}%</p>
+    </div>
+  `).join('');
+}
+buildTransfer();
+
+function showTransferDetail(i) {
+  const t = TRANSFER[i];
+  const detail = document.getElementById('transferDetail');
+  detail.style.display = 'block';
+  document.getElementById('transferDetailTitle').textContent = `${t.flag} ${t.lang} — Transfer Details`;
+  document.getElementById('transferDetailContent').innerHTML = `
+    <p style="margin-bottom:12px;font-size:0.9rem;color:#94a3b8;">${t.note}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+      <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:0.7rem;color:var(--red);text-transform:uppercase;letter-spacing:1px;font-weight:700;">From Scratch</div>
+        <div style="font-size:1.8rem;font-weight:800;color:#fca5a5;">${t.from}%</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:0.7rem;color:var(--green);text-transform:uppercase;letter-spacing:1px;font-weight:700;">With Khmer Transfer</div>
+        <div style="font-size:1.8rem;font-weight:800;color:#86efac;">${t.to}%</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+        <div style="font-size:0.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Improvement</div>
+        <div style="font-size:1.8rem;font-weight:800;color:#38bdf8;">-${t.pct}%</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="font-size:0.82rem;color:var(--dim);margin-bottom:4px;">Script type: <strong style="color:var(--text);">${t.script}</strong></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${t.pct}%;background:linear-gradient(90deg,#3b82f6,#22c55e);"></div></div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
