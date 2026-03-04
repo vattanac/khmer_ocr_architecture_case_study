@@ -6,438 +6,268 @@
 <title>Figure 15 – Full Chunking & Merging Architecture</title>
 <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Noto+Sans+Khmer:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
-/* ══ TOKENS ══════════════════════════════════════════════ */
 :root {
-  --bg:      #0e1118;
-  --bg2:     #161b2c;
-  --bg3:     #1e2438;
-  --border:  #2a3050;
-  --blue:    #4a9eff;
-  --blue-bg: rgba(74,158,255,0.14);
-  --blue-bdr:rgba(74,158,255,0.55);
-  --green:   #3dd68c;
-  --green-bg:rgba(61,214,140,0.14);
+  --bg:       #0e1118;
+  --bg2:      #161b2c;
+  --bg3:      #1e2438;
+  --border:   #2a3050;
+  --blue:     #4a9eff;
+  --blue-bg:  rgba(74,158,255,0.14);
+  --blue-bdr: rgba(74,158,255,0.55);
+  --green:    #3dd68c;
+  --green-bg: rgba(61,214,140,0.14);
   --green-bdr:rgba(61,214,140,0.55);
-  --merge:   #f59e0b;
-  --merge-bg:rgba(245,158,11,0.12);
-  --purple:  #a78bfa;
-  --text:    #dde3f0;
-  --muted:   #7a8499;
-  --white:   #ffffff;
-  --r:       10px;
+  --merge:    #f59e0b;
+  --purple:   #a78bfa;
+  --text:     #dde3f0;
+  --muted:    #7a8499;
+  --r:        12px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'Inter',sans-serif;
-  min-height:100vh;
-  padding:36px 20px 60px;
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  min-height: 100vh;
+  padding: 48px 28px 80px;
 }
-.khmer{font-family:'Kantumruy Pro','Noto Sans Khmer',serif;letter-spacing:.5px}
+
+.khmer { font-family: 'Kantumruy Pro','Noto Sans Khmer',serif; letter-spacing:.5px }
 
 /* ── page header ── */
-h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:5px}
-.subtitle{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:40px}
+h1 { text-align:center; font-size:2rem; font-weight:700; color:#fff; margin-bottom:8px }
+.subtitle { text-align:center; color:var(--muted); font-size:1rem; margin-bottom:48px }
 
 /* ── outer two-column layout ── */
-.diagram{
-  max-width:960px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:1fr 340px;
-  grid-template-rows:auto;
-  gap:0 24px;
-  align-items:start;
+.diagram {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 0 32px;
+  align-items: start;
 }
-/* left = main bottom-up pipeline; right = merging module */
-.left-col{
-  display:flex;
-  flex-direction:column-reverse;   /* bottom = image, top = features */
-  gap:0;
-}
-.right-col{
-  display:flex;
-  flex-direction:column;
-  gap:0;
-  padding-top:0;
+.left-col  { display:flex; flex-direction:column-reverse; gap:0; }
+.right-col { display:flex; flex-direction:column; gap:0; }
+
+/* ── card ── */
+.card { background:var(--bg2); border:1.5px solid var(--border); border-radius:var(--r); padding:20px 22px; }
+.card-title {
+  font-size: .85rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 14px;
 }
 
-/* ── generic section card ── */
-.card{
-  background:var(--bg2);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:14px 16px;
+/* ── arrows ── */
+.arrow-v {
+  display:flex; align-items:center; justify-content:center;
+  height: 40px; color:var(--muted); font-size:1.4rem; gap:8px; flex-shrink:0;
 }
-.card-title{
-  font-size:.62rem;
-  letter-spacing:1.8px;
-  text-transform:uppercase;
-  color:var(--muted);
-  font-weight:600;
-  margin-bottom:10px;
-}
+.arrow-label { font-size:.85rem; color:var(--muted) }
 
-/* ── arrows between stages ── */
-.arrow-v{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:28px;
-  color:var(--muted);
-  font-size:1.1rem;
-  gap:4px;
-  flex-shrink:0;
+/* ════ INPUT IMAGE ════ */
+.image-card {
+  background: linear-gradient(90deg,#111,#181818);
+  border: 2px solid #555;
+  border-radius: var(--r);
+  padding: 16px 20px;
+  display: flex; align-items:center; gap:16px;
 }
-.arrow-label{font-size:.65rem;color:var(--muted)}
-
-/* ════════════════════ INPUT IMAGE ════════════════════════ */
-.image-card{
-  background: linear-gradient(90deg,#111 0%,#181818 100%);
-  border:2px solid #444;
-  border-radius:var(--r);
-  padding:12px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
+.image-strip {
+  flex:1; height:64px; border-radius:8px;
+  background: repeating-linear-gradient(90deg,#2a2a2a 0,#2a2a2a 2px,#1c1c1c 2px,#1c1c1c 14px);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; font-weight:600; color:#d8d8d8; letter-spacing:1px;
+  position:relative; overflow:hidden;
 }
-.image-strip{
-  flex:1;
-  height:46px;
-  border-radius:6px;
-  background: repeating-linear-gradient(
-    90deg,
-    #2a2a2a 0px, #2a2a2a 2px,
-    #1c1c1c 2px, #1c1c1c 12px
-  );
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.05rem;
-  font-weight:600;
-  color:#d8d8d8;
-  letter-spacing:1px;
-  position:relative;
-  overflow:hidden;
-}
-.image-strip::before{
-  content:'';
-  position:absolute;inset:0;
+.image-strip::before {
+  content:''; position:absolute; inset:0;
   background:linear-gradient(90deg,rgba(255,255,255,.04) 0%,transparent 40%,transparent 60%,rgba(255,255,255,.04) 100%);
 }
-.img-label{
-  font-size:.72rem;
-  font-style:italic;
-  color:var(--muted);
-  white-space:nowrap;
-  font-family:'JetBrains Mono',monospace;
+.img-label {
+  font-size:.9rem; font-style:italic; color:var(--muted);
+  white-space:nowrap; font-family:'JetBrains Mono',monospace;
 }
 
-/* ════════════════════ CHUNKS ROW ═════════════════════════ */
-.chunks-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+/* ════ CHUNKS ════ */
+.chunks-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.chunk-card {
+  border-radius:10px; padding:14px 14px;
+  display:flex; flex-direction:column; gap:10px; border:2px solid;
 }
-.chunk-card{
-  border-radius:8px;
-  padding:8px 10px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  border:1.5px solid;
+.chunk-card.c1 { background:var(--blue-bg);  border-color:var(--blue-bdr) }
+.chunk-card.c2 { background:var(--green-bg); border-color:var(--green-bdr) }
+.chunk-img {
+  height:54px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.15rem; font-weight:600; letter-spacing:.5px;
+  position:relative; overflow:hidden;
 }
-.chunk-card.c1{background:var(--blue-bg);border-color:var(--blue-bdr)}
-.chunk-card.c2{background:var(--green-bg);border-color:var(--green-bdr)}
-.chunk-img{
-  height:38px;
-  border-radius:5px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.9rem;
-  font-weight:600;
-  letter-spacing:.5px;
-  position:relative;
-  overflow:hidden;
+.chunk-img.c1 { background:rgba(0,0,0,.5); color:#aed6ff; border:1.5px solid var(--blue-bdr) }
+.chunk-img.c2 { background:rgba(0,0,0,.5); color:#a0f5c8; border:1.5px solid var(--green-bdr) }
+.overlap-tag {
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  font-size:.7rem; background:rgba(255,255,255,.12); color:var(--merge);
+  padding:2px 6px; border-radius:4px; font-family:'JetBrains Mono',monospace;
 }
-.chunk-img.c1{background:rgba(0,0,0,.5);color:#aed6ff;border:1px solid var(--blue-bdr)}
-.chunk-img.c2{background:rgba(0,0,0,.5);color:#a0f5c8;border:1px solid var(--green-bdr)}
-.overlap-tag{
-  position:absolute;right:4px;top:50%;transform:translateY(-50%);
-  font-size:.52rem;background:rgba(255,255,255,.12);color:var(--merge);
-  padding:1px 4px;border-radius:3px;font-family:'JetBrains Mono',monospace;
-}
-.chunk-tag{font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace}
-.chunk-tag.c1{color:var(--blue)}
-.chunk-tag.c2{color:var(--green)}
+.chunk-tag { font-size:.85rem; font-weight:700; font-family:'JetBrains Mono',monospace }
+.chunk-tag.c1 { color:var(--blue) }
+.chunk-tag.c2 { color:var(--green) }
 
-/* ════════════════════ CNN BOX ════════════════════════════ */
-.cnn-box{
-  background:var(--bg3);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:12px 16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
+/* ════ CNN ════ */
+.cnn-box {
+  background:var(--bg3); border:2px solid var(--border); border-radius:var(--r);
+  padding:16px 20px; display:flex; align-items:center; justify-content:center; gap:14px;
 }
-.cnn-label{font-size:.9rem;font-weight:700;color:var(--text)}
-.cnn-sub{font-size:.65rem;color:var(--muted)}
+.cnn-label { font-size:1.2rem; font-weight:700; color:var(--text) }
+.cnn-sub   { font-size:.85rem; color:var(--muted) }
 
-/* ════════════════════ FEATURE MAPS ══════════════════════ */
-.fmaps-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fmap-block{
-  border-radius:8px;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-  border:1.5px solid;
+/* ════ FEATURE MAPS ════ */
+.fmaps-row { display:grid; grid-template-columns:1fr 1fr; gap:14px }
+.fmap-block {
+  border-radius:10px; padding:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px; border:2px solid;
 }
-.fmap-block.c1{background:var(--blue-bg);border-color:var(--blue-bdr)}
-.fmap-block.c2{background:var(--green-bg);border-color:var(--green-bdr)}
-.fmap-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:3px;
-  width:100%;
+.fmap-block.c1 { background:var(--blue-bg);  border-color:var(--blue-bdr) }
+.fmap-block.c2 { background:var(--green-bg); border-color:var(--green-bdr) }
+.fmap-grid {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:5px; width:100%;
 }
-.fmap-cell{
-  height:18px;
-  border-radius:3px;
-  transition:opacity .3s;
+.fmap-cell { height:26px; border-radius:4px; transition:opacity .3s; }
+.fmap-cell.c1 { background:var(--blue) }
+.fmap-cell.c2 { background:var(--green) }
+.fmap-dims {
+  font-size:.78rem; font-family:'JetBrains Mono',monospace;
+  color:var(--muted); text-align:center;
 }
-.fmap-cell.c1{background:var(--blue)}
-.fmap-cell.c2{background:var(--green)}
-.fmap-dims{
-  font-size:.6rem;
-  font-family:'JetBrains Mono',monospace;
-  color:var(--muted);
-  text-align:center;
+.fmap-dims span { color:var(--text) }
+
+/* ════ MODULE BOX ════ */
+.module-box {
+  background:var(--bg3); border:2px solid var(--border); border-radius:var(--r);
+  padding:16px 20px; text-align:center;
 }
-.fmap-dims span{color:var(--text)}
-.dim-annot{
-  font-size:.58rem;
-  color:var(--muted);
-  display:flex;
-  gap:10px;
-  justify-content:center;
+.module-name { font-size:1.25rem; font-weight:700; color:var(--text) }
+.module-sub  { font-size:.82rem; color:var(--muted); margin-top:4px; font-style:italic }
+
+/* ════ FEATURE SEQUENCES ════ */
+.feat-row { display:grid; grid-template-columns:1fr 1fr; gap:14px }
+.feat-seq {
+  border-radius:10px; padding:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px; border:2px solid;
+}
+.feat-seq.c1 { background:var(--blue-bg);  border-color:var(--blue-bdr) }
+.feat-seq.c2 { background:var(--green-bg); border-color:var(--green-bdr) }
+.tokens { display:flex; gap:5px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.tok {
+  width:36px; height:36px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; font-weight:700; font-family:'JetBrains Mono',monospace;
+}
+.tok.c1   { background:var(--blue);  color:#fff }
+.tok.c2   { background:var(--green); color:#0a1a10 }
+.tok.dots { background:transparent;  color:var(--muted); font-size:1rem }
+.feat-math {
+  font-size:.8rem; font-family:'JetBrains Mono',monospace;
+  color:var(--muted); text-align:center;
+}
+.feat-math span { color:var(--text) }
+
+/* ════ FEED-TO-MERGE ════ */
+.feed-to-merge {
+  display:flex; align-items:center; gap:8px;
+  font-size:.82rem; color:var(--merge); justify-content:flex-end; margin-top:6px;
 }
 
-/* ════════════════════ PATCH_ENC ══════════════════════════ */
-.module-box{
-  background:var(--bg3);
-  border:1.5px solid var(--border);
-  border-radius:var(--r);
-  padding:11px 16px;
-  text-align:center;
+/* ════ RIGHT COLUMN ════ */
+.right-header {
+  text-align:center; font-size:.95rem; font-weight:700; font-style:italic;
+  text-decoration:underline; color:var(--merge); margin-bottom:16px; letter-spacing:.5px;
 }
-.module-name{font-size:.95rem;font-weight:700;color:var(--text)}
-.module-sub{font-size:.62rem;color:var(--muted);margin-top:2px;font-style:italic}
+.merge-box {
+  background:var(--bg3); border:2.5px solid var(--merge); border-radius:var(--r);
+  padding:18px 20px; text-align:center;
+}
+.merge-name { font-size:1.35rem; font-weight:700; color:var(--merge) }
+.merge-sub  { font-size:.82rem; color:var(--muted); margin-top:5px; line-height:1.5 }
 
-/* ════════════════════ FEATURE SEQUENCES ════════════════ */
-.feat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.feat-seq{
-  border-radius:8px;
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:7px;
-  border:1.5px solid;
+.merged-feats {
+  background:var(--bg2); border:2px solid var(--border); border-radius:10px;
+  padding:14px 18px; display:flex; flex-direction:column; align-items:center; gap:10px;
 }
-.feat-seq.c1{background:var(--blue-bg);border-color:var(--blue-bdr)}
-.feat-seq.c2{background:var(--green-bg);border-color:var(--green-bdr)}
-.tokens{
-  display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center;
-}
-.tok{
-  width:22px;height:22px;
-  border-radius:4px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.52rem;font-weight:700;font-family:'JetBrains Mono',monospace;
-}
-.tok.c1{background:var(--blue);color:#fff}
-.tok.c2{background:var(--green);color:#0a1a10}
-.tok.dots{background:transparent;color:var(--muted);font-size:.7rem}
-.feat-math{
-  font-size:.6rem;font-family:'JetBrains Mono',monospace;color:var(--muted);
-  text-align:center;
-}
-.feat-math span{color:var(--text)}
-
-/* ════════════════════ CHUNK LABEL BAND ══════════════════ */
-.label-band{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-}
-.lband{
-  border-radius:6px;padding:5px 10px;
-  font-size:.65rem;font-weight:700;text-align:center;
-  font-family:'JetBrains Mono',monospace;
-}
-.lband.c1{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bdr)}
-.lband.c2{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bdr)}
-
-/* ════════════════════ RIGHT COLUMN ══════════════════════ */
-.right-header{
-  text-align:center;
-  font-size:.7rem;
-  font-weight:700;
-  font-style:italic;
-  text-decoration:underline;
-  color:var(--merge);
-  margin-bottom:12px;
-  letter-spacing:.5px;
+.merged-tokens { display:flex; gap:5px; align-items:center; flex-wrap:wrap; justify-content:center }
+.merged-label-row {
+  display:flex; gap:12px; justify-content:center;
+  font-size:.78rem; font-family:'JetBrains Mono',monospace; color:var(--muted);
 }
 
-.merge-box{
-  background:var(--bg3);
-  border:2px solid var(--merge);
-  border-radius:var(--r);
-  padding:14px 16px;
-  text-align:center;
+.trdec-box {
+  background:var(--bg3); border:2px solid var(--purple); border-radius:var(--r);
+  padding:16px 20px; text-align:center;
 }
-.merge-name{font-size:1rem;font-weight:700;color:var(--merge)}
-.merge-sub{font-size:.62rem;color:var(--muted);margin-top:3px}
+.trdec-name { font-size:1.25rem; font-weight:700; color:var(--purple) }
+.trdec-sub  { font-size:.82rem; color:var(--muted); margin-top:4px; font-style:italic }
 
-/* merged feature display */
-.merged-feats{
-  background:var(--bg2);
-  border:1.5px solid var(--border);
-  border-radius:8px;
-  padding:10px 14px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
+.pred-chars-row { display:flex; gap:6px; align-items:center; justify-content:center; flex-wrap:wrap; }
+.pred-box {
+  width:38px; height:38px; border:2px solid var(--border);
+  border-radius:7px; background:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; color:var(--muted);
 }
-.merged-tokens{display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:center}
-.merged-label-row{
-  display:flex;gap:8px;justify-content:center;
-  font-size:.58rem;font-family:'JetBrains Mono',monospace;color:var(--muted);
+.pred-math {
+  font-size:.82rem; font-family:'JetBrains Mono',monospace;
+  color:var(--muted); text-align:center; margin-top:8px;
 }
 
-/* TR_DEC right */
-.trdec-box{
-  background:var(--bg3);
-  border:1.5px solid var(--purple);
-  border-radius:var(--r);
-  padding:12px 16px;
-  text-align:center;
-}
-.trdec-name{font-size:.95rem;font-weight:700;color:var(--purple)}
-.trdec-sub{font-size:.62rem;color:var(--muted);margin-top:2px;font-style:italic}
-
-/* predicted chars */
-.pred-chars-row{
-  display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap;
-}
-.pred-box{
-  width:26px;height:26px;
-  border:1.5px solid var(--border);
-  border-radius:5px;
-  background:var(--bg3);
-  display:flex;align-items:center;justify-content:center;
-  font-size:.6rem;color:var(--muted);
-}
-.pred-math{
-  font-size:.62rem;font-family:'JetBrains Mono',monospace;color:var(--muted);
-  text-align:center;margin-top:6px;
-}
-
-/* final output text */
-.output-text{
+.output-text {
   background:linear-gradient(135deg,#0f1e16,#162614);
-  border:2px solid var(--green);
-  border-radius:var(--r);
-  padding:14px 18px;
-  text-align:center;
+  border:2.5px solid var(--green); border-radius:var(--r);
+  padding:18px 22px; text-align:center;
 }
-.output-khmer{
-  font-size:1.3rem;
-  font-weight:600;
-  color:var(--green);
-  display:block;
-  margin-bottom:4px;
+.output-khmer {
+  font-size:1.6rem; font-weight:600; color:var(--green); display:block; margin-bottom:6px;
 }
-.output-label{font-size:.65rem;color:var(--muted)}
+.output-label { font-size:.85rem; color:var(--muted) }
 
-/* Z input annotation */
-.z-input{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  font-size:.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted);
-  margin-top:4px;
+.z-input {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  font-size:.82rem; font-family:'JetBrains Mono',monospace; color:var(--muted); margin-top:4px;
 }
-.z-badge{
-  background:rgba(167,139,250,.18);border:1px solid var(--purple);
-  color:var(--purple);border-radius:4px;padding:1px 7px;font-weight:700;
+.z-badge {
+  background:rgba(167,139,250,.18); border:1.5px solid var(--purple);
+  color:var(--purple); border-radius:5px; padding:2px 10px; font-weight:700; font-size:.9rem;
+}
+.right-arrow {
+  display:flex; align-items:center; justify-content:center;
+  height:36px; color:var(--muted); font-size:1.4rem;
 }
 
-/* right-side connector lines */
-.right-arrow{
-  display:flex;align-items:center;justify-content:center;
-  height:26px;color:var(--muted);font-size:1rem;
+/* ════ LEGEND + TABLE ════ */
+.legend { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:.88rem; color:var(--muted) }
+.legend-sq { width:16px; height:16px; border-radius:4px; flex-shrink:0 }
+
+.sum-table { width:100%; border-collapse:collapse; font-size:.9rem; margin-top:16px }
+.sum-table th,.sum-table td { border:1px solid var(--border); padding:11px 15px; text-align:left; }
+.sum-table th { background:var(--bg3); color:var(--text); font-weight:600 }
+.sum-table td { color:var(--muted) }
+.sum-table td code { color:var(--blue); font-family:'JetBrains Mono',monospace; font-size:.85rem }
+.sum-table tr:hover td { background:rgba(255,255,255,.03) }
+
+.fig-caption {
+  max-width:1280px; margin:28px auto 0; text-align:center;
+  font-size:.9rem; color:var(--muted); font-style:italic; line-height:1.7;
 }
 
-/* ════════════════════ TOP CONNECTOR ════════════════════ */
-/* The contextual-features row feeds into MERGE on the right */
-.feed-to-merge{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:.62rem;
-  color:var(--merge);
-  justify-content:flex-end;
-  margin-top:4px;
-}
-
-/* ════════════════════ ANNOTATIONS ═══════════════════════ */
-.annot-pill{
-  display:inline-flex;align-items:center;gap:5px;
-  background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:20px;padding:3px 10px;
-  font-size:.62rem;color:var(--muted);
-}
-.annot-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-/* legend */
-.legend{
-  display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;
-}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:.68rem;color:var(--muted)}
-.legend-sq{width:12px;height:12px;border-radius:3px;flex-shrink:0}
-
-/* summary table */
-.sum-table{width:100%;border-collapse:collapse;font-size:.75rem;margin-top:12px}
-.sum-table th,.sum-table td{
-  border:1px solid var(--border);padding:8px 12px;text-align:left;
-}
-.sum-table th{background:var(--bg3);color:var(--text);font-weight:600}
-.sum-table td{color:var(--muted)}
-.sum-table td code{color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:.72rem}
-.sum-table tr:hover td{background:rgba(255,255,255,.03)}
-
-/* caption */
-.fig-caption{
-  max-width:960px;margin:24px auto 0;text-align:center;
-  font-size:.75rem;color:var(--muted);font-style:italic;line-height:1.6;
-}
-
-/* overlap label inside CNN section */
-.overlap-note{
-  font-size:.62rem;color:var(--merge);
-  display:flex;align-items:center;gap:5px;justify-content:center;
-  margin-top:6px;
-}
-
-/* ── responsive ── */
-@media(max-width:700px){
-  .diagram{grid-template-columns:1fr;grid-template-rows:auto auto}
-  .right-col{margin-top:32px}
+@media(max-width:800px){
+  .diagram { grid-template-columns:1fr; }
+  .right-col { margin-top:40px; }
 }
 </style>
 </head>
@@ -448,16 +278,18 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
 
 <div class="diagram">
 
-  <!-- ══════════════════════════════════════════════════════════
-       LEFT COLUMN  (bottom-up flow, displayed top-first in DOM
-       but column-reverse makes bottom = Image)
-  ══════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════
+       LEFT COLUMN  (column-reverse → Image at bottom)
+  ════════════════════════════════════════════════════════ -->
   <div class="left-col">
 
-    <!-- ① Contextual features  (top of left column) -->
+    <!-- ① Contextual Features T_i -->
     <div>
-      <div class="card-title" style="font-size:.62rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;">
-        Contextual Features &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.65rem;color:var(--text);">T<sub>i</sub> ∈ ℝ<sup>D</sup></span>
+      <div class="card-title">
+        Contextual Features &nbsp;
+        <span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.9rem;color:var(--text);">
+          T<sub>i</sub> ∈ ℝ<sup>D</sup>
+        </span>
       </div>
       <div class="feat-row">
         <div class="feat-seq c1">
@@ -486,28 +318,36 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
       <div class="feed-to-merge">→ feeds into Merging Module &nbsp;▶</div>
     </div>
 
-    <!-- arrow -->
-    <div class="arrow-v" style="flex-direction:row;gap:16px;">
-      <span style="color:var(--blue);font-size:.9rem;">↑</span>
+    <div class="arrow-v" style="flex-direction:row;gap:20px;">
+      <span style="color:var(--blue);">↑</span>
       <span class="arrow-label">TR<sub>ENC</sub> output</span>
-      <span style="color:var(--green);font-size:.9rem;">↑</span>
+      <span style="color:var(--green);">↑</span>
     </div>
 
     <!-- ② TR_ENC -->
-    <div style="display:grid;grid-template-columns:1fr;gap:0">
-      <div style="font-size:.68rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:6px;text-align:right;">Transformer<br>Encoder Units</div>
+    <div>
+      <div style="font-size:.88rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:8px;text-align:right;">
+        Transformer Encoder Units
+      </div>
       <div class="module-box">
-        <div class="module-name">TR<sub style="font-size:.65rem">ENC</sub></div>
+        <div class="module-name">TR<sub style="font-size:.8rem">ENC</sub></div>
         <div class="module-sub">Multi-head self-attention on both chunk features independently</div>
       </div>
     </div>
 
-    <div class="arrow-v"><span style="color:var(--blue);">↑</span><span class="arrow-label">patched features</span><span style="color:var(--green)">↑</span></div>
+    <div class="arrow-v">
+      <span style="color:var(--blue);">↑</span>
+      <span class="arrow-label">patched features</span>
+      <span style="color:var(--green);">↑</span>
+    </div>
 
-    <!-- ③ Patched features P_i -->
+    <!-- ③ Patched Features P_i -->
     <div>
-      <div class="card-title" style="font-size:.62rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;">
-        Patched Features &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.65rem;color:var(--text);">P<sub>i</sub> ∈ ℝ<sup>D</sup></span>
+      <div class="card-title">
+        Patched Features &nbsp;
+        <span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.9rem;color:var(--text);">
+          P<sub>i</sub> ∈ ℝ<sup>D</sup>
+        </span>
       </div>
       <div class="feat-row">
         <div class="feat-seq c1">
@@ -533,61 +373,74 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
       </div>
     </div>
 
-    <div class="arrow-v"><span style="color:var(--blue)">↑</span><span class="arrow-label">1-D patch tokens</span><span style="color:var(--green)">↑</span></div>
+    <div class="arrow-v">
+      <span style="color:var(--blue);">↑</span>
+      <span class="arrow-label">1-D patch tokens</span>
+      <span style="color:var(--green);">↑</span>
+    </div>
 
     <!-- ④ PATCH_ENC -->
     <div>
-      <div style="font-size:.68rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:6px;text-align:right;">Patching<br>Module</div>
+      <div style="font-size:.88rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:8px;text-align:right;">
+        Patching Module
+      </div>
       <div class="module-box">
-        <div class="module-name">PATCH<sub style="font-size:.65rem">ENC</sub></div>
+        <div class="module-name">PATCH<sub style="font-size:.8rem">ENC</sub></div>
         <div class="module-sub">Flattens 2-D H′×W′ feature map into 1-D sequence of D-dim tokens</div>
       </div>
     </div>
 
-    <div class="arrow-v"><span style="color:var(--blue)">↑</span><span class="arrow-label">2D feature maps</span><span style="color:var(--green)">↑</span></div>
+    <div class="arrow-v">
+      <span style="color:var(--blue);">↑</span>
+      <span class="arrow-label">2D feature maps</span>
+      <span style="color:var(--green);">↑</span>
+    </div>
 
-    <!-- ⑤ 2D Feature maps F_{i,j} -->
+    <!-- ⑤ 2D Feature Maps -->
     <div>
-      <div class="card-title" style="font-size:.62rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;">
-        2D Feature Maps &nbsp;<span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.65rem;color:var(--text);">F<sub>i,j</sub> ∈ ℝ<sup>D</sup></span>
+      <div class="card-title">
+        2D Feature Maps &nbsp;
+        <span style="font-family:'JetBrains Mono',monospace;font-style:italic;font-size:.9rem;color:var(--text);">
+          F<sub>i,j</sub> ∈ ℝ<sup>D</sup>
+        </span>
       </div>
       <div class="fmaps-row">
         <div class="fmap-block c1">
           <div class="chunk-tag c1">(1)</div>
-          <div style="display:flex;gap:4px;align-items:flex-end;">
-            <div>
-              <div style="font-size:.55rem;color:var(--muted);margin-bottom:2px;font-family:'JetBrains Mono',monospace">H′ ↕</div>
-              <div class="fmap-grid" style="grid-template-columns:repeat(4,1fr)">
-                <div class="fmap-cell c1"></div><div class="fmap-cell c1"></div><div class="fmap-cell c1"></div><div class="fmap-cell c1"></div>
-                <div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div>
-                <div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div>
-                <div class="fmap-cell c1" style="opacity:.4"></div><div class="fmap-cell c1" style="opacity:.4"></div><div class="fmap-cell c1" style="opacity:.4"></div><div class="fmap-cell c1" style="opacity:.4"></div>
-              </div>
-              <div style="font-size:.55rem;color:var(--muted);margin-top:2px;text-align:center;font-family:'JetBrains Mono',monospace">W′ ↔</div>
+          <div>
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px;font-family:'JetBrains Mono',monospace">H′ ↕</div>
+            <div class="fmap-grid">
+              <div class="fmap-cell c1"></div><div class="fmap-cell c1"></div><div class="fmap-cell c1"></div><div class="fmap-cell c1"></div>
+              <div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div><div class="fmap-cell c1" style="opacity:.8"></div>
+              <div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div><div class="fmap-cell c1" style="opacity:.6"></div>
+              <div class="fmap-cell c1" style="opacity:.35"></div><div class="fmap-cell c1" style="opacity:.35"></div><div class="fmap-cell c1" style="opacity:.35"></div><div class="fmap-cell c1" style="opacity:.35"></div>
             </div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:4px;text-align:center;font-family:'JetBrains Mono',monospace">W′ ↔</div>
           </div>
           <div class="fmap-dims"><span>F<sub>i,j</sub></span> ∈ ℝ<sup>D</sup></div>
         </div>
         <div class="fmap-block c2">
           <div class="chunk-tag c2">(2)</div>
-          <div style="display:flex;gap:4px;align-items:flex-end;">
-            <div>
-              <div style="font-size:.55rem;color:var(--muted);margin-bottom:2px;font-family:'JetBrains Mono',monospace">H′ ↕</div>
-              <div class="fmap-grid" style="grid-template-columns:repeat(4,1fr)">
-                <div class="fmap-cell c2"></div><div class="fmap-cell c2"></div><div class="fmap-cell c2"></div><div class="fmap-cell c2"></div>
-                <div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div>
-                <div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div>
-                <div class="fmap-cell c2" style="opacity:.4"></div><div class="fmap-cell c2" style="opacity:.4"></div><div class="fmap-cell c2" style="opacity:.4"></div><div class="fmap-cell c2" style="opacity:.4"></div>
-              </div>
-              <div style="font-size:.55rem;color:var(--muted);margin-top:2px;text-align:center;font-family:'JetBrains Mono',monospace">W′ ↔</div>
+          <div>
+            <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px;font-family:'JetBrains Mono',monospace">H′ ↕</div>
+            <div class="fmap-grid">
+              <div class="fmap-cell c2"></div><div class="fmap-cell c2"></div><div class="fmap-cell c2"></div><div class="fmap-cell c2"></div>
+              <div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div><div class="fmap-cell c2" style="opacity:.8"></div>
+              <div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div><div class="fmap-cell c2" style="opacity:.6"></div>
+              <div class="fmap-cell c2" style="opacity:.35"></div><div class="fmap-cell c2" style="opacity:.35"></div><div class="fmap-cell c2" style="opacity:.35"></div><div class="fmap-cell c2" style="opacity:.35"></div>
             </div>
+            <div style="font-size:.75rem;color:var(--muted);margin-top:4px;text-align:center;font-family:'JetBrains Mono',monospace">W′ ↔</div>
           </div>
           <div class="fmap-dims"><span>F<sub>i,j</sub></span> ∈ ℝ<sup>D</sup></div>
         </div>
       </div>
     </div>
 
-    <div class="arrow-v"><span style="color:var(--blue)">↑</span><span class="arrow-label">CNN output</span><span style="color:var(--green)">↑</span></div>
+    <div class="arrow-v">
+      <span style="color:var(--blue);">↑</span>
+      <span class="arrow-label">CNN output</span>
+      <span style="color:var(--green);">↑</span>
+    </div>
 
     <!-- ⑥ CNN -->
     <div class="cnn-box">
@@ -598,14 +451,14 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
     </div>
 
     <div class="arrow-v">
-      <span style="color:var(--blue)">↑</span>
+      <span style="color:var(--blue);">↑</span>
       <span class="arrow-label">Overlapping &amp; Padding</span>
-      <span style="color:var(--green)">↑</span>
+      <span style="color:var(--green);">↑</span>
     </div>
 
     <!-- ⑦ Chunks -->
     <div>
-      <div class="card-title" style="font-size:.62rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;">Input Chunks</div>
+      <div class="card-title">Input Chunks</div>
       <div class="chunks-row">
         <div class="chunk-card c1">
           <div class="chunk-tag c1">Chunk (1)</div>
@@ -613,7 +466,7 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
             បំណូសសម្ភ
             <span class="overlap-tag">+O</span>
           </div>
-          <div style="font-size:.58rem;color:var(--muted);font-family:'JetBrains Mono',monospace">px 0 → 100</div>
+          <div style="font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace">px 0 → 100</div>
         </div>
         <div class="chunk-card c2">
           <div class="chunk-tag c2">Chunk (2)</div>
@@ -621,72 +474,78 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
             ាត់បឹងកក់២
             <span class="overlap-tag">+O</span>
           </div>
-          <div style="font-size:.58rem;color:var(--muted);font-family:'JetBrains Mono',monospace">px 68 → 168</div>
+          <div style="font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace">px 68 → 168</div>
         </div>
       </div>
     </div>
 
-    <div class="arrow-v"><span>↑</span><span class="arrow-label">sliced from image I</span></div>
+    <div class="arrow-v">
+      <span>↑</span>
+      <span class="arrow-label">sliced from image I</span>
+    </div>
 
-    <!-- ⑧ Input Image (bottom) -->
+    <!-- ⑧ Input Image -->
     <div>
-      <div class="card-title" style="font-size:.62rem;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;">Input Image</div>
+      <div class="card-title">Input Image</div>
       <div class="image-card">
         <div class="image-strip khmer">
           បំណូសសម្ភាត់បឹងកក់២
         </div>
-        <div class="img-label">Image, <em>I</em></div>
+        <div class="img-label">Image,&thinsp;<em>I</em></div>
       </div>
     </div>
 
   </div><!-- /left-col -->
 
 
-  <!-- ══════════════════════════════════════════════════════════
-       RIGHT COLUMN — Merging Module flow (top to bottom)
-  ══════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════
+       RIGHT COLUMN — Merging Module (top to bottom)
+  ════════════════════════════════════════════════════════ -->
   <div class="right-col">
 
-    <div style="height:60px"></div><!-- vertical offset to align with contextual features row -->
+    <div style="height:72px"></div><!-- align with contextual features -->
 
     <div class="right-header">Merging Module</div>
 
-    <!-- inputs: blue + green tokens arrive -->
-    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
+    <!-- Input tokens arriving -->
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:12px;">
       <div style="text-align:center;">
         <div class="tokens">
-          <div class="tok c1" style="width:28px;height:28px">t</div>
-          <div class="tok c1" style="width:28px;height:28px">…</div>
-          <div class="tok c1" style="width:28px;height:28px">t</div>
+          <div class="tok c1" style="width:40px;height:40px">t</div>
+          <div class="tok dots" style="width:28px;height:40px">…</div>
+          <div class="tok c1" style="width:40px;height:40px">t</div>
         </div>
-        <div style="font-size:.58rem;color:var(--blue);margin-top:3px">(1)</div>
+        <div style="font-size:.8rem;color:var(--blue);margin-top:5px;font-family:'JetBrains Mono',monospace">(1)</div>
       </div>
-      <div style="font-size:1.1rem;color:var(--muted);display:flex;align-items:center">+</div>
+      <div style="font-size:1.4rem;color:var(--muted);display:flex;align-items:center">+</div>
       <div style="text-align:center;">
         <div class="tokens">
-          <div class="tok c2" style="width:28px;height:28px">t</div>
-          <div class="tok c2" style="width:28px;height:28px">…</div>
-          <div class="tok c2" style="width:28px;height:28px">t</div>
+          <div class="tok c2" style="width:40px;height:40px">t</div>
+          <div class="tok dots" style="width:28px;height:40px">…</div>
+          <div class="tok c2" style="width:40px;height:40px">t</div>
         </div>
-        <div style="font-size:.58rem;color:var(--green);margin-top:3px">(2)</div>
+        <div style="font-size:.8rem;color:var(--green);margin-top:5px;font-family:'JetBrains Mono',monospace">(2)</div>
       </div>
     </div>
 
     <div class="right-arrow">↓</div>
 
-    <!-- MERGE box -->
+    <!-- MERGE -->
     <div class="merge-box">
       <div class="merge-name">MERGE</div>
-      <div class="merge-sub">Concatenate features from both chunks<br>&amp; apply <strong style="color:var(--merge)">positional encoding</strong></div>
+      <div class="merge-sub">
+        Concatenate features from both chunks<br>
+        &amp; apply <strong style="color:var(--merge)">positional encoding</strong>
+      </div>
     </div>
 
     <div class="right-arrow">↓</div>
 
     <!-- Merged contextual features -->
     <div>
-      <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-bottom:6px;font-style:italic;">
+      <div style="font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:8px;font-style:italic;">
         Merged Contextual Features<br>
-        <span style="font-family:'JetBrains Mono',monospace;color:var(--text);">T<sub>i</sub> ∈ ℝ<sup>D</sup></span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:.88rem;">T<sub>i</sub> ∈ ℝ<sup>D</sup></span>
       </div>
       <div class="merged-feats">
         <div class="merged-tokens">
@@ -716,9 +575,11 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
 
     <!-- TR_DEC -->
     <div>
-      <div style="font-size:.68rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:6px;text-align:right;">Transformer<br>Decoder Units</div>
+      <div style="font-size:.88rem;font-weight:700;font-style:italic;text-decoration:underline;color:var(--text);margin-bottom:8px;text-align:right;">
+        Transformer Decoder Units
+      </div>
       <div class="trdec-box">
-        <div class="trdec-name">TR<sub style="font-size:.65rem">DEC</sub></div>
+        <div class="trdec-name">TR<sub style="font-size:.8rem">DEC</sub></div>
         <div class="trdec-sub">Cross-attention over merged features<br>Autoregressive character generation</div>
       </div>
     </div>
@@ -727,16 +588,16 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
 
     <!-- Predicted Characters -->
     <div>
-      <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-bottom:6px;font-style:italic;">
+      <div style="font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:8px;font-style:italic;">
         Predicted Characters<br>
-        <span style="font-family:'JetBrains Mono',monospace;color:var(--text);">Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--text);font-size:.88rem;">Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></span>
       </div>
-      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;padding:12px;">
+      <div style="background:var(--bg2);border:2px solid var(--border);border-radius:10px;padding:16px;">
         <div class="pred-chars-row">
           <div class="pred-box"></div>
           <div class="pred-box"></div>
           <div class="pred-box"></div>
-          <div style="font-size:.7rem;color:var(--muted)">…</div>
+          <div style="font-size:1rem;color:var(--muted)">…</div>
           <div class="pred-box"></div>
           <div class="pred-box"></div>
         </div>
@@ -746,7 +607,7 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
 
     <div class="right-arrow">↓</div>
 
-    <!-- Final output text -->
+    <!-- Final output -->
     <div class="output-text">
       <span class="output-khmer khmer">បំណូសសម្ភាត់បឹងកក់២</span>
       <div class="output-label">Recognized Khmer text (full textline)</div>
@@ -755,10 +616,8 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
   </div><!-- /right-col -->
 </div><!-- /diagram -->
 
-<!-- ══════════════════════════════════════════════════════════
-     LEGEND + SUMMARY TABLE
-══════════════════════════════════════════════════════════ -->
-<div style="max-width:960px;margin:32px auto 0;">
+<!-- ════ LEGEND + TABLE ════ -->
+<div style="max-width:1280px;margin:40px auto 0;">
   <div class="card">
     <div class="card-title">Legend</div>
     <div class="legend">
@@ -768,14 +627,9 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
       <div class="legend-item"><div class="legend-sq" style="background:var(--purple)"></div> Transformer Decoder</div>
     </div>
 
-    <table class="sum-table" style="margin-top:20px;">
+    <table class="sum-table">
       <thead>
-        <tr>
-          <th>Stage</th>
-          <th>Module</th>
-          <th>Output Tensor</th>
-          <th>Description</th>
-        </tr>
+        <tr><th>Stage</th><th>Module</th><th>Output Tensor</th><th>Description</th></tr>
       </thead>
       <tbody>
         <tr><td>1</td><td>Input</td><td><code>Image I</code></td><td>Full-width Khmer textline image</td></tr>
