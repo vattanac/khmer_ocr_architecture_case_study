@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khmer OCR — Interactive Pipeline Demo</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Khmer:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;600;700&family=Noto+Sans+Khmer:wght@400;600;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
+  .khmer{font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif!important;font-weight:600;line-height:2;letter-spacing:0.5px;}
   :root{--bg:#0a0e1a;--card:#111827;--card2:#1e293b;--border:#1e293b;--border2:#334155;--text:#e2e8f0;--dim:#64748b;--accent:#38bdf8;--green:#22c55e;--red:#ef4444;--purple:#a78bfa;--orange:#f59e0b;--pink:#ec4899;}
   body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
 
@@ -76,15 +77,15 @@
   .fm-cell{border-radius:3px;transition:all 0.6s;aspect-ratio:1;}
 
   /* KHMER TEXT DISPLAY */
-  .khmer-text{font-family:'Noto Sans Khmer',serif;font-size:2.2rem;color:var(--accent);text-align:center;padding:16px;letter-spacing:2px;}
-  .khmer-sm{font-family:'Noto Sans Khmer',serif;font-size:1.2rem;}
+  .khmer-text{font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:2.2rem;color:var(--accent);text-align:center;padding:16px;letter-spacing:1px;line-height:2;font-weight:700;}
+  .khmer-sm{font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:1.2rem;line-height:2;font-weight:600;}
 
   /* DECODER ANIMATION */
   .decoder-output{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin:16px 0;}
   .decoder-char{display:flex;flex-direction:column;align-items:center;padding:8px 6px;background:var(--card2);border-radius:10px;border:2px solid transparent;transition:all 0.7s;min-width:50px;}
   .decoder-char.revealed{border-color:var(--green);background:rgba(34,197,94,0.1);}
   .decoder-char.current{border-color:var(--orange);background:rgba(245,158,11,0.15);animation:pulse 1.2s infinite;}
-  .decoder-char .char{font-family:'Noto Sans Khmer',serif;font-size:1.6rem;color:var(--text);}
+  .decoder-char .char{font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:1.6rem;color:var(--text);line-height:2;}
   .decoder-char .prob{font-size:0.65rem;color:var(--green);font-weight:700;margin-top:2px;}
   .decoder-char .step-num{font-size:0.6rem;color:var(--dim);}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
@@ -206,10 +207,10 @@
   <div class="card slide-up" style="animation-delay:0.15s;">
     <h3>Choose a Khmer text sample:</h3>
     <div class="btn-group" id="sampleBtns">
-      <button class="btn btn-outline btn-sm active" data-sample="0">ស្ត្រី (woman)</button>
-      <button class="btn btn-outline btn-sm" data-sample="1">កម្ពុជា (Cambodia)</button>
-      <button class="btn btn-outline btn-sm" data-sample="2">សាកលវិទ្យាល័យ (University)</button>
-      <button class="btn btn-outline btn-sm" data-sample="3">ជំរាបសួរពិភពលោក (Hello World)</button>
+      <button class="btn btn-outline btn-sm khmer active" data-sample="0">ស្ត្រី (woman)</button>
+      <button class="btn btn-outline btn-sm khmer" data-sample="1">កម្ពុជា (Cambodia)</button>
+      <button class="btn btn-outline btn-sm khmer" data-sample="2">សាកលវិទ្យាល័យ (University)</button>
+      <button class="btn btn-outline btn-sm khmer" data-sample="3">ជំរាបសួរពិភពលោក (Hello World)</button>
     </div>
     <div class="khmer-text" id="selectedText">ស្ត្រី</div>
   </div>
@@ -267,7 +268,7 @@
   <div class="card" id="chunkingVis">
     <h3>Step 1 — Original Image</h3>
     <div class="anim-area" id="chunkAnimArea">
-      <div id="chunkOriginal" style="height:56px;border-radius:8px;background:linear-gradient(90deg,#1e3a5f,#1e3a5f);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans Khmer',serif;font-size:1.1rem;color:#93c5fd;letter-spacing:2px;transition:all 0.5s;">
+      <div id="chunkOriginal" style="height:56px;border-radius:8px;background:linear-gradient(90deg,#1e3a5f,#1e3a5f);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:1.1rem;color:#93c5fd;letter-spacing:0.5px;line-height:2;transition:all 0.5s;">
         ជំរាបសួរ អ្នកទាំងអស់គ្នា រស់នៅសុខសប្បាយ នេះជាប្រយោគវែងមួយ ដើម្បីសាកល្បង
       </div>
       <div id="chunkPieces" style="margin-top:16px;display:none;"></div>
@@ -587,7 +588,7 @@ const stageContent = [
     <div class="anim-area" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--dim);margin-bottom:8px;">Simulated input image (height = 64px)</div>
       <div style="display:inline-block;background:linear-gradient(180deg,#1a1a2e,#16213e);border:2px solid #f59e0b;border-radius:8px;padding:16px 40px;position:relative;">
-        <div style="font-family:'Noto Sans Khmer',serif;font-size:2.4rem;color:#e2e8f0;letter-spacing:3px;">${s.text}</div>
+        <div style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:2.4rem;color:#e2e8f0;letter-spacing:1px;line-height:2;">${s.text}</div>
         <div style="position:absolute;left:-60px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;font-size:0.6rem;color:var(--dim);">
           <span>0px</span><span>32px</span><span>64px</span>
         </div>
@@ -643,7 +644,7 @@ const stageContent = [
           <div style="display:flex;flex-direction:column;gap:2px;text-align:center;">
             <div style="font-size:0.6rem;color:var(--dim);">Patch ${i+1}</div>
             ${[0,1,2,3,4,5,6,7].map(r => `<div style="width:28px;height:12px;border-radius:2px;background:hsl(${260 + i*20}, 60%, ${30 + r*5}%);"></div>`).join('')}
-            <div style="font-family:'Noto Sans Khmer',serif;font-size:0.9rem;color:#c4b5fd;margin-top:4px;">${c}</div>
+            <div style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:0.9rem;color:#c4b5fd;margin-top:4px;">${c}</div>
           </div>
         `).join('')}
       </div>
@@ -679,7 +680,7 @@ const stageContent = [
         }).join('')).join('')}
       </div>
       <div style="display:flex;justify-content:center;gap:4px;margin-top:8px;">
-        ${s.chars.map(c => `<div style="width:${Math.min(360/s.chars.length, 40)}px;text-align:center;font-family:'Noto Sans Khmer',serif;font-size:0.75rem;color:#6ee7b7;">${c}</div>`).join('')}
+        ${s.chars.map(c => `<div style="width:${Math.min(360/s.chars.length, 40)}px;text-align:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:0.75rem;color:#6ee7b7;">${c}</div>`).join('')}
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;">
@@ -712,7 +713,7 @@ const stageContent = [
     <div class="subtitle">The model has successfully recognized the Khmer text!</div>
     <div class="anim-area" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--dim);margin-bottom:12px;">Predicted Unicode string:</div>
-      <div style="font-family:'Noto Sans Khmer',serif;font-size:3rem;color:#22d3ee;margin:20px 0;letter-spacing:4px;">${s.text}</div>
+      <div style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:3rem;color:#22d3ee;margin:20px 0;letter-spacing:1px;line-height:2;">${s.text}</div>
       <div style="font-size:1.1rem;color:var(--green);font-weight:700;">✓ "${s.meaning}" — CER: 0.0%</div>
     </div>
     <div style="margin-top:16px;">
@@ -720,7 +721,7 @@ const stageContent = [
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         ${s.chars.map((c, i) => `
           <div style="background:var(--bg);border-radius:8px;padding:8px 12px;text-align:center;border:1px solid var(--border2);">
-            <div style="font-family:'Noto Sans Khmer',serif;font-size:1.2rem;color:#22d3ee;">${c}</div>
+            <div style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:1.2rem;color:#22d3ee;">${c}</div>
             <div style="font-size:0.6rem;color:var(--dim);margin-top:2px;">${s.unicode[i] || ''}</div>
           </div>
         `).join('')}
