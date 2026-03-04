@@ -21,6 +21,7 @@ Khmer script presents unique challenges for OCR systems due to its complex chara
 | [Figure 3 Demo](https://khmer-ocr-case-study-figure3.netlify.app/) | Figure 3 visualization from referenced paper ![Figure 3](/figure3/figure3.png) |
 | [Figure 12 Demo](https://khmer-ocr-case-study-figure12.netlify.app/) | Figure 12 visualization from referenced paper ![Figure 12](/figure12/figure12.png) |
 | [Figure 13 Demo](https://khmer-ocr-case-study-figure13.netlify.app/) | Figure 13 visualization from referenced paper ![Figure 13](/figure13/figure13.png) |
+| [Figure 15 Demo](https://khmer-ocr-case-study-figure15.netlify.app/) | Figure 15 visualization from referenced paper ![Figure 15](/figure15/figure15.png) |
 
 ---
 
