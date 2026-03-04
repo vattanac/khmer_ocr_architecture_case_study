@@ -42,7 +42,8 @@ All research, models, and architectural concepts referenced in this project belo
 
 Research papers and resources reviewed in this case study are documented within each demo. Proper attribution is given to the original authors.
 
-[source ](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10316307)
+[source ](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10316307) or 
+[file](/Toward_a_Low-Resource_Non-Latin-Complete_Baseline_An_Exploration_of_Khmer_Optical_Character_Recognition.pdf)
 
 ---
 
