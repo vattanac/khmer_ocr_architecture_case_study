@@ -677,7 +677,7 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
     <!-- MERGE box -->
     <div class="merge-box">
       <div class="merge-name">MERGE</div>
-      <div class="merge-sub">Concatenate &amp; resolve overlap duplicates<br>by confidence score</div>
+      <div class="merge-sub">Concatenate features from both chunks<br>&amp; apply <strong style="color:var(--merge)">positional encoding</strong></div>
     </div>
 
     <div class="right-arrow">↓</div>
@@ -710,7 +710,7 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
       ↓
       <div class="z-input" style="position:absolute;right:0;top:50%;transform:translateY(-50%);">
         <div class="z-badge">Z</div>
-        <span>query</span>
+        <span>context sequence</span>
       </div>
     </div>
 
@@ -783,8 +783,8 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
         <tr><td>3</td><td>CNN</td><td><code>F<sub>i,j</sub> ∈ ℝ<sup>D</sup></code></td><td>Modified ResNet — 2D spatial feature maps H′×W′</td></tr>
         <tr><td>4</td><td>PATCH<sub>ENC</sub></td><td><code>P<sub>i</sub> ∈ ℝ<sup>D</sup></code></td><td>Flatten 2D maps → 1D patch token sequences</td></tr>
         <tr><td>5</td><td>TR<sub>ENC</sub></td><td><code>T<sub>i</sub> ∈ ℝ<sup>D</sup></code></td><td>Transformer encoder — contextual features per chunk</td></tr>
-        <tr><td>6</td><td>MERGE</td><td><code>T<sub>i</sub> ∈ ℝ<sup>D</sup></code> (merged)</td><td>Concatenate chunk features, resolve overlap by confidence</td></tr>
-        <tr><td>7</td><td>TR<sub>DEC</sub></td><td><code>Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></code></td><td>Cross-attention decoder → character logits (vocab C≈131)</td></tr>
+        <tr><td>6</td><td>MERGE</td><td><code>T<sub>i</sub> ∈ ℝ<sup>D</sup></code> (merged)</td><td>Concatenate chunk features from both chunks &amp; apply positional encoding</td></tr>
+        <tr><td>7</td><td>TR<sub>DEC</sub></td><td><code>Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></code></td><td>Cross-attention over merged T; context sequence Z as autoregressive input → character logits (vocab C≈131)</td></tr>
         <tr><td>8</td><td>Output</td><td>Khmer text string</td><td>Argmax over logits → final recognized characters</td></tr>
       </tbody>
     </table>
@@ -792,7 +792,7 @@ h1{text-align:center;font-size:1.45rem;font-weight:700;color:#fff;margin-bottom:
 </div>
 
 <p class="fig-caption">
-  <strong>Figure 15.</strong> Full chunking &amp; merging pipeline for long Khmer textlines. Each chunk (blue = chunk 1, green = chunk 2) is processed independently through the CNN → PATCH<sub>ENC</sub> → TR<sub>ENC</sub> stack, producing contextual feature sequences T<sub>i</sub> ∈ ℝ<sup>D</sup>. The Merging Module combines these sequences and feeds them to a shared TR<sub>DEC</sub> which autoregressively generates the predicted character sequence Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup>.
+  <strong>Figure 15.</strong> Full chunking &amp; merging pipeline for long Khmer textlines. Each chunk (blue = chunk 1, green = chunk 2) is processed independently through the CNN → PATCH<sub>ENC</sub> → TR<sub>ENC</sub> stack, producing contextual feature sequences T<sub>i</sub> ∈ ℝ<sup>D</sup>. The Merging Module combines these sequences and applies <strong>positional encoding</strong> to produce merged T. The merged T together with a context sequence <em>Z</em> are fed to TR<sub>DEC</sub>, which autoregressively generates the predicted character sequence Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup>.
   <br><em>Buoy et al., IEEE Access 2023, Figure 15.</em>
 </p>
 
