@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 12 — Transformer-Based Encoder-Decoder Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&family=Kantumruy+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .khmer {
+    font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer OS', serif;
+    font-weight: 600;
+    line-height: 1.8;
+  }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+
+  .page-title {
+    font-size: 14px; color: #666; margin-bottom: 4px;
+    letter-spacing: 0.5px; text-align: center;
+  }
+  .page-subtitle {
+    font-size: 12px; color: #999; margin-bottom: 30px; text-align: center;
+  }
+  .fig-heading {
+    font-size: 15px; font-weight: 700; color: #1a1a2e;
+    margin-bottom: 32px; text-align: center;
+  }
+
+  /* ── Main layout ── */
+  .main-layout {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 980px;
+  }
+
+  /* ────────────────────────
+     DIAGRAM COLUMN
+  ──────────────────────── */
+  .diagram-col {
+    flex-shrink: 0;
+    width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Each "step row" = token/grid + label side by side */
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+  }
+
+  .step-tokens {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .step-label {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .step-label .lbl-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .step-label .lbl-formula {
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    color: #222;
+    font-weight: 600;
+  }
+
+  /* tokens */
+  .token {
+    width: 22px; height: 22px;
+    border-radius: 4px; border: 2px solid;
+    flex-shrink: 0;
+    animation: cellPulse 2.5s ease-in-out infinite;
+  }
+  .token-dots { font-size: 14px; font-weight: 700; color: #aaa; }
+  .token-blue   { background:#dbeafe; border-color:#3b82f6; }
+  .token-green  { background:#dcfce7; border-color:#22c55e; }
+  .token-purple { background:#ede9fe; border-color:#7c3aed; }
+  .token-gold   { background:#fef9c3; border-color:#ca8a04; }
+
+  @keyframes cellPulse {
+    0%,100% { opacity:0.5; } 50% { opacity:1; }
+  }
+  .token:nth-child(2n) { animation-delay:0.4s; }
+  .token:nth-child(3n) { animation-delay:0.8s; }
+
+  /* feature grid */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 18px);
+    grid-template-rows: repeat(4, 14px);
+    gap: 2px;
+  }
+  .feat-cell {
+    border-radius: 2px;
+    animation: cellPulse 2.5s ease-in-out infinite;
+  }
+  .feat-cell:nth-child(2n) { animation-delay:0.4s; }
+  .feat-cell:nth-child(3n) { animation-delay:0.8s; }
+  .feat-cell:nth-child(4n) { animation-delay:1.2s; }
+  .feat-cell:nth-child(5n) { animation-delay:1.6s; }
+
+  /* feat wrapper with H' W' dim labels */
+  .feat-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .dim-h {
+    position: absolute; left: -16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px; font-style: italic;
+    font-family: 'Courier New', monospace; color: #666;
+  }
+  .dim-w {
+    position: absolute; bottom: -16px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px; font-style: italic;
+    font-family: 'Courier New', monospace; color: #666;
+    white-space: nowrap;
+  }
+
+  /* main block boxes */
+  .block {
+    border-radius: 10px;
+    padding: 13px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    width: 100%;
+  }
+  .block:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  .block-title { font-size: 15px; font-weight: 800; font-family: 'Courier New', monospace; }
+  .block-sub   { font-size: 11px; margin-top: 3px; opacity: 0.85; font-style: italic; }
+
+  .block-decoder {
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    color: #fff; border: 2px solid #3b82f6;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+  }
+  .block-encoder {
+    background: linear-gradient(135deg, #14532d, #16a34a);
+    color: #fff; border: 2px solid #22c55e;
+    box-shadow: 0 4px 16px rgba(34,197,94,0.3);
+  }
+  .block-patch {
+    background: linear-gradient(135deg, #4c1d95, #7c3aed);
+    color: #fff; border: 2px solid #a78bfa;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+  }
+  .block-cnn {
+    background: linear-gradient(135deg, #7c2d12, #ea580c);
+    color: #fff; border: 2px solid #fb923c;
+    box-shadow: 0 4px 16px rgba(234,88,12,0.3);
+    clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
+    padding: 13px 34px;
+  }
+
+  /* connector line */
+  .connector {
+    width: 2px; background: #aaa;
+    margin: 0 auto; flex-shrink: 0;
+    align-self: center;
+  }
+
+  /* up arrow at top */
+  .arrow-up-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    height: 30px;
+  }
+  .arrow-up-line {
+    flex: 1; width: 2px; background: #555; position: relative;
+  }
+  .arrow-up-line::before {
+    content: '';
+    position: absolute; top: -9px; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid #555;
+  }
+
+  /* Z arrow */
+  .z-wrap {
+    display: flex; align-items: center;
+    position: relative; height: 28px;
+  }
+  .z-line {
+    height: 2px; background: #777; width: 56px; position: relative;
+  }
+  .z-line::after {
+    content: '';
+    position: absolute; right: -7px; top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid #777;
+  }
+  .z-text {
+    font-weight: 800; font-size: 14px;
+    font-family: 'Courier New', monospace; color: #333;
+    margin-right: 4px;
+  }
+
+  /* output Khmer text */
+  .output-khmer {
+    text-align: center; font-size: 13px;
+    font-weight: 600; color: #1a1a2e;
+    padding: 4px 0 6px;
+  }
+
+  /* input image */
+  .input-img {
+    height: 50px;
+    background: linear-gradient(90deg, #1a1a2e, #16213e 50%, #0f3460);
+    border-radius: 6px; border: 2px solid #4a5568;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: rgba(255,255,255,0.85);
+    position: relative;
+  }
+  .input-img .h-lbl {
+    position: absolute; left: -20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px; font-style: italic;
+    font-family: 'Courier New', monospace; color: #555;
+  }
+  .input-img .w-lbl {
+    position: absolute; bottom: -17px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px; font-style: italic;
+    font-family: 'Courier New', monospace; color: #555;
+  }
+  .img-caption {
+    text-align: center; font-size: 11px;
+    color: #666; font-style: italic; margin-top: 22px;
+  }
+
+  /* ────────────────────────
+     ANNOTATION COLUMN
+  ──────────────────────── */
+  .annotation-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 8px;
+    min-width: 0;
+  }
+
+  .ann-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--accent);
+  }
+  .ann-card h4 {
+    font-size: 13px; font-weight: 700;
+    color: var(--accent); margin-bottom: 7px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .ann-card p, .ann-card li {
+    font-size: 12px; color: #444; line-height: 1.6;
+  }
+  .ann-card ul { padding-left: 16px; }
+  .f { /* inline formula */
+    font-family: 'Courier New', monospace;
+    background: #f3f4f6; padding: 1px 5px;
+    border-radius: 3px; font-size: 11.5px; color: #1a1a2e;
+  }
+
+  .ann-card.cnn     { --accent: #ea580c; }
+  .ann-card.patch   { --accent: #7c3aed; }
+  .ann-card.encoder { --accent: #16a34a; }
+  .ann-card.decoder { --accent: #2563eb; }
+  .ann-card.output  { --accent: #ca8a04; }
+
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block; flex-shrink: 0;
+  }
+
+  /* data flow summary */
+  .flow-summary {
+    background: #1a1a2e; border-radius: 12px;
+    padding: 16px 18px; color: #e2e8f0;
+  }
+  .flow-summary h5 {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: #94a3b8; margin-bottom: 10px;
+  }
+  .flow-summary .eq {
+    font-family: 'Courier New', monospace;
+    font-size: 12px; line-height: 2.1;
+  }
+
+  /* figure caption */
+  .figure-caption {
+    max-width: 980px; width: 100%;
+    background: #fff; border-radius: 10px;
+    padding: 16px 22px; font-size: 12.5px;
+    color: #444; line-height: 1.7;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-top: 32px;
+  }
+  .figure-caption strong { color: #1a1a2e; }
+
+  @media (max-width: 720px) {
+    .main-layout { flex-direction: column; align-items: center; }
+    .diagram-col { width: 100%; max-width: 380px; }
+  }
+</style>
+</head>
+<body>
+
+<p class="page-title">Buoy et al. — IEEE Access, Vol. 11, 2023</p>
+<p class="page-subtitle">Toward a Low-Resource Non-Latin-Complete Baseline: An Exploration of Khmer OCR</p>
+<div class="fig-heading">FIGURE 12 — The Overall Transformer-Based Encoder-Decoder Architecture</div>
+
+<div class="main-layout">
+
+  <!-- ═══════════════════════════════
+       DIAGRAM COLUMN
+  ═══════════════════════════════ -->
+  <div class="diagram-col">
+
+    <!-- Khmer output text -->
+    <div class="output-khmer khmer">ប៉ុស្តិ៍សម្តាប់បឹងកក់២</div>
+
+    <!-- Up arrow -->
+    <div class="arrow-up-wrap">
+      <div class="arrow-up-line"></div>
+    </div>
+
+    <!-- Predicted characters row -->
+    <div class="step-row" style="margin-bottom:4px;">
+      <div class="step-tokens">
+        <div class="token token-gold"></div>
+        <div class="token token-gold"></div>
+        <span class="token-dots">…</span>
+        <div class="token token-gold"></div>
+      </div>
+      <div class="step-label">
+        <span class="lbl-name" style="color:#ca8a04;">Predicted Characters</span>
+        <span class="lbl-formula">Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></span>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:14px;"></div>
+
+    <!-- TR_DEC block with Z arrow -->
+    <div style="position:relative;">
+      <div class="z-wrap" style="position:absolute; left:-72px; top:50%; transform:translateY(-50%);">
+        <span class="z-text">Z</span>
+        <div class="z-line"></div>
+      </div>
+      <div class="block block-decoder">
+        <div class="block-title">TR<sub>DEC</sub></div>
+        <div class="block-sub">Transformer Decoder Units</div>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:14px;"></div>
+
+    <!-- Contextual features row -->
+    <div class="step-row" style="margin-bottom:4px;">
+      <div class="step-tokens">
+        <div class="token token-green"></div>
+        <div class="token token-green"></div>
+        <span class="token-dots">…</span>
+        <div class="token token-green"></div>
+      </div>
+      <div class="step-label">
+        <span class="lbl-name" style="color:#16a34a;">Contextual Features</span>
+        <span class="lbl-formula">T<sub>i</sub> ∈ ℝ<sup>D</sup></span>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:14px;"></div>
+
+    <!-- TR_ENC block -->
+    <div class="block block-encoder">
+      <div class="block-title">TR<sub>ENC</sub></div>
+      <div class="block-sub">Transformer Encoder Units</div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:14px;"></div>
+
+    <!-- Patched features row -->
+    <div class="step-row" style="margin-bottom:4px;">
+      <div class="step-tokens">
+        <div class="token token-purple"></div>
+        <div class="token token-purple"></div>
+        <span class="token-dots">…</span>
+        <div class="token token-purple"></div>
+      </div>
+      <div class="step-label">
+        <span class="lbl-name" style="color:#7c3aed;">Patched Features</span>
+        <span class="lbl-formula">P<sub>i</sub> ∈ ℝ<sup>D</sup></span>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:14px;"></div>
+
+    <!-- PATCH_ENC block -->
+    <div class="block block-patch">
+      <div class="block-title">PATCH<sub>ENC</sub></div>
+      <div class="block-sub">Patching Module</div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:20px;"></div>
+
+    <!-- 2D Feature maps row -->
+    <div class="step-row" style="margin-bottom:4px; padding-left: 20px;">
+      <div class="feat-wrapper" style="margin-left:6px;">
+        <span class="dim-h">H'</span>
+        <div class="feat-grid">
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#ea580c;"></div>
+          <div class="feat-cell" style="background:#f97316;"></div>
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#c2410c;"></div>
+          <div class="feat-cell" style="background:#ea580c;"></div>
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#f97316;"></div>
+          <div class="feat-cell" style="background:#c2410c;"></div>
+          <div class="feat-cell" style="background:#ea580c;"></div>
+          <div class="feat-cell" style="background:#f97316;"></div>
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#c2410c;"></div>
+          <div class="feat-cell" style="background:#ea580c;"></div>
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#ea580c;"></div>
+          <div class="feat-cell" style="background:#f97316;"></div>
+          <div class="feat-cell" style="background:#fb923c;"></div>
+          <div class="feat-cell" style="background:#c2410c;"></div>
+          <div class="feat-cell" style="background:#f97316;"></div>
+        </div>
+        <span class="dim-w">W'</span>
+      </div>
+      <div class="step-label" style="margin-left:18px; margin-bottom: 14px;">
+        <span class="lbl-name" style="color:#ea580c;">2D Feature Maps</span>
+        <span class="lbl-formula">F<sub>i,j</sub> ∈ ℝ<sup>D</sup></span>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:18px;"></div>
+
+    <!-- CNN block -->
+    <div class="block block-cnn">
+      <div class="block-title">CNN</div>
+    </div>
+
+    <!-- connector -->
+    <div class="connector" style="height:22px;"></div>
+
+    <!-- Input image -->
+    <div style="padding: 0 10px;">
+      <div class="input-img">
+        <span class="h-lbl">H</span>
+        <span class="khmer" style="font-size:14px; letter-spacing:0.5px;">ប័ណ្ណ សម្ភាស បំបែកក័រ</span>
+        <span class="w-lbl">W</span>
+      </div>
+      <div class="img-caption">Figure 12<em>I</em></div>
+    </div>
+
+  </div><!-- end diagram-col -->
+
+  <!-- ═══════════════════════════════
+       ANNOTATION COLUMN
+  ═══════════════════════════════ -->
+  <div class="annotation-col">
+
+    <div class="ann-card output">
+      <h4><span class="dot" style="background:#ca8a04;"></span> Output — Predicted Characters</h4>
+      <p>The decoder outputs a probability distribution over <span class="f">C = 131</span> character classes at each step. The most likely character is selected autoregressively until the <span class="f">[EOS]</span> token is produced.</p>
+    </div>
+
+    <div class="ann-card decoder">
+      <h4><span class="dot" style="background:#2563eb;"></span> TR<sub>DEC</sub> — Transformer Decoder Units</h4>
+      <ul>
+        <li>Takes contextual features <span class="f">T</span> and context sequence <span class="f">Z = (SOS, y₁,…,yL)</span></li>
+        <li>Uses <strong>static position encoding</strong> for variable-length output</li>
+        <li>Autoregressive: predicts one character at a time, attending to all previous outputs</li>
+        <li>Equation: <span class="f">Ŷ = TR<sub>DEC</sub>(T, Z)</span> &nbsp;|&nbsp; Loss: <span class="f">CE(Ŷ, Y)</span></li>
+      </ul>
+    </div>
+
+    <div class="ann-card encoder">
+      <h4><span class="dot" style="background:#16a34a;"></span> TR<sub>ENC</sub> — Transformer Encoder Units</h4>
+      <ul>
+        <li>Receives patched features <span class="f">P = (P₁,…,P<sub>W'/k₁k₂</sub>)</span></li>
+        <li>Applies standard multi-head self-attention across all patches</li>
+        <li>Produces contextual features <span class="f">T</span> capturing spatial relationships</li>
+        <li>Equation: <span class="f">T = TR<sub>ENC</sub>(P)</span></li>
+      </ul>
+    </div>
+
+    <div class="ann-card patch">
+      <h4><span class="dot" style="background:#7c3aed;"></span> PATCH<sub>ENC</sub> — Patching Module</h4>
+      <ul>
+        <li>Splits 2D feature map <span class="f">F</span> into non-overlapping patches of size <span class="f">(k₁, k₂)</span></li>
+        <li>Each patch is linearly projected + position encoded → vector in <span class="f">ℝ<sup>D</sup></span></li>
+        <li>Equation: <span class="f">P = PATCH<sub>ENC(k₁,k₂)</sub>(F)</span></li>
+        <li>Asymmetric patches used: <span class="f">(2,1)</span>, <span class="f">(3,1)</span>, <span class="f">(4,1)</span></li>
+      </ul>
+    </div>
+
+    <div class="ann-card cnn">
+      <h4><span class="dot" style="background:#ea580c;"></span> CNN — Feature Extractor</h4>
+      <ul>
+        <li>Takes grayscale image <span class="f">I</span> of shape <span class="f">H × W</span></li>
+        <li>Outputs 2D feature maps <span class="f">F</span> of shape <span class="f">H' × W' × D</span></li>
+        <li>For 2D: <span class="f">H' = H/4, W' = W/4</span> (last MaxPool layers removed)</li>
+        <li>Equation: <span class="f">F = CNN(I)</span></li>
+        <li>Backbones: <strong>modified VGG</strong> or <strong>modified ResNet</strong></li>
+      </ul>
+    </div>
+
+    <!-- Data flow summary -->
+    <div class="flow-summary">
+      <h5>Complete Data Flow</h5>
+      <div class="eq">
+        <span style="color:#fb923c;">I</span>
+        <span style="color:#94a3b8;"> → CNN → </span>
+        <span style="color:#fb923c;">F<sub>i,j</sub></span>
+        <span style="color:#94a3b8;"> → PATCH<sub>ENC</sub> → </span>
+        <span style="color:#a78bfa;">P<sub>i</sub></span><br>
+        <span style="color:#a78bfa;">P<sub>i</sub></span>
+        <span style="color:#94a3b8;"> → TR<sub>ENC</sub> → </span>
+        <span style="color:#4ade80;">T<sub>i</sub></span>
+        <span style="color:#94a3b8;"> → TR<sub>DEC</sub>(T,Z) → </span>
+        <span style="color:#fbbf24;">Ŷ<sub>i</sub></span>
+      </div>
+    </div>
+
+  </div><!-- end annotation-col -->
+</div><!-- end main-layout -->
+
+<!-- Figure caption -->
+<div class="figure-caption">
+  <strong>FIGURE 12.</strong> The overall Transformer-based encoder-decoder architecture. The CNN module
+  takes an input image <em>I</em> and outputs 2D feature maps <em>F</em>, downsampled by
+  <strong>PATCH<sub>ENC</sub></strong> to generate <em>P</em>. To capture spatial feature dependencies,
+  <em>P</em> are fed to the Transformer encoder units <strong>TR<sub>ENC</sub></strong> to obtain <em>T</em>.
+  <em>T</em> and a context sequence <em>Z</em> are fed to the Transformer decoder units
+  <strong>TR<sub>DEC</sub></strong> to obtain the predicted characters <em>Ŷ</em>.
+  The architecture is <em>unified</em> (handles both 1D and 2D feature maps) and
+  <em>modular</em> (the CNN module can be included or excluded).
+</div>
+
+</body>
+</html>

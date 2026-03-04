@@ -5,8 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khmer OCR — Complete Architecture & Process Diagrams</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:wght@400;600;700&family=Noto+Sans+Khmer:wght@400;600;700&display=swap');
 
+
+  .khmer {
+    font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer OS', serif !important;
+    font-weight: 600;
+    line-height: 2;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
 
@@ -244,27 +250,27 @@
     <div class="vert-struct" style="flex-direction: column;">
       <div class="vert-row row1">
         <div class="vert-name">Row 1 — Superscript</div>
-        <div class="vert-char" style="color:#f59e0b;">◌់</div>
+        <div class="vert-char khmer" style="color:#f59e0b;">◌់</div>
         <div class="vert-desc">Tiny diacritics (~15% height)</div>
       </div>
       <div class="vert-row row2">
         <div class="vert-name">Row 2 — Above-base Vowel</div>
-        <div class="vert-char" style="color:#8b5cf6;">◌ី ◌ឹ ◌ើ</div>
+        <div class="vert-char khmer" style="color:#8b5cf6;">◌ី ◌ឹ ◌ើ</div>
         <div class="vert-desc">Above vowels (~25% height)</div>
       </div>
       <div class="vert-row row3">
         <div class="vert-name">Row 3 — Base Consonant</div>
-        <div class="vert-char" style="color:#3b82f6; font-size:1.8rem;">ក គ ស ន</div>
+        <div class="vert-char khmer" style="color:#3b82f6; font-size:1.8rem;">ក គ ស ន</div>
         <div class="vert-desc">Main character (100% size)</div>
       </div>
       <div class="vert-row row4">
         <div class="vert-name">Row 4 — Subscript Consonant (Coeng)</div>
-        <div class="vert-char" style="color:#10b981;">្ត ្រ ្ន</div>
+        <div class="vert-char khmer" style="color:#10b981;">្ត ្រ ្ន</div>
         <div class="vert-desc">Below consonants (~60% height)</div>
       </div>
       <div class="vert-row row5">
         <div class="vert-name">Row 5 — Below-base Vowel</div>
-        <div class="vert-char" style="color:#ec4899;">◌ុ ◌ូ</div>
+        <div class="vert-char khmer" style="color:#ec4899;">◌ុ ◌ូ</div>
         <div class="vert-desc">Below vowels (~25% height)</div>
       </div>
     </div>
@@ -273,13 +279,13 @@
   <!-- Right: example word -->
   <div style="flex:1; min-width:300px; max-width:480px;">
     <div style="background:#1e293b; border-radius:16px; border:1px solid #334155; padding:28px;">
-      <h3 style="color:#f1f5f9; font-size:1rem; margin-bottom:16px;">Example: "ស្ត្រី" (woman)</h3>
-      <div style="text-align:center; font-size:4rem; color:#38bdf8; margin:20px 0; font-family: serif;">ស្ត្រី</div>
+      <h3 style="color:#f1f5f9; font-size:1rem; margin-bottom:16px;">Example: "<span class="khmer">ស្ត្រី</span>" (woman)</h3>
+      <div class="khmer" style="text-align:center; font-size:4rem; color:#38bdf8; margin:20px 0;">ស្ត្រី</div>
       <div style="font-size:0.85rem; color:#94a3b8; line-height:2;">
-        <span style="color:#3b82f6; font-weight:700;">ស</span> — Base consonant (Row 3)<br>
-        <span style="color:#10b981; font-weight:700;">្ត</span> — Subscript "ta" below ស (Row 4)<br>
-        <span style="color:#10b981; font-weight:700;">្រ</span> — Subscript "ra" below ្ត (Row 4, deeper)<br>
-        <span style="color:#8b5cf6; font-weight:700;">ី</span> — Above vowel "ii" above ស (Row 2)
+        <span class="khmer" style="color:#3b82f6; font-weight:700;">ស</span> — Base consonant (Row 3)<br>
+        <span class="khmer" style="color:#10b981; font-weight:700;">្ត</span> — Subscript "ta" below <span class="khmer">ស</span> (Row 4)<br>
+        <span class="khmer" style="color:#10b981; font-weight:700;">្រ</span> — Subscript "ra" below <span class="khmer">្ត</span> (Row 4, deeper)<br>
+        <span class="khmer" style="color:#8b5cf6; font-weight:700;">ី</span> — Above vowel "ii" above <span class="khmer">ស</span> (Row 2)
       </div>
       <div class="note" style="margin-top:16px;">
         <strong>Key insight:</strong> This single word uses 4 of 5 vertical rows. A computer must identify ALL components and their relationships correctly.
@@ -492,7 +498,7 @@
         <span class="label">What each layer does:</span><br>
         1. <span class="highlight">Multi-Head Self-Attention:</span><br>
            Each patch asks "which other patches are relevant to me?"<br>
-           Example: vowel patch above ស attends to the ស consonant patch<br><br>
+           Example: vowel patch above <span class="khmer">ស</span> attends to the <span class="khmer">ស</span> consonant patch<br><br>
         2. <span class="highlight">Feed-Forward Network:</span><br>
            Refines each patch's representation independently<br><br>
         3. <span class="highlight">Layer Normalization + Residual Connection:</span><br>
@@ -517,19 +523,19 @@
         <span class="label">Step-by-step generation:</span><br><br>
         Step 0: Input = [START]<br>
         <span class="arrow">→</span> Attend to encoder output (all 64 patches)<br>
-        <span class="arrow">→</span> Predict: <span class="highlight">"ស"</span> (highest probability)<br><br>
-        Step 1: Input = [START, ស]<br>
+        <span class="arrow">→</span> Predict: <span class="highlight khmer">"ស"</span> (highest probability)<br><br>
+        Step 1: Input = [START, <span class="khmer">ស</span>]<br>
         <span class="arrow">→</span> Attend to encoder + previous character<br>
-        <span class="arrow">→</span> Predict: <span class="highlight">"្"</span> (coeng sign)<br><br>
-        Step 2: Input = [START, ស, ្]<br>
-        <span class="arrow">→</span> Predict: <span class="highlight">"ត"</span><br><br>
-        Step 3: Input = [START, ស, ្, ត, ្]<br>
-        <span class="arrow">→</span> Predict: <span class="highlight">"រ"</span><br><br>
-        Step 4: Input = [START, ស, ្, ត, ្, រ]<br>
-        <span class="arrow">→</span> Predict: <span class="highlight">"ី"</span><br><br>
-        Step 5: Input = [START, ស, ្, ត, ្, រ, ី]<br>
+        <span class="arrow">→</span> Predict: <span class="highlight khmer">"្"</span> (coeng sign)<br><br>
+        Step 2: Input = [START, <span class="khmer">ស, ្</span>]<br>
+        <span class="arrow">→</span> Predict: <span class="highlight khmer">"ត"</span><br><br>
+        Step 3: Input = [START, <span class="khmer">ស, ្, ត, ្</span>]<br>
+        <span class="arrow">→</span> Predict: <span class="highlight khmer">"រ"</span><br><br>
+        Step 4: Input = [START, <span class="khmer">ស, ្, ត, ្, រ</span>]<br>
+        <span class="arrow">→</span> Predict: <span class="highlight khmer">"ី"</span><br><br>
+        Step 5: Input = [START, <span class="khmer">ស, ្, ត, ្, រ, ី</span>]<br>
         <span class="arrow">→</span> Predict: <span class="highlight">[END]</span><br><br>
-        <span class="label">Final output:</span> <span class="highlight">"ស្ត្រី"</span> ✓
+        <span class="label">Final output:</span> <span class="highlight khmer">"ស្ត្រី"</span> ✓
       </div>
       <div class="note">
         <strong>Vocabulary size:</strong> ~120 tokens (114 Khmer Unicode codepoints + special tokens [PAD], [UNK], [START], [END])
@@ -559,18 +565,18 @@
 <div class="chunk-vis">
   <h3 style="color:#f1f5f9; margin-bottom:4px;">Step 1: Original Long Image</h3>
   <p style="font-size:0.82rem; color:#94a3b8; margin-bottom:8px;">A long sentence image: 64px tall × 2000px wide</p>
-  <div class="chunk-bar chunk-full" style="font-family:serif; font-size:1.2rem; letter-spacing:2px; justify-content:center;">
+  <div class="chunk-bar chunk-full khmer" style="font-size:1.2rem; letter-spacing:1px; justify-content:center;">
     ជំរាបសួរ អ្នកទាំងអស់គ្នា រស់នៅសុខសប្បាយទេ នេះជាប្រយោគវែងមួយ
   </div>
 
   <div class="chunk-label" style="margin-top:20px;">↓ Step 2: Split into overlapping chunks (W=400px each, overlap=100px)</div>
 
   <div class="chunk-pieces">
-    <div class="chunk-piece cp1" style="flex:1;">Chunk 1<br><span style="font-size:0.65rem;">ជំរាបសួរ អ្នក</span></div>
-    <div class="chunk-piece cp2" style="flex:1;">Chunk 2<br><span style="font-size:0.65rem;">អ្នកទាំងអស់គ្នា</span></div>
-    <div class="chunk-piece cp3" style="flex:1;">Chunk 3<br><span style="font-size:0.65rem;">គ្នា រស់នៅសុខ</span></div>
-    <div class="chunk-piece cp4" style="flex:1;">Chunk 4<br><span style="font-size:0.65rem;">សុខសប្បាយទេ នេះ</span></div>
-    <div class="chunk-piece cp5" style="flex:1;">Chunk 5<br><span style="font-size:0.65rem;">នេះជាប្រយោគវែង</span></div>
+    <div class="chunk-piece cp1" style="flex:1;">Chunk 1<br><span class="khmer" style="font-size:0.75rem;">ជំរាបសួរ អ្នក</span></div>
+    <div class="chunk-piece cp2" style="flex:1;">Chunk 2<br><span class="khmer" style="font-size:0.75rem;">អ្នកទាំងអស់គ្នា</span></div>
+    <div class="chunk-piece cp3" style="flex:1;">Chunk 3<br><span class="khmer" style="font-size:0.75rem;">គ្នា រស់នៅសុខ</span></div>
+    <div class="chunk-piece cp4" style="flex:1;">Chunk 4<br><span class="khmer" style="font-size:0.75rem;">សុខសប្បាយទេ នេះ</span></div>
+    <div class="chunk-piece cp5" style="flex:1;">Chunk 5<br><span class="khmer" style="font-size:0.75rem;">នេះជាប្រយោគវែង</span></div>
   </div>
 
   <div style="display:flex; gap:8px; margin:6px 0; flex-wrap:wrap;">
@@ -582,25 +588,25 @@
 
   <div style="display:flex; gap:8px; margin:8px 0;">
     <div style="flex:1; background:#0f172a; border-radius:8px; padding:10px; text-align:center; font-size:0.75rem; color:#93c5fd; border:1px solid #1e3a5f;">
-      Model → "ជំរាបសួរ អ្នក"<br><span style="color:#4ade80;">conf: 0.97</span>
+      Model → <span class="khmer">"ជំរាបសួរ អ្នក"</span><br><span style="color:#4ade80;">conf: 0.97</span>
     </div>
     <div style="flex:1; background:#0f172a; border-radius:8px; padding:10px; text-align:center; font-size:0.75rem; color:#c4b5fd; border:1px solid #2d1f5e;">
-      Model → "អ្នកទាំងអស់គ្នា"<br><span style="color:#4ade80;">conf: 0.95</span>
+      Model → <span class="khmer">"អ្នកទាំងអស់គ្នា"</span><br><span style="color:#4ade80;">conf: 0.95</span>
     </div>
     <div style="flex:1; background:#0f172a; border-radius:8px; padding:10px; text-align:center; font-size:0.75rem; color:#6ee7b7; border:1px solid #14532d;">
-      Model → "គ្នា រស់នៅសុខ"<br><span style="color:#4ade80;">conf: 0.96</span>
+      Model → <span class="khmer">"គ្នា រស់នៅសុខ"</span><br><span style="color:#4ade80;">conf: 0.96</span>
     </div>
     <div style="flex:1; background:#0f172a; border-radius:8px; padding:10px; text-align:center; font-size:0.75rem; color:#f9a8d4; border:1px solid #5e1f3d;">
-      Model → "សុខសប្បាយទេ នេះ"<br><span style="color:#4ade80;">conf: 0.94</span>
+      Model → <span class="khmer">"សុខសប្បាយទេ នេះ"</span><br><span style="color:#4ade80;">conf: 0.94</span>
     </div>
     <div style="flex:1; background:#0f172a; border-radius:8px; padding:10px; text-align:center; font-size:0.75rem; color:#fcd34d; border:1px solid #5e4a0f;">
-      Model → "នេះជាប្រយោគវែង"<br><span style="color:#4ade80;">conf: 0.93</span>
+      Model → <span class="khmer">"នេះជាប្រយោគវែង"</span><br><span style="color:#4ade80;">conf: 0.93</span>
     </div>
   </div>
 
   <div class="chunk-label">↓ Step 4: Merge predictions (use center-of-chunk text, discard edges)</div>
 
-  <div class="chunk-bar" style="background:linear-gradient(90deg, #14532d, #065f46); border:2px solid #22c55e; color:#6ee7b7; justify-content:center; font-family:serif; font-size:1.1rem;">
+  <div class="chunk-bar khmer" style="background:linear-gradient(90deg, #14532d, #065f46); border:2px solid #22c55e; color:#6ee7b7; justify-content:center; font-size:1.1rem;">
     ✓ ជំរាបសួរ អ្នកទាំងអស់គ្នា រស់នៅសុខសប្បាយទេ នេះជាប្រយោគវែងមួយ
   </div>
 
@@ -893,7 +899,7 @@
 <div class="fail-grid">
   <div class="fail-card">
     <h4>1. Low Resolution</h4>
-    <p>When images are below 40px tall, tiny diacritics become invisible. The difference between ក and ក់ (a single dot) disappears.</p>
+    <p>When images are below 40px tall, tiny diacritics become invisible. The difference between <span class="khmer">ក</span> and <span class="khmer">ក់</span> (a single dot) disappears.</p>
   </div>
   <div class="fail-card">
     <h4>2. Text Detector Errors</h4>
@@ -901,7 +907,7 @@
   </div>
   <div class="fail-card">
     <h4>3. Ambiguous Characters</h4>
-    <p>Some pairs like ◌ិ vs ◌ី differ by just one stroke length. At low quality, even humans struggle to distinguish them.</p>
+    <p>Some pairs like <span class="khmer">◌ិ</span> vs <span class="khmer">◌ី</span> differ by just one stroke length. At low quality, even humans struggle to distinguish them.</p>
   </div>
   <div class="fail-card">
     <h4>4. Rare Triple Clusters</h4>
