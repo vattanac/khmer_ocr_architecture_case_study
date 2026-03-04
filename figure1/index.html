@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khmer OCR — Language Challenges Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0f172a;--text:#e2e8f0;--dim:#64748b;--accent:#38bdf8;--border:#334155;--card:#1e293b;}
+body{font-family:'Kantumruy Pro','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+h1{text-align:center;padding:24px 20px 4px;font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,#38bdf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sub{text-align:center;color:var(--dim);font-size:0.82rem;margin-bottom:16px;}
+
+/* ── SVG diagram ── */
+.diagram-wrap{width:100%;max-width:820px;margin:0 auto;}
+svg text{font-family:'Kantumruy Pro','Segoe UI',system-ui,sans-serif;}
+
+/* ── Popup ── */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.popup-overlay.show{display:flex;}
+.popup{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:popIn .25s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
+.popup h2{font-size:1.15rem;margin-bottom:2px;}
+.popup .pn{font-size:1.2rem;color:var(--accent);margin-bottom:10px;}
+.popup ul{list-style:none;padding:0;}
+.popup li{padding:7px 0;border-bottom:1px solid var(--border);font-size:0.83rem;display:flex;gap:7px;align-items:flex-start;}
+.popup li:last-child{border:none;}
+.popup li .ic{font-size:1rem;flex-shrink:0;}
+.popup .closeb{margin-top:14px;width:100%;padding:9px;background:var(--accent);color:#0f172a;border:none;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;}
+.popup .closeb:hover{background:#7dd3fc;}
+
+/* ── Legend ── */
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;padding:8px 20px 28px;}
+.legend span{display:flex;align-items:center;gap:5px;font-size:0.72rem;color:var(--dim);}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+</style>
+</head>
+<body>
+<h1>Khmer OCR — Why Non-Latin Scripts Are Hard</h1>
+<p class="sub">Click any language to see its unique OCR challenges</p>
+
+<div class="diagram-wrap">
+<svg id="mainSvg" viewBox="0 0 820 720" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6Z" fill="#64748b"/></marker>
+    <linearGradient id="boxGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1d4ed8"/></linearGradient>
+    <linearGradient id="centerGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#1e40af"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.35"/></filter>
+  </defs>
+
+  <!-- Orbit ring -->
+  <ellipse cx="410" cy="360" rx="235" ry="235" fill="none" stroke="rgba(100,160,255,0.12)" stroke-width="2.5"/>
+
+  <!-- ══════ ARROWS (short, from center outward) ══════ -->
+  <!-- English (top, 12 o'clock) -->
+  <line x1="410" y1="325" x2="410" y2="195" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Vietnamese (top-right, ~1:30) -->
+  <line x1="440" y1="330" x2="565" y2="210" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Russian (right, 3 o'clock) -->
+  <line x1="475" y1="360" x2="620" y2="360" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Arabic (bottom-right, ~4:30) -->
+  <line x1="440" y1="390" x2="570" y2="510" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Japanese (bottom, 6 o'clock) -->
+  <line x1="410" y1="395" x2="410" y2="530" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Thai/Lao/Burmese (bottom-left, ~7:30) -->
+  <line x1="378" y1="390" x2="248" y2="510" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Hindi (left, 9 o'clock) -->
+  <line x1="345" y1="360" x2="200" y2="360" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+  <!-- Kannada (top-left, ~10:30) -->
+  <line x1="378" y1="330" x2="248" y2="210" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- ══════ CENTER: Khmer ══════ -->
+  <rect x="345" y="330" width="130" height="60" rx="14" fill="url(#centerGrad)" filter="url(#glow)" class="clickable" data-id="khmer"/>
+  <text x="410" y="358" text-anchor="middle" fill="#fff" font-size="22" font-weight="900">Khmer</text>
+  <!-- ភាសាខ្មែរ below center -->
+  <text x="410" y="415" text-anchor="middle" fill="#93c5fd" font-size="15" font-weight="700">ភាសាខ្មែរ</text>
+
+  <!-- ══════ LANGUAGE BOXES ══════ -->
+
+  <!-- English (top center) -->
+  <rect x="355" y="150" width="110" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="english"/>
+  <text x="410" y="175" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">English</text>
+
+  <!-- Vietnamese (top right) -->
+  <rect x="575" y="165" width="120" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="vietnamese"/>
+  <text x="635" y="190" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Vietnamese</text>
+
+  <!-- Russian (right) -->
+  <rect x="635" y="340" width="105" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="russian"/>
+  <text x="688" y="365" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Russian</text>
+
+  <!-- Arabic (bottom right) -->
+  <rect x="580" y="515" width="100" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="arabic"/>
+  <text x="630" y="540" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Arabic</text>
+
+  <!-- Japanese (bottom center) -->
+  <rect x="355" y="540" width="110" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="japanese"/>
+  <text x="410" y="565" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Japanese</text>
+
+  <!-- Thai, Lao, Burmese (bottom left) -->
+  <rect x="135" y="515" width="115" height="50" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="thai_lao"/>
+  <text x="192" y="537" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Thai, Lao,</text>
+  <text x="192" y="555" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Burmese</text>
+
+  <!-- Hindi (left) -->
+  <rect x="80" y="340" width="105" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="hindi"/>
+  <text x="133" y="365" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Hindi</text>
+
+  <!-- Kannada (top left) -->
+  <rect x="140" y="165" width="110" height="40" rx="10" fill="url(#boxGrad)" filter="url(#shadow)" class="clickable" data-id="kannada"/>
+  <text x="195" y="190" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Kannada</text>
+
+
+  <!-- ══════ NATIVE SCRIPT TEXT (offset from arrows) ══════ -->
+
+  <!-- Tiếng Việt — offset right of arrow -->
+  <text x="535" y="240" text-anchor="middle" fill="#cbd5e1" font-size="15" font-weight="700">Tiếng Việt</text>
+
+  <!-- Русский — above arrow line -->
+  <text x="580" y="345" text-anchor="middle" fill="#cbd5e1" font-size="16" font-weight="800">Русский</text>
+
+  <!-- عربي — offset right of arrow -->
+  <text x="545" y="475" text-anchor="middle" fill="#cbd5e1" font-size="17" font-weight="700">عربي</text>
+
+  <!-- 日本 — offset right of arrow -->
+  <text x="440" y="495" text-anchor="start" fill="#cbd5e1" font-size="22" font-weight="700">日本</text>
+
+  <!-- ประเทศไทย ລາວ မြန်မာ — offset left of arrow -->
+  <text x="280" y="450" text-anchor="middle" fill="#cbd5e1" font-size="12" font-weight="700">ประเทศไทย</text>
+  <text x="280" y="470" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">ລາວ</text>
+  <text x="280" y="492" text-anchor="middle" fill="#cbd5e1" font-size="13" font-weight="700">မြန်မာ</text>
+
+  <!-- हिन्दी — above arrow line -->
+  <text x="260" y="340" text-anchor="middle" fill="#cbd5e1" font-size="18" font-weight="800">हिन्दी</text>
+
+  <!-- ಕನ್ನಡ — offset left of arrow -->
+  <text x="290" y="252" text-anchor="middle" fill="#cbd5e1" font-size="16" font-weight="700">ಕನ್ನಡ</text>
+
+
+  <!-- ══════ RED ITALIC CHALLENGE LABELS (outer edge) ══════ -->
+
+  <!-- English: "Most worked-on" -->
+  <text x="410" y="138" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700" font-style="italic">Most worked-on</text>
+
+  <!-- Vietnamese: "A lot of unusual diacritics" -->
+  <text x="740" y="155" text-anchor="middle" fill="#fb923c" font-size="12" font-weight="700" font-style="italic">A lot of unusual</text>
+  <text x="740" y="170" text-anchor="middle" fill="#fb923c" font-size="12" font-weight="700" font-style="italic">diacritics</text>
+
+  <!-- Russian: "Case ambiguities" -->
+  <text x="688" y="400" text-anchor="middle" fill="#a78bfa" font-size="12.5" font-weight="700" font-style="italic">Case ambiguities</text>
+
+  <!-- Arabic: "Right-to-left, joined characters, shape change" -->
+  <text x="700" y="570" text-anchor="middle" fill="#a78bfa" font-size="11.5" font-weight="700" font-style="italic">Right-to-left, joined</text>
+  <text x="700" y="585" text-anchor="middle" fill="#a78bfa" font-size="11.5" font-weight="700" font-style="italic">characters, shape</text>
+  <text x="700" y="600" text-anchor="middle" fill="#a78bfa" font-size="11.5" font-weight="700" font-style="italic">change</text>
+
+  <!-- Japanese: "4 different scripts..." -->
+  <text x="410" y="600" text-anchor="middle" fill="#f472b6" font-size="11.5" font-weight="700" font-style="italic">4 different scripts</text>
+  <text x="410" y="615" text-anchor="middle" fill="#f472b6" font-size="11.5" font-weight="700" font-style="italic">(vertically &amp; horizontally),</text>
+  <text x="410" y="630" text-anchor="middle" fill="#f472b6" font-size="11.5" font-weight="700" font-style="italic">no word boundary</text>
+
+  <!-- Thai/Lao/Burmese: "Stacking diacritics..." -->
+  <text x="110" y="582" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700" font-style="italic">Stacking diacritics,</text>
+  <text x="110" y="597" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700" font-style="italic">ligatures, ambiguous</text>
+  <text x="110" y="612" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700" font-style="italic">character, no word</text>
+  <text x="110" y="627" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="700" font-style="italic">boundary</text>
+
+  <!-- Hindi: "Multiple Unicodes combine into ligature" -->
+  <text x="95" y="400" text-anchor="middle" fill="#f472b6" font-size="11.5" font-weight="700" font-style="italic">Multiple Unicodes</text>
+  <text x="95" y="415" text-anchor="middle" fill="#f472b6" font-size="11.5" font-weight="700" font-style="italic">combine into ligature</text>
+
+  <!-- Kannada: "29k possible graphemes..." -->
+  <text x="100" y="135" text-anchor="middle" fill="#fb923c" font-size="11.5" font-weight="700" font-style="italic">29k possible</text>
+  <text x="100" y="150" text-anchor="middle" fill="#fb923c" font-size="11.5" font-weight="700" font-style="italic">graphemes of 7 or</text>
+  <text x="100" y="165" text-anchor="middle" fill="#fb923c" font-size="11.5" font-weight="700" font-style="italic">more Unicodes</text>
+
+</svg>
+</div>
+
+<div class="legend">
+  <span><i style="background:#f472b6;"></i>Script structure</span>
+  <span><i style="background:#fb923c;"></i>Diacritics / marks</span>
+  <span><i style="background:#a78bfa;"></i>Direction / joining</span>
+  <span><i style="background:#22c55e;"></i>Well-resourced</span>
+</div>
+
+<!-- Popup -->
+<div class="popup-overlay" id="po" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="popup" id="pc" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+const D = {
+  khmer:{name:'Khmer',native:'ភាសាខ្មែរ',c:[
+    {i:'📐',t:'5-row vertical structure: superscript, above-base, base, subscript, sub-base'},
+    {i:'🔣',t:'Multiple Unicode codepoints combine into single visible characters'},
+    {i:'🚫',t:'No spaces between words — only between phrases/clauses'},
+    {i:'📏',t:'Characters extend both above and below the baseline significantly'},
+    {i:'🔗',t:'Subscript consonants (coeng) change shape when stacked below'},
+    {i:'🌐',t:'Extremely low-resource: very limited training data available'},
+    {i:'🎯',t:"This paper's focus: building a complete OCR baseline for Khmer"},
+  ]},
+  english:{name:'English',native:'English',c:[
+    {i:'✅',t:'Most studied language in OCR — huge datasets, strong baselines'},
+    {i:'🔤',t:'Simple left-to-right alphabet, clear word boundaries with spaces'},
+    {i:'📏',t:'Fixed character height — no stacking or vertical complexity'},
+    {i:'🎯',t:'Acts as the benchmark: other scripts are compared against English performance'},
+  ]},
+  vietnamese:{name:'Vietnamese',native:'Tiếng Việt',c:[
+    {i:'🔣',t:'Latin-based but heavy diacritics (ă, ơ, ư, ễ, ờ) — 100+ unique characters'},
+    {i:'📐',t:'Diacritics stack above AND below — increases vertical complexity'},
+    {i:'🔍',t:'Tiny marks critically change meaning: a vs ạ vs ả vs ã vs á vs à'},
+    {i:'🌐',t:"Shares Khmer's challenge: small marks carry big semantic weight"},
+  ]},
+  russian:{name:'Russian',native:'Русский',c:[
+    {i:'🔠',t:'Cyrillic: visually similar to Latin (В=B, Н=H, Р=P) — confuses models'},
+    {i:'🔄',t:'Upper/lowercase shapes differ significantly for some letters'},
+    {i:'📝',t:'Cursive forms drastically different from print'},
+    {i:'🎯',t:'Relatively well-resourced — moderate OCR difficulty'},
+  ]},
+  arabic:{name:'Arabic',native:'عربي',c:[
+    {i:'↩️',t:'Right-to-left reading — requires different text line processing'},
+    {i:'🔗',t:'Characters join together (cursive by default) — segmentation is hard'},
+    {i:'🔀',t:'Each letter has 4 forms: isolated, initial, medial, final'},
+    {i:'📐',t:'Dots & diacritics above/below change letter identity entirely'},
+  ]},
+  japanese:{name:'Japanese',native:'日本',c:[
+    {i:'🔣',t:'4 scripts mixed: Hiragana, Katakana, Kanji, Romaji'},
+    {i:'↕️',t:'Can be written vertically OR horizontally'},
+    {i:'🚫',t:'No spaces between words — word boundary detection is separate'},
+    {i:'📚',t:'Thousands of Kanji characters — massive vocabulary'},
+  ]},
+  thai_lao:{name:'Thai, Lao, Burmese',native:'ประเทศไทย / ລາວ / မြန်မာ',c:[
+    {i:'📐',t:'Stacking diacritics above and below — vertical complexity like Khmer'},
+    {i:'🔗',t:'Ligatures: multiple Unicode codepoints fuse into one visual glyph'},
+    {i:'🚫',t:'No word boundaries (no spaces) — same challenge as Khmer'},
+    {i:'🎯',t:'Most similar to Khmer — best candidates for transfer learning'},
+  ]},
+  hindi:{name:'Hindi',native:'हिन्दी',c:[
+    {i:'🔗',t:'Devanagari: consonant clusters form complex ligatures (conjuncts)'},
+    {i:'📐',t:'Characters connect via horizontal top-line (Shirorekha)'},
+    {i:'🔣',t:'Multiple Unicode codepoints combine into single visual glyphs'},
+    {i:'🌐',t:"Shares Khmer's multi-codepoint challenge — 1 glyph ≠ 1 character"},
+  ]},
+  kannada:{name:'Kannada',native:'ಕನ್ನಡ',c:[
+    {i:'💥',t:'29,000+ possible graphemes — enormous output vocabulary'},
+    {i:'🔣',t:'Graphemes composed of 7+ Unicode codepoints each'},
+    {i:'📐',t:'Complex conjuncts and vowel signs modify base characters'},
+    {i:'🧩',t:'Extreme combinatorial complexity — hardest for char-level models'},
+  ]},
+};
+
+// Click handler on SVG boxes
+document.querySelectorAll('.clickable').forEach(el => {
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    const id = el.dataset.id;
+    if (!id || !D[id]) return;
+    const d = D[id];
+    document.getElementById('pc').innerHTML = `
+      <h2>${d.name}</h2>
+      <div class="pn">${d.native}</div>
+      <ul>${d.c.map(x=>`<li><span class="ic">${x.i}</span><span>${x.t}</span></li>`).join('')}</ul>
+      <button class="closeb" onclick="document.getElementById('po').classList.remove('show')">Close</button>
+    `;
+    document.getElementById('po').classList.add('show');
+  });
+});
+
+// Also make the text labels clickable by adding click to the nearest rect
+document.querySelectorAll('text').forEach(t => {
+  // Find if previous sibling is a clickable rect
+  const prev = t.previousElementSibling;
+  if (prev && prev.classList.contains('clickable')) {
+    t.style.cursor = 'pointer';
+    t.style.pointerEvents = 'auto';
+    t.addEventListener('click', () => prev.dispatchEvent(new Event('click')));
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('po').classList.remove('show');
+});
+
+// Hover effects
+document.querySelectorAll('.clickable').forEach(el => {
+  el.addEventListener('mouseenter', () => { el.style.filter = 'brightness(1.3)'; el.style.transition = 'filter 0.2s'; });
+  el.addEventListener('mouseleave', () => { el.style.filter = ''; });
+});
+</script>
+</body>
+</html>
