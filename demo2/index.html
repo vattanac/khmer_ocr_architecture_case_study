@@ -95,6 +95,32 @@
   .chunk-bar .shimmer{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);animation:shimmer 2s infinite;}
   @keyframes shimmer{0%{left:-100%;}100%{left:100%;}}
 
+  /* ── PAUSE / RESUME ANIMATION STYLES ── */
+  .pipe-icon.paused{
+    animation:pausedPulse 1.4s ease-in-out infinite !important;
+    box-shadow:0 0 28px rgba(245,158,11,0.6) !important;
+  }
+  @keyframes pausedPulse{
+    0%,100%{box-shadow:0 0 16px rgba(245,158,11,0.35);opacity:1;}
+    50%{box-shadow:0 0 42px rgba(245,158,11,0.8);opacity:0.72;}
+  }
+  #pauseBtn{transition:all 0.2s;}
+  #pauseBtn.is-resume{
+    background:rgba(56,189,248,0.12);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .pipe-label-paused{
+    display:inline-block;
+    font-size:0.68rem;
+    font-weight:700;
+    color:var(--orange);
+    letter-spacing:0.4px;
+    margin-top:4px;
+    animation:pausedPulse 1.4s ease-in-out infinite;
+  }
+  /* ──────────────────────────────────── */
+
   /* RESULTS */
   .bar-chart{margin:16px 0;}
   .bar-row{display:flex;align-items:center;gap:10px;margin:8px 0;}
@@ -200,9 +226,10 @@
     <!-- Filled by JS -->
   </div>
 
-  <!-- Auto-play -->
+  <!-- Auto-play controls -->
   <div style="text-align:center;margin-top:20px;">
     <button class="btn btn-primary" id="autoPlayBtn">▶ Auto-Play Full Pipeline</button>
+    <button class="btn btn-outline" id="pauseBtn" style="margin-left:8px;display:none;">⏸ Pause</button>
     <button class="btn btn-outline" id="resetBtn" style="margin-left:8px;">↺ Reset</button>
   </div>
 </div>
@@ -210,7 +237,7 @@
 <!-- ═══════════════ SECTION 2: CHUNKING ═══════════════ -->
 <div class="section" id="sec-chunking">
   <div class="section-head">
-    <h2>Image Chunking & Merging</h2>
+    <h2>Image Chunking &amp; Merging</h2>
     <p>See how long text lines are split into overlapping chunks for efficient processing.</p>
   </div>
 
@@ -268,7 +295,7 @@
 <!-- ═══════════════ SECTION 3: RESULTS ═══════════════ -->
 <div class="section" id="sec-results">
   <div class="section-head">
-    <h2>Results & Performance</h2>
+    <h2>Results &amp; Performance</h2>
     <p>Interactive comparison of CER (Character Error Rate) across all datasets and models.</p>
   </div>
 
@@ -362,12 +389,9 @@
 
 <script>
 // ═══════════════ SPEED CONTROL ═══════════════
-// speed multiplier: 1.0 = normal, 0.5 = half speed (slower), 2.0 = double speed (faster)
-// We INVERT it for delays: delay = baseDelay / speedMultiplier
 let SPEED = 1.0;
 function T(ms) { return Math.round(ms / SPEED); }
 
-// Speed buttons
 document.querySelectorAll('.speed-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     SPEED = parseFloat(btn.dataset.speed);
@@ -379,38 +403,30 @@ document.querySelectorAll('.speed-btn').forEach(btn => {
   });
 });
 
-// Speed slider
 document.getElementById('speedSlider').addEventListener('input', (e) => {
   SPEED = parseInt(e.target.value) / 100;
   document.getElementById('speedDisplay').textContent = SPEED.toFixed(1) + 'x';
   document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
-  // Highlight matching preset if close
   document.querySelectorAll('.speed-btn').forEach(b => {
     if (Math.abs(parseFloat(b.dataset.speed) - SPEED) < 0.05) b.classList.add('active');
   });
   updateCSSTransitions();
 });
 
-// Update CSS-based transitions dynamically
 function updateCSSTransitions() {
   const root = document.documentElement;
-  // Pipeline connector fill
   document.querySelectorAll('.pipe-connector .fill').forEach(el => {
     el.style.transition = `width ${(1.5 / SPEED).toFixed(1)}s ease`;
   });
-  // Decoder chars
   document.querySelectorAll('.decoder-char').forEach(el => {
     el.style.transition = `all ${(0.7 / SPEED).toFixed(1)}s`;
   });
-  // Feature map cells
   document.querySelectorAll('.fm-cell').forEach(el => {
     el.style.transition = `all ${(0.6 / SPEED).toFixed(1)}s`;
   });
-  // Bar chart fills
   document.querySelectorAll('.bar-fill').forEach(el => {
     el.style.transition = `width ${(2 / SPEED).toFixed(1)}s cubic-bezier(0.4,0,0.2,1)`;
   });
-  // Pipe icons
   document.querySelectorAll('.pipe-icon').forEach(el => {
     el.style.transition = `all ${(0.8 / SPEED).toFixed(1)}s`;
   });
@@ -526,10 +542,13 @@ buildPipeline();
 function resetPipeline() {
   currentStage = 0;
   STAGES.forEach((_, i) => {
-    document.getElementById('icon-' + i).classList.remove('active', 'done');
+    document.getElementById('icon-' + i).classList.remove('active', 'done', 'paused');
     document.getElementById('name-' + i).classList.remove('active');
     const conn = document.getElementById('conn-' + i);
     if (conn) conn.style.width = '0%';
+    // Remove any paused label
+    const lbl = document.getElementById('pausedLabel-' + i);
+    if (lbl) lbl.remove();
   });
 }
 
@@ -539,8 +558,10 @@ function goToStage(idx) {
     const icon = document.getElementById('icon-' + i);
     const name = document.getElementById('name-' + i);
     const conn = document.getElementById('conn-' + i);
-    icon.classList.remove('active', 'done');
+    icon.classList.remove('active', 'done', 'paused');
     name.classList.remove('active');
+    const lbl = document.getElementById('pausedLabel-' + i);
+    if (lbl) lbl.remove();
     if (i < idx) { icon.classList.add('done'); if (conn) conn.style.width = '100%'; }
     else if (i === idx) { icon.classList.add('active'); name.classList.add('active'); }
     else { if (conn) conn.style.width = '0%'; }
@@ -554,7 +575,6 @@ function showStageDetail(idx) {
   const s = SAMPLES[currentSample];
   const html = stageContent[idx](s);
   panel.innerHTML = html;
-  // Animate feature map if present
   if (idx === 1) animateFeatureMap();
   if (idx === 4) animateDecoder(s);
 }
@@ -756,14 +776,122 @@ function animateDecoder(s) {
   });
 }
 
-// Auto-play
-document.getElementById('autoPlayBtn').addEventListener('click', () => {
-  resetPipeline();
+// ═══════════════ AUTO-PLAY WITH PAUSE / RESUME ═══════════════
+let _isPlaying = false;
+let _isPaused  = false;
+let _pausedAt  = 0;          // last stage index that was shown
+let _playQueue = [];         // pending setTimeout IDs
+
+const autoPlayBtn = document.getElementById('autoPlayBtn');
+const pauseBtn    = document.getElementById('pauseBtn');
+const resetBtn    = document.getElementById('resetBtn');
+
+function _clearQueue() {
+  _playQueue.forEach(id => clearTimeout(id));
+  _playQueue = [];
+}
+
+// Apply amber "paused" glow + label to the current icon
+function _applyPausedVisual(idx) {
+  const icon = document.getElementById('icon-' + idx);
+  if (icon) icon.classList.add('paused');
+  // Insert a small "PAUSED" label below the stage name if not already there
+  const nameEl = document.getElementById('name-' + idx);
+  if (nameEl && !document.getElementById('pausedLabel-' + idx)) {
+    const lbl = document.createElement('div');
+    lbl.id = 'pausedLabel-' + idx;
+    lbl.className = 'pipe-label-paused';
+    lbl.textContent = '⏸ PAUSED';
+    nameEl.parentNode.insertBefore(lbl, nameEl.nextSibling);
+  }
+}
+
+// Remove paused visual from ALL stages
+function _clearPausedVisual() {
   STAGES.forEach((_, i) => {
-    setTimeout(() => goToStage(i), T(i * 3500));
+    const icon = document.getElementById('icon-' + i);
+    if (icon) icon.classList.remove('paused');
+    const lbl = document.getElementById('pausedLabel-' + i);
+    if (lbl) lbl.remove();
   });
+}
+
+function _startFrom(fromStage) {
+  _isPlaying = true;
+  _isPaused  = false;
+  autoPlayBtn.textContent = '▶ Playing…';
+  autoPlayBtn.disabled = true;
+  pauseBtn.style.display = 'inline-flex';
+  pauseBtn.textContent = '⏸ Pause';
+  pauseBtn.classList.remove('is-resume');
+
+  let delay = 0;
+  for (let i = fromStage; i < STAGES.length; i++) {
+    const idx = i;
+    const id = setTimeout(() => {
+      if (_isPaused) return;   // safety guard
+      _pausedAt = idx;
+      goToStage(idx);
+
+      if (idx === STAGES.length - 1) {
+        // Finished
+        _isPlaying = false;
+        pauseBtn.style.display = 'none';
+        autoPlayBtn.textContent = '▶ Auto-Play Full Pipeline';
+        autoPlayBtn.disabled = false;
+      }
+    }, delay);
+    _playQueue.push(id);
+    delay += T(3500);
+  }
+}
+
+autoPlayBtn.addEventListener('click', () => {
+  _clearQueue();
+  _clearPausedVisual();
+  resetPipeline();
+  showStageDetail(0);
+  _pausedAt = 0;
+  _startFrom(0);
 });
-document.getElementById('resetBtn').addEventListener('click', () => {
+
+pauseBtn.addEventListener('click', () => {
+  if (!_isPaused) {
+    // ── PAUSE ──
+    _isPaused = true;
+    _clearQueue();
+    _applyPausedVisual(_pausedAt);
+    pauseBtn.textContent = '▶ Resume';
+    pauseBtn.classList.add('is-resume');
+  } else {
+    // ── RESUME ──
+    _isPaused = false;
+    _clearPausedVisual();
+    pauseBtn.textContent = '⏸ Pause';
+    pauseBtn.classList.remove('is-resume');
+    const nextStage = _pausedAt + 1;
+    if (nextStage >= STAGES.length) {
+      // Already at last stage — wrap up
+      _isPlaying = false;
+      pauseBtn.style.display = 'none';
+      autoPlayBtn.textContent = '▶ Auto-Play Full Pipeline';
+      autoPlayBtn.disabled = false;
+    } else {
+      _startFrom(nextStage);
+    }
+  }
+});
+
+resetBtn.addEventListener('click', () => {
+  _clearQueue();
+  _clearPausedVisual();
+  _isPlaying = false;
+  _isPaused  = false;
+  _pausedAt  = 0;
+  pauseBtn.style.display = 'none';
+  pauseBtn.classList.remove('is-resume');
+  autoPlayBtn.textContent = '▶ Auto-Play Full Pipeline';
+  autoPlayBtn.disabled = false;
   resetPipeline();
   showStageDetail(0);
 });
@@ -792,7 +920,6 @@ document.getElementById('runChunking').addEventListener('click', () => {
   const numChunks = Math.ceil((W - O) / step);
   const colors = ['#3b82f6','#8b5cf6','#10b981','#ec4899','#f59e0b','#06b6d4','#ef4444','#84cc16'];
 
-  // Compute complexity
   const noChunk = W * W;
   const withChunk = numChunks * C * C;
   const speedupVal = (noChunk / withChunk).toFixed(1);
@@ -801,7 +928,6 @@ document.getElementById('runChunking').addEventListener('click', () => {
   document.getElementById('withChunkOps').textContent = withChunk.toLocaleString();
   document.getElementById('speedup').textContent = speedupVal + '× faster!';
 
-  // Show pieces
   const piecesDiv = document.getElementById('chunkPieces');
   piecesDiv.style.display = 'block';
   piecesDiv.innerHTML = `<div style="font-size:0.85rem;font-weight:700;color:#94a3b8;margin-bottom:8px;">Step 2 — Split into ${numChunks} overlapping chunks:</div>`;
@@ -820,7 +946,6 @@ document.getElementById('runChunking').addEventListener('click', () => {
   row.style.position = 'relative';
   piecesDiv.appendChild(row);
 
-  // Show processed
   setTimeout(() => {
     const procDiv = document.getElementById('chunkProcessed');
     procDiv.style.display = 'block';
@@ -834,7 +959,6 @@ document.getElementById('runChunking').addEventListener('click', () => {
     </div>`;
   }, T(numChunks * 500 + 1500));
 
-  // Show merged
   setTimeout(() => {
     const mergedDiv = document.getElementById('chunkMerged');
     mergedDiv.style.display = 'block';
@@ -858,7 +982,6 @@ document.querySelectorAll('.inner-tab').forEach(tab => {
 });
 
 function animateResults() {
-  // Find active tab
   const activeTab = document.querySelector('#sec-results .inner-tab.active');
   if (!activeTab) return;
   const key = activeTab.dataset.rtab;
