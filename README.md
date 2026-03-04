@@ -37,10 +37,11 @@ All research, models, and architectural concepts referenced in this project belo
 
 ---
 
+## 📖 References
 
-📖 **References**
-
-Research papers and resources reviewed in this case study are documented within each demo. Proper attribution is given to the original authors. [Source](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10316307)
+Research papers and resources reviewed in this case study are documented within each demo. Proper attribution is given to the original authors.
+---
+[source ](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10316307)
 ---
 
 *Built for personal study | Not intended for production use*
