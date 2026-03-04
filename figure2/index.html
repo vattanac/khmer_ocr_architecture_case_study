@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 2 — Stacked Characters &amp; No Explicit Word Boundaries</title>
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;700;900&family=Noto+Sans+Thai:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:30px 20px 50px;}
+
+.figure{max-width:880px;margin:0 auto;}
+
+/* Title */
+.fig-title{text-align:center;font-size:1.1rem;font-weight:700;color:#94a3b8;margin-bottom:28px;letter-spacing:0.02em;}
+.fig-title span{color:#38bdf8;}
+
+/* ── Section ── */
+.section{margin-bottom:36px;}
+.section-header{text-align:center;font-size:1.15rem;font-weight:800;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #334155;color:#e2e8f0;}
+.section-header .num{color:#38bdf8;}
+
+/* ── Row of script samples ── */
+.samples-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;}
+
+/* ── Single script sample card ── */
+.sample{flex:1;min-width:220px;max-width:300px;}
+.sample-label{font-size:0.82rem;font-weight:700;color:#94a3b8;margin-bottom:6px;}
+.sample-label .num{color:#64748b;font-weight:600;}
+
+.sample-box{border-radius:10px;padding:18px 14px;display:flex;align-items:center;justify-content:center;min-height:72px;position:relative;overflow:hidden;}
+
+/* Specific background colors matching original */
+.bg-khmer1{background:#e8e0d0;}
+.bg-thai1{background:#00b359;}
+.bg-viet1{background:#0a0a5c;}
+.bg-khmer2{background:#ff3399;}
+.bg-thai2{background:#c4a8b8;}
+.bg-japanese{background:#333333;}
+
+/* Script text styles */
+.script-text{font-weight:700;line-height:1.2;text-align:center;white-space:nowrap;}
+.script-text.khmer1{font-family:'Kantumruy Pro','Noto Sans Khmer',sans-serif;font-size:2.2rem;color:#1a1a2e;}
+.script-text.thai1{font-family:'Noto Sans Thai',sans-serif;font-size:1.8rem;color:#006600;}
+.script-text.viet1{font-family:'Inter',sans-serif;font-size:2rem;color:#4488cc;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;}
+
+.script-text.khmer2{font-family:'Kantumruy Pro','Noto Sans Khmer',sans-serif;font-size:1.6rem;color:#1a1a2e;}
+.script-text.thai2{font-family:'Noto Sans Thai',sans-serif;font-size:1.5rem;color:#4444aa;}
+.script-text.japanese{font-family:'Noto Sans JP',sans-serif;font-size:2.8rem;color:#f0f0f0;font-weight:700;letter-spacing:0.05em;}
+
+/* ── Full-width sample (section 2) ── */
+.sample-full{max-width:100%;min-width:0;flex:1 1 100%;}
+.sample-full .sample-box{min-height:65px;padding:14px 20px;}
+
+/* ── Annotation highlights ── */
+.highlight-bar{position:absolute;bottom:0;left:0;right:0;height:4px;opacity:0.7;}
+.highlight-bar.stack{background:linear-gradient(90deg,#f472b6,#fb923c);}
+.highlight-bar.noword{background:linear-gradient(90deg,#a78bfa,#38bdf8);}
+
+/* ── Tooltip annotations ── */
+.annotation{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:6px;font-size:0.72rem;color:#64748b;font-style:italic;}
+.ann-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ── Interactive hover effect ── */
+.sample-box{transition:transform 0.25s,box-shadow 0.25s;cursor:default;}
+.sample-box:hover{transform:scale(1.03);box-shadow:0 8px 30px rgba(0,0,0,0.4);}
+
+/* ── Stacking visualization overlay ── */
+.stack-lines{position:absolute;left:8px;top:0;bottom:0;width:3px;display:flex;flex-direction:column;justify-content:space-evenly;opacity:0;transition:opacity 0.3s;}
+.sample-box:hover .stack-lines{opacity:1;}
+.stack-line{width:100%;height:2px;border-radius:1px;}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .samples-row{flex-direction:column;align-items:center;}
+  .sample{min-width:90%;max-width:100%;}
+  .script-text.japanese{font-size:2rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="figure">
+  <div class="fig-title"><span>Figure 2</span> — Key OCR Challenges in Non-Latin Scripts</div>
+
+  <!-- ═══════ SECTION 1: Stacked Characters ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">(1)</span> Stacked Characters</div>
+    <div class="samples-row">
+
+      <!-- (1a) Khmer -->
+      <div class="sample">
+        <div class="sample-label"><span class="num">(1a)</span> Khmer</div>
+        <div class="sample-box bg-khmer1">
+          <div class="script-text khmer1">4ល្បែងកំសាន្ត</div>
+          <div class="stack-lines">
+            <div class="stack-line" style="background:#ef4444;"></div>
+            <div class="stack-line" style="background:#fb923c;"></div>
+            <div class="stack-line" style="background:#fbbf24;"></div>
+            <div class="stack-line" style="background:#22c55e;"></div>
+            <div class="stack-line" style="background:#3b82f6;"></div>
+          </div>
+          <div class="highlight-bar stack"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#f472b6;"></div>5-row vertical stacking (super → sub-base)</div>
+      </div>
+
+      <!-- (1b) Thai -->
+      <div class="sample">
+        <div class="sample-label"><span class="num">(1b)</span> Thai</div>
+        <div class="sample-box bg-thai1">
+          <div class="script-text thai1" style="color:#003300;">เพื่อเก็บค่ะ</div>
+          <div class="stack-lines">
+            <div class="stack-line" style="background:#ef4444;"></div>
+            <div class="stack-line" style="background:#fbbf24;"></div>
+            <div class="stack-line" style="background:#3b82f6;"></div>
+          </div>
+          <div class="highlight-bar stack"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#f472b6;"></div>Above-base &amp; below-base marks</div>
+      </div>
+
+      <!-- (1c) Vietnamese -->
+      <div class="sample">
+        <div class="sample-label"><span class="num">(1c)</span> Vietnamese</div>
+        <div class="sample-box bg-viet1">
+          <div class="script-text viet1">VIỆC GẤU</div>
+          <div class="stack-lines">
+            <div class="stack-line" style="background:#ef4444;"></div>
+            <div class="stack-line" style="background:#fbbf24;"></div>
+          </div>
+          <div class="highlight-bar stack"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#fb923c;"></div>Diacritics above &amp; below (Ệ, Ấ)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ SECTION 2: No Explicit Word Boundaries ═══════ -->
+  <div class="section">
+    <div class="section-header"><span class="num">(2)</span> No Explicit Word Boundaries</div>
+
+    <!-- (2a) Khmer -->
+    <div class="samples-row">
+      <div class="sample sample-full">
+        <div class="sample-label"><span class="num">(2a)</span> Khmer</div>
+        <div class="sample-box bg-khmer2">
+          <div class="script-text khmer2">ផ្ដើលគេសបរចៅ) មៃវីអណ្ឌែពោះ ឆ្នំ២ ០១៦</div>
+          <div class="highlight-bar noword"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#a78bfa;"></div>No spaces between words — only between phrases/clauses</div>
+      </div>
+    </div>
+
+    <!-- (2b) Thai -->
+    <div class="samples-row">
+      <div class="sample sample-full">
+        <div class="sample-label"><span class="num">(2b)</span> Thai</div>
+        <div class="sample-box bg-thai2">
+          <div class="script-text thai2" style="color:#3333aa;">คล้องไกด์ เดสก์ำวิเคราะห์เสนอแทนกลุ่มสัตว์พฤษภาคม</div>
+          <div class="highlight-bar noword"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#a78bfa;"></div>Continuous script — no visible word breaks</div>
+      </div>
+    </div>
+
+    <!-- (2c) Japanese -->
+    <div class="samples-row">
+      <div class="sample sample-full">
+        <div class="sample-label"><span class="num">(2c)</span> Japanese</div>
+        <div class="sample-box bg-japanese">
+          <div class="script-text japanese">日本語を学びたいです</div>
+          <div class="highlight-bar noword"></div>
+        </div>
+        <div class="annotation"><div class="ann-dot" style="background:#a78bfa;"></div>Mixed scripts (Kanji + Hiragana), no word boundaries</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
