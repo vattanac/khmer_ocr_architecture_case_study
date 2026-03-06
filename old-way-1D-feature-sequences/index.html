@@ -1370,69 +1370,414 @@
 
   <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">Encoded sequence T (248 × 256)</div></div>
 
-  <!-- STEP 5 -->
+  <!-- STEP 5 — FULL TECHNICAL DEEP-DIVE -->
   <div class="step s5">
     <div class="step-accent-bar"></div>
     <div class="step-header">
       <div class="step-num">05</div>
       <div class="step-meta">
-        <div class="step-name">TR_DEC — Decoder generates text character by character</div>
-        <div class="step-subtitle">Autoregressive · one character per step · outputs over 131 Khmer classes</div>
+        <div class="step-name">TR_DEC — Transformer Decoder · Full Technical Deep-Dive</div>
+        <div class="step-subtitle">What the decoder does · Autoregressive loop · Cross-attention · SOS/EOS tokens · 131-class output</div>
       </div>
     </div>
     <div class="step-body">
-      The Transformer Decoder reads the encoded sequence and generates output text
-      <strong>one character at a time</strong>. At each step it outputs a probability over all C = 131 Khmer
-      characters, then feeds that character back as input for the next step.
-      The decoder itself is <em>not</em> the bottleneck — the bottleneck is TR_ENC's O(n²) attention.
+      The Transformer Decoder takes the encoded image context <strong>T</strong> (248 × 256) from TR_ENC
+      and produces the output text <strong>one character at a time</strong>, using everything it has already
+      predicted to decide what comes next.
     </div>
     <div class="viz">
-      <div class="decoder-viz">
-        <!-- Encoded sequence -->
-        <div class="enc-block">
-          <div class="enc-block-title">ENCODED SEQUENCE T</div>
-          <div class="enc-tokens" id="encTokens"></div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px;">248 vectors × 256-dim</div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 1 — THE BIG PICTURE                           -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          🗺️ Part 1 — The Big Picture: Encoder vs Decoder roles
         </div>
-        <!-- Arrow -->
-        <div style="font-size:24px;color:var(--accent);flex-shrink:0;align-self:center;">→</div>
-        <!-- Decoder output -->
-        <div class="dec-flow" style="flex:1;min-width:180px;">
-          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Output characters (step by step)</div>
-          <div class="char-output">
-            <div class="char-box done">ត</div>
-            <div class="char-box done">ា</div>
-            <div class="char-box done">ក</div>
-            <div class="char-box done">ែ</div>
-            <div class="char-box done">វ</div>
-            <div class="char-box active">?</div>
-            <div class="char-box pending">…</div>
+
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+          <!-- Encoder box -->
+          <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:14px 16px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:8px;letter-spacing:1px;">TR_ENC (Step 4) — done</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.7;">
+              Reads the <strong style="color:#fff;">entire image</strong> all at once.
+              Produces a rich contextual summary <strong style="color:var(--accent2);">T</strong> (248 vectors)
+              that encodes every visual feature with global context.
+              <br><br>
+              Think of it as a <strong style="color:#fff;">librarian who has read the whole book</strong>
+              and can answer any question about it.
+            </div>
           </div>
-          <div class="prob-bar">
-            <div class="prob-bar-title">Probability at current step (over 131 chars)</div>
-            <div class="prob-row">
-              <div class="prob-char">គ</div>
-              <div class="prob-track"><div class="prob-fill top" style="width:72%;"></div></div>
-              <div class="prob-pct">72%</div>
+          <div style="text-align:center;font-size:26px;color:var(--muted);">→<br><span style="font-family:var(--mono);font-size:9px;color:var(--muted);">T passes</span></div>
+          <!-- Decoder box -->
+          <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:12px;padding:14px 16px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:8px;letter-spacing:1px;">TR_DEC (Step 5) — now</div>
+            <div style="font-size:13px;color:#94a3b8;line-height:1.7;">
+              <strong style="color:#fff;">Does not see the image directly.</strong>
+              Only sees T (the encoded summary) and the characters it has already predicted.
+              Its job: <strong style="color:var(--accent);">predict the next character</strong>, one at a time.
+              <br><br>
+              Think of it as a <strong style="color:#fff;">scribe who asks the librarian questions</strong>
+              and writes down the answer letter by letter.
             </div>
-            <div class="prob-row">
-              <div class="prob-char">ក</div>
-              <div class="prob-track"><div class="prob-fill" style="width:14%;"></div></div>
-              <div class="prob-pct">14%</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#94a3b8;line-height:1.6;">
+          <strong style="color:var(--text);">Key insight:</strong> The encoder sees everything at once (parallel).
+          The decoder generates sequentially — it <strong style="color:var(--accent);">cannot see future characters</strong>
+          when predicting the current one. This is called <strong style="color:#fff;">autoregressive generation</strong>.
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 2 — SOS / EOS / PAD TOKENS                    -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          🪙 Part 2 — Special Tokens: SOS, EOS, PAD
+        </div>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
+          The decoder uses three special tokens that are <strong style="color:#fff;">not Khmer characters</strong>
+          but control signals for the generation loop:
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+            <div style="width:44px;height:36px;border-radius:8px;background:rgba(34,197,94,0.2);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);flex-shrink:0;">SOS</div>
+            <div>
+              <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:3px;">Start Of Sentence</div>
+              <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
+                The very first input fed to the decoder. It is the signal that says
+                <em>"start generating now"</em>. The decoder sees SOS → predicts the first real character.
+                The context sequence Z always begins with SOS: Z = [SOS, y₁, y₂, …].
+              </div>
             </div>
-            <div class="prob-row">
-              <div class="prob-char">ង</div>
-              <div class="prob-track"><div class="prob-fill" style="width:8%;background:var(--muted);"></div></div>
-              <div class="prob-pct">8%</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+            <div style="width:44px;height:36px;border-radius:8px;background:rgba(239,68,68,0.2);border:2px solid var(--danger);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--danger);flex-shrink:0;">EOS</div>
+            <div>
+              <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:3px;">End Of Sentence</div>
+              <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
+                When the decoder predicts EOS, the generation loop <strong style="color:#fff;">stops</strong>.
+                This is how the model knows the full text has been output — it is not limited to a fixed number of characters.
+                The target sequence Y always ends with EOS: Y = [y₁, y₂, …, yL, EOS].
+              </div>
             </div>
-            <div class="prob-row">
-              <div class="prob-char">…</div>
-              <div class="prob-track"><div class="prob-fill" style="width:6%;background:var(--muted);"></div></div>
-              <div class="prob-pct">6%</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+            <div style="width:44px;height:36px;border-radius:8px;background:rgba(100,116,139,0.2);border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;">PAD</div>
+            <div>
+              <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:3px;">Padding</div>
+              <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
+                Used to pad shorter sequences to the same length in a mini-batch during training
+                (so all samples have equal length tensors). PAD tokens are masked — the model
+                learns to ignore them.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Token sequence visual -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;">Context sequence Z fed to decoder at each step (for text "តាកែវ"):</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(34,197,94,0.15);border:1px solid var(--green);font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700;">SOS</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:16px;color:#fff;">ត</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:16px;color:#fff;">តា</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:16px;color:#fff;">តាក</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:16px;color:#fff;">តាកែ</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);font-size:16px;color:#fff;">តាកែវ</div>
+            <div style="color:var(--muted);font-size:14px;">→</div>
+            <div style="padding:6px 10px;border-radius:7px;background:rgba(239,68,68,0.15);border:1px solid var(--danger);font-family:var(--mono);font-size:12px;color:var(--danger);font-weight:700;">EOS</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;">Each arrow = one decoder step. The decoder grows its context one character at a time.</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 3 — WHAT AUTOREGRESSIVE MEANS                 -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          🔁 Part 3 — What "Autoregressive" Actually Means
+        </div>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
+          <strong style="color:#fff;">Auto</strong> = self. <strong style="color:#fff;">Regressive</strong> = depends on previous outputs.
+          Autoregressive means: <strong style="color:var(--accent3);">each prediction uses its own previous predictions as input</strong>.
+          This creates a loop that runs until EOS is predicted.
+        </p>
+
+        <!-- Step-by-step loop -->
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;">THE GENERATION LOOP — step by step for "តាកែវ":</div>
+        <div style="display:flex;flex-direction:column;gap:6px;" id="autoregSteps">
+
+          <div style="display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(34,197,94,0.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--green);flex-shrink:0;font-weight:700;">t=0</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>] &nbsp;+&nbsp; T (image context)
+              &nbsp;→&nbsp; predict: <span style="color:var(--accent);font-size:14px;font-weight:700;">ត</span>
+              &nbsp;<span style="color:var(--green);">✓ appended to Z</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(249,115,22,0.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);flex-shrink:0;font-weight:700;">t=1</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>, <span style="color:var(--accent);">ត</span>] &nbsp;+&nbsp; T
+              &nbsp;→&nbsp; predict: <span style="color:var(--accent);font-size:14px;font-weight:700;">ា</span>
+              &nbsp;<span style="color:var(--green);">✓ appended</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(249,115,22,0.15);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);flex-shrink:0;font-weight:700;">t=2</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>, ត, ា] &nbsp;+&nbsp; T
+              &nbsp;→&nbsp; predict: <span style="color:var(--accent);font-size:14px;font-weight:700;">ក</span>
+              &nbsp;<span style="color:var(--green);">✓ appended</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(168,85,247,0.15);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent3);flex-shrink:0;font-weight:700;">t=3</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>, ត, ា, ក] &nbsp;+&nbsp; T
+              &nbsp;→&nbsp; predict: <span style="color:var(--accent);font-size:14px;font-weight:700;">ែ</span>
+              &nbsp;<span style="color:var(--green);">✓ appended</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(168,85,247,0.15);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent3);flex-shrink:0;font-weight:700;">t=4</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>, ត, ា, ក, ែ] &nbsp;+&nbsp; T
+              &nbsp;→&nbsp; predict: <span style="color:var(--accent);font-size:14px;font-weight:700;">វ</span>
+              &nbsp;<span style="color:var(--green);">✓ appended</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 14px;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(239,68,68,0.2);border:1px solid var(--danger);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--danger);flex-shrink:0;font-weight:700;">t=5</div>
+            <div style="font-family:var(--mono);font-size:11px;flex:1;">
+              Input Z = [<span style="color:var(--green);">SOS</span>, ត, ា, ក, ែ, វ] &nbsp;+&nbsp; T
+              &nbsp;→&nbsp; predict: <span style="color:var(--danger);font-size:13px;font-weight:700;">EOS</span>
+              &nbsp;<span style="color:var(--danger);">⬛ STOP — generation complete</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:rgba(168,85,247,0.07);border:1px solid rgba(168,85,247,0.2);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.6;">
+          <strong style="color:var(--accent3);">Why is this called "autoregressive"?</strong>
+          At each step t, the model uses its own previous output (y₁…y_{t-1}) as the next input.
+          The output <em>regresses onto itself</em> — hence auto-regressive.
+          The key consequence: <strong style="color:#fff;">errors compound</strong>. If step t=2 predicts the wrong character,
+          every subsequent step sees that wrong character in its context and may be misled.
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 4 — INSIDE THE DECODER: 3 ATTENTION LAYERS   -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          🏗️ Part 4 — Inside the Decoder: Three Sub-Layers
+        </div>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
+          Each Transformer decoder unit has three sequential sub-layers. Understanding all three explains
+          exactly how T (image context) and Z (predicted-so-far) combine to predict the next character.
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+
+          <!-- Layer 1: Masked Self-Attention -->
+          <div style="background:var(--surface);border:1px solid rgba(249,115,22,0.3);border-radius:10px;padding:14px 18px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(249,115,22,0.2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;">1</div>
+              <div style="font-size:14px;font-weight:700;color:var(--accent);">Masked Self-Attention on Z</div>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              The decoder runs self-attention on the context sequence Z = [SOS, y₁, …, y_{t-1}].
+              <strong style="color:#fff;">Masked</strong> means: position t can only attend to positions 0…t-1 —
+              it is forbidden from looking at future characters (which don't exist yet at inference, and must not be cheated during training).
+              <br><br>
+              This sub-layer lets the decoder build up an understanding of
+              <strong style="color:var(--accent);">"what have I said so far?"</strong>
+            </div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:8px;background:rgba(0,0,0,0.3);border-radius:6px;padding:6px 10px;">
+              output₁ = MaskedSelfAttn(Z, Z, Z) &nbsp;·&nbsp; shape: (t × D)
+            </div>
+          </div>
+
+          <!-- Layer 2: Cross-Attention -->
+          <div style="background:var(--surface);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px 18px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(59,130,246,0.2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent2);flex-shrink:0;">2</div>
+              <div style="font-size:14px;font-weight:700;color:var(--accent2);">Cross-Attention on T (the image context)</div>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              This is the critical bridge between image and text. The decoder uses output₁ as the
+              <strong style="color:var(--accent);">Query</strong> ("what do I need from the image?"),
+              and the encoder output <strong style="color:var(--accent2);">T</strong> as both the
+              <strong style="color:var(--accent2);">Key</strong> and <strong style="color:var(--green);">Value</strong>
+              ("what does the image contain?").
+              <br><br>
+              Concretely: at step t=2 (predicting ក), the decoder's Query asks
+              <em>"given I've already said ត and ា, what part of the image should I look at next?"</em>
+              — and the cross-attention mechanism points to the relevant image region.
+            </div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);margin-top:8px;background:rgba(0,0,0,0.3);border-radius:6px;padding:6px 10px;">
+              output₂ = CrossAttn(<span style="color:var(--accent);">Q=output₁</span>, <span style="color:var(--accent2);">K=T</span>, <span style="color:var(--green);">V=T</span>) &nbsp;·&nbsp; shape: (t × D)
+            </div>
+          </div>
+
+          <!-- Layer 3: FFN + Linear + Softmax -->
+          <div style="background:var(--surface);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:14px 18px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(34,197,94,0.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);flex-shrink:0;">3</div>
+              <div style="font-size:14px;font-weight:700;color:var(--green);">Feed-Forward → Linear → Softmax → 131 probabilities</div>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              output₂ passes through a Feed-Forward Network (FFN), then a final linear projection
+              maps it from D=256 dimensions to <strong style="color:#fff;">C=131 dimensions</strong> —
+              one score per possible output character. Softmax converts these raw scores
+              into a <strong style="color:var(--green);">probability distribution</strong> over all 131 classes.
+              The character with the highest probability is selected as ŷ_t.
+            </div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;background:rgba(0,0,0,0.3);border-radius:6px;padding:6px 10px;">
+              ŷ_t = argmax( softmax( Linear( FFN(output₂) ) ) ) &nbsp;·&nbsp; over C=131 classes
             </div>
           </div>
         </div>
       </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 5 — THE 131 OUTPUT CLASSES                    -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          📊 Part 5 — The 131 Output Classes & Probability Distribution
+        </div>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
+          At every step the decoder outputs a vector of <strong style="color:#fff;">131 numbers</strong>,
+          one per possible output class. After softmax, they sum to 1.0 and represent
+          the model's confidence for each character.
+        </p>
+
+        <!-- Class breakdown -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:16px;">
+          <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:10px 12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:4px;">Khmer consonants</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">33</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">base + subscript forms</div>
+          </div>
+          <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:10px 12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:4px;">Khmer vowels</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">37</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">dependent + independent</div>
+          </div>
+          <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:10px 12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);margin-bottom:4px;">Diacritics + numerals</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">~55</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">marks, digits, symbols</div>
+          </div>
+          <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:8px;padding:10px 12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:4px;">Special tokens</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">3</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">SOS · EOS · PAD</div>
+          </div>
+          <div style="background:rgba(100,116,139,0.08);border:1px solid rgba(100,116,139,0.25);border-radius:8px;padding:10px 12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">Foreign symbols</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">3+</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">space · hyphen · period</div>
+          </div>
+        </div>
+
+        <!-- Live probability bar at step t=5 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;">
+            EXAMPLE — Probability distribution at step t=5 (predicting 6th character, after "តាកែវ ")
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;font-size:17px;text-align:center;">គ</div>
+              <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+                <div style="height:100%;width:68%;background:linear-gradient(90deg,var(--accent),#fbbf24);border-radius:4px;"></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--accent);width:36px;text-align:right;font-weight:700;">68%</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--green);">← SELECTED</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;font-size:17px;text-align:center;">ក</div>
+              <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+                <div style="height:100%;width:15%;background:var(--accent2);border-radius:4px;"></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);width:36px;text-align:right;">15%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;font-size:17px;text-align:center;">ង</div>
+              <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+                <div style="height:100%;width:9%;background:var(--accent3);border-radius:4px;"></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--accent3);width:36px;text-align:right;">9%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:28px;font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;">128<br>more</div>
+              <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+                <div style="height:100%;width:8%;background:var(--muted);border-radius:4px;"></div>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px;text-align:right;">8%</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--muted);">split across 128 classes</div>
+            </div>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;">All 131 probabilities sum = 1.00 · argmax picks គ · it is appended to Z · loop continues</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- PART 6 — LOSS FUNCTION (HOW IT LEARNS)             -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
+          📉 Part 6 — How the Decoder Learns: Cross-Entropy Loss
+        </div>
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
+          During training, the ground-truth sequence Y = [y₁, y₂, …, yL, EOS] is known.
+          At each step t, the decoder predicts a probability distribution Ŷ_t over 131 classes.
+          The loss penalises the model for assigning low probability to the correct character y_t:
+        </p>
+        <div style="background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px;text-align:center;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;">CROSS-ENTROPY LOSS (from the paper, equation 5)</div>
+          <div style="font-family:var(--mono);font-size:15px;color:var(--text);">
+            Loss = CE(<span style="color:var(--accent);">Ŷ</span>, <span style="color:var(--green);">Y</span>) = −Σ<sub>t</sub> log <span style="color:var(--accent);">Ŷ_t</span>[<span style="color:var(--green);">y_t</span>]
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8;">
+            <span style="color:var(--accent);">Ŷ_t</span> = predicted probability distribution at step t &nbsp;·&nbsp;
+            <span style="color:var(--green);">y_t</span> = correct character at step t
+          </div>
+        </div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+          If the model predicted 68% for the correct character: loss contribution = −log(0.68) ≈ 0.39 (small, good).<br>
+          If the model predicted 2% for the correct character: loss contribution = −log(0.02) ≈ 3.91 (large, bad).<br>
+          Backpropagation adjusts all weights (W_Q, W_K, W_V in both encoder and decoder) to minimise this loss over millions of training examples.
+        </div>
+      </div>
+
+      <!-- FINAL SUMMARY BOX -->
+      <div class="problem-box">
+        <strong>🔑 Full technical summary of Step 5:</strong><br><br>
+        1. The decoder receives <strong>T</strong> (248×256 encoded image context) from TR_ENC and a growing context sequence <strong>Z</strong>.<br>
+        2. Generation starts with <strong>Z = [SOS]</strong> and loops until <strong>EOS</strong> is predicted.<br>
+        3. Each decoder step runs three sub-layers: <strong>Masked Self-Attention</strong> (on Z) → <strong>Cross-Attention</strong> (Q from Z, K/V from T) → <strong>FFN + Linear + Softmax</strong>.<br>
+        4. Cross-attention is the bridge: the decoder <em>queries the image context T</em> to decide what to output next.<br>
+        5. Softmax produces a probability over <strong>C = 131 classes</strong>; argmax selects the character ŷ_t.<br>
+        6. ŷ_t is appended to Z and the loop repeats — this is <strong>autoregressive generation</strong>.<br>
+        7. Training uses <strong>Cross-Entropy Loss</strong> comparing predicted ŷ against ground-truth y at every step.
+      </div>
+
     </div>
   </div>
 
@@ -1468,18 +1813,17 @@
 <script>
 // Generate pixel matrix (step 2)
 const pm = document.getElementById('pixelMatrix');
-for (let i = 0; i < 80; i++) {
+if (pm) { for (let i = 0; i < 80; i++) {
   const cell = document.createElement('div');
   cell.className = 'pm-cell';
   const v = Math.floor(Math.random() * 180 + 40);
   cell.style.background = `rgb(${Math.floor(v*0.3)},${Math.floor(v*0.4)},${Math.floor(v*0.9)})`;
   pm.appendChild(cell);
-}
+} }
 
 // Feature matrix (step 2)
 const fm = document.getElementById('featMatrix');
-const featColors = ['#1e40af','#1d4ed8','#2563eb','#3b82f6','#1e3a8a','#1e40af'];
-for (let i = 0; i < 40; i++) {
+if (fm) { for (let i = 0; i < 40; i++) {
   const cell = document.createElement('div');
   cell.className = 'fm-cell';
   const h = 180 + Math.floor(Math.random() * 60);
@@ -1487,11 +1831,11 @@ for (let i = 0; i < 40; i++) {
   const l = 35 + Math.floor(Math.random() * 25);
   cell.style.background = `hsl(${h},${s}%,${l}%)`;
   fm.appendChild(cell);
-}
+} }
 
 // 2D grid step 3
 const g2 = document.getElementById('grid2d');
-for (let r = 0; r < 4; r++) {
+if (g2) { for (let r = 0; r < 4; r++) {
   for (let c = 0; c < 8; c++) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell';
@@ -1499,16 +1843,15 @@ for (let r = 0; r < 4; r++) {
     cell.textContent = r * 8 + c + 1;
     g2.appendChild(cell);
   }
-}
+} }
 
 // 1D sequence step 3
 const s1 = document.getElementById('seq1d');
-const purpleShades = [0.4, 0.5, 0.6, 0.7, 0.5, 0.45, 0.55, 0.65];
-for (let i = 0; i < 32; i++) {
+if (s1) { for (let i = 0; i < 32; i++) {
   const cell = document.createElement('div');
   cell.style.cssText = `height:14px;border-radius:3px;background:linear-gradient(90deg,rgba(168,85,247,${0.3+Math.random()*0.5}),rgba(59,130,246,${0.2+Math.random()*0.4}));border:1px solid rgba(168,85,247,0.3);`;
   s1.appendChild(cell);
-}
+} }
 
 // ── Step 4: n=4 vs n=8 comparison grids ──
 function makeCompGrid(id, n, baseColor) {
@@ -1544,13 +1887,6 @@ for (let r = 0; r < 16; r++) {
 }
 
 
-// Encoded tokens step 5
-const et = document.getElementById('encTokens');
-for (let i = 0; i < 10; i++) {
-  const tok = document.createElement('div');
-  tok.style.cssText = `height:12px;border-radius:3px;margin-bottom:3px;background:linear-gradient(90deg,rgba(59,130,246,${0.3+Math.random()*0.4}),rgba(59,130,246,0.1));border:1px solid rgba(59,130,246,0.25);width:${60+Math.random()*20}px;`;
-  et.appendChild(tok);
-}
 </script>
 
 <!-- ══════════════════════════════════════════════════════════ -->
