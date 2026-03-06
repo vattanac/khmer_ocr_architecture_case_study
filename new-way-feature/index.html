@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khmer OCR — The New Way: 2D Feature Maps as Patches</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:      #0a0c14;
+  --surface: #111520;
+  --surface2:#161b2e;
+  --border:  #1e2640;
+  --accent:  #f97316;
+  --accent2: #3b82f6;
+  --accent3: #a855f7;
+  --danger:  #ef4444;
+  --green:   #22c55e;
+  --text:    #e2e8f0;
+  --muted:   #64748b;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Kantumruy Pro', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  padding: 32px 16px 64px;
+}
+
+/* ── header ── */
+.page-header {
+  max-width: 860px;
+  margin: 0 auto 32px;
+  text-align: center;
+}
+.page-header .eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--accent2);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.page-header h1 {
+  font-size: clamp(20px, 4vw, 30px);
+  font-weight: 800;
+  line-height: 1.25;
+  background: linear-gradient(135deg, #fff 30%, var(--accent2) 70%, var(--accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+.page-header p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ── section card ── */
+.card {
+  max-width: 860px;
+  margin: 0 auto 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp .5s ease both;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.card.c-blue::before  { background: linear-gradient(90deg, var(--accent2), var(--accent3)); }
+.card.c-orange::before{ background: linear-gradient(90deg, var(--accent), #fbbf24); }
+.card.c-purple::before{ background: linear-gradient(90deg, var(--accent3), var(--accent2)); }
+.card.c-green::before { background: linear-gradient(90deg, var(--green), var(--accent2)); }
+.card.c-red::before   { background: linear-gradient(90deg, var(--danger), var(--accent)); }
+
+.card-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.card h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.card p, .card li {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.8;
+}
+.card ul { padding-left: 18px; }
+
+/* ── code / formula box ── */
+.formula {
+  background: rgba(0,0,0,.45);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.9;
+  margin: 10px 0;
+}
+
+/* ── connector ── */
+.connector {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0 4px;
+}
+.connector-line { width: 2px; height: 22px; background: var(--border); }
+.connector-arrow {
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid var(--border);
+}
+.connector-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+/* ── chip — compact rectangular pill, never a circle ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+/* ── The main 2D grid visualizer ── */
+.map-wrap {
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.feature-map-grid {
+  display: grid;
+  gap: 3px;
+  width: fit-content;
+}
+.fm-row-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+.fm-cell {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,.06);
+  position: relative;
+  cursor: default;
+  transition: transform .15s, border-color .15s;
+}
+.fm-cell:hover { transform: scale(1.15); border-color: rgba(255,255,255,.3); z-index:10; }
+.fm-cell.patch-highlight { border: 2px solid #fff; }
+
+/* patch column highlight overlay */
+.patch-col-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* ── patch strip ── */
+.patch-strip {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.patch-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+.patch-box:hover, .patch-box.active {
+  border-color: var(--accent2);
+  background: rgba(59,130,246,.1);
+}
+.patch-box .patch-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.patch-cells {
+  display: grid;
+  gap: 2px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.pc {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+/* ── row role table ── */
+.row-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 10px;
+}
+.row-table th {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: left;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.row-table td {
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  vertical-align: middle;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+.row-table td:first-child { white-space: nowrap; }
+.row-table tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── vector visual ── */
+.vector-bar {
+  display: flex;
+  gap: 2px;
+  height: 20px;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+.vb { border-radius: 2px 2px 0 0; width: 5px; min-height: 4px; }
+
+/* ── comparison old vs new ── */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 500px) { .cmp-grid { grid-template-columns: 1fr; } }
+.cmp-box {
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.cmp-box.old { background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.25); }
+.cmp-box.new { background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.25); }
+.cmp-box h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.cmp-box ul { padding-left: 16px; }
+.cmp-box li { font-size: 12px; color: #94a3b8; line-height: 1.8; }
+
+/* ── takeaway ── */
+.takeaway {
+  background: rgba(249,115,22,.07);
+  border: 1px solid rgba(249,115,22,.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.8;
+  margin-top: 14px;
+}
+
+/* ── tooltip ── */
+.tooltip-hint {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card:nth-child(2) { animation-delay: .05s; }
+.card:nth-child(3) { animation-delay: .10s; }
+.card:nth-child(4) { animation-delay: .15s; }
+.card:nth-child(5) { animation-delay: .20s; }
+.card:nth-child(6) { animation-delay: .25s; }
+.card:nth-child(7) { animation-delay: .30s; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="eyebrow">IEEE Access · Khmer OCR Paper Explainer</div>
+  <h1>The New Way — 2D Feature Maps Preserved as Patches</h1>
+  <p>Instead of flattening the 2D feature map into a single long sequence, the researchers keep<br>
+     its 2D structure and slice it into vertical <strong style="color:var(--text)">patches</strong> — one per column group.</p>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 1 — WHAT THE CNN PRODUCES        -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-blue" style="animation-delay:.00s">
+  <div class="card-label" style="color:var(--accent2)">🧱 Part 1 — What the CNN produces</div>
+  <h2>The feature map is a 3D grid: Rows × Columns × Channels</h2>
+  <p style="margin-bottom:12px">
+    After the CNN processes the Khmer image, it outputs a <strong style="color:#fff">feature map</strong> —
+    a 3-dimensional tensor. Our example uses:
+  </p>
+  <div class="formula">
+    Input image: &nbsp;&nbsp;1 × 32 × 500 &nbsp;&nbsp;<span style="color:var(--muted)">(grayscale × height × width)</span><br>
+    After CNN:  &nbsp;&nbsp;&nbsp;<span style="color:var(--accent2)">512</span> × &nbsp;<span style="color:var(--green)">8</span> × &nbsp;<span style="color:var(--accent)">64</span>
+    &nbsp;&nbsp;<span style="color:var(--muted)">(channels × rows × columns)</span>
+  </div>
+
+  <!-- 3-axis diagram -->
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:14px;">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1;min-width:180px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:6px;letter-spacing:1px;">ROWS = 8</div>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.7;">
+        The vertical axis. Each row corresponds to a horizontal band of the original image.
+        With 8 rows, the CNN has compressed the original 32 pixel height by 4×.<br>
+        <strong style="color:#fff">This is the crucial axis — it encodes WHERE vertically each Khmer component sits.</strong>
+      </p>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1;min-width:180px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:6px;letter-spacing:1px;">COLUMNS = 64</div>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.7;">
+        The horizontal axis — position along the text line.
+        64 columns because the CNN compressed the original 500 px width by ~8×.
+        <strong style="color:#fff">Each column ≈ one "slice" of the text line.</strong>
+      </p>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1;min-width:180px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:6px;letter-spacing:1px;">CHANNELS = 512</div>
+      <p style="font-size:12px;color:#94a3b8;line-height:1.7;">
+        At every (row, column) position there are 512 numbers — features learned by the CNN
+        describing edges, curves, strokes etc. at that location.
+        <strong style="color:#fff">Think of it as 512 "lenses" all looking at the same spot.</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">feature map 8 × 64 × 512 enters next step</div></div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 2 — THE OLD WAY PROBLEM RECAP     -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-red" style="animation-delay:.05s">
+  <div class="card-label" style="color:var(--danger)">⚠️ Part 2 — Quick Recap: Why the Old Way Failed</div>
+  <h2>Old way: collapse 8 rows → 1 row, then flatten to 1D</h2>
+  <div class="formula">
+    Old PATCH_ENC: &nbsp; 8 × 64 × 256 &nbsp;→&nbsp; <span style="color:var(--danger)">248 × 256</span>
+    &nbsp;<span style="color:var(--muted)">(rows collapsed, n becomes large)</span>
+  </div>
+  <p style="margin-top:10px">
+    Collapsing the 8 rows into 1 by averaging or concatenating <strong style="color:#fff">destroys vertical position information</strong>.
+    The model can no longer tell whether a feature came from the top of the image (diacritics)
+    or the bottom (subscripts). For Khmer, this matters enormously.
+  </p>
+  <div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.6;">
+    After collapsing, a feature that was at row 1 (diacritic zone) and a feature at row 7 (subscript zone)
+    look identical to the Transformer — they are just entries in the same long 1D vector.
+    The vertical structure is lost forever.
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">the new approach preserves all 8 rows</div></div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 3 — PATCH SLICING                 -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-purple" style="animation-delay:.10s">
+  <div class="card-label" style="color:var(--accent3)">✂️ Part 3 — The Key Idea: Slice into Vertical Patches</div>
+  <h2>Each patch = ALL 8 rows × a few columns × 512 channels</h2>
+  <p style="margin-bottom:14px">
+    Instead of collapsing rows, the researchers slice the feature map into
+    <strong style="color:#fff">vertical strips</strong> (patches). Each patch spans
+    <strong style="color:var(--green)">all 8 rows</strong> but only a small number of columns.
+    With patch width = 1 column, we get exactly <strong style="color:var(--accent)">64 patches</strong>.
+  </p>
+
+  <!-- Interactive feature map grid -->
+  <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">
+    Interactive feature map (8 rows × 20 columns shown) — click a patch column to highlight it:
+  </div>
+  <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+    <!-- Row labels + grid -->
+    <div>
+      <div style="display:flex;gap:0;margin-bottom:2px;padding-left:72px;">
+        <!-- col labels generated by JS -->
+        <div id="colLabels" style="display:flex;gap:3px;"></div>
+      </div>
+      <div id="fmGridWrap" style="display:flex;gap:0;align-items:flex-start;">
+        <div id="rowLabels" style="display:flex;flex-direction:column;gap:3px;padding-right:6px;padding-top:0px;"></div>
+        <div id="fmGrid" style="display:grid;gap:3px;"></div>
+      </div>
+    </div>
+
+    <!-- Patch detail panel -->
+    <div style="flex:1;min-width:180px;">
+      <div id="patchDetail" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">← Click a column to inspect that patch</div>
+        <div id="patchInfo" style="font-size:12px;color:#94a3b8;line-height:1.8;">
+          Each patch spans all 8 rows.<br>
+          Each cell holds 512 channel values.<br>
+          Total patch size: 8 × 1 × 512 = <strong style="color:#fff">4096 numbers</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip-hint">Hover over cells to see (row, col) · Click a column to highlight that patch</div>
+
+  <!-- Step-by-step patch formula -->
+  <div style="margin-top:16px;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;">STEP-BY-STEP PATCH CREATION:</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+        <div style="width:22px;height:22px;border-radius:6px;background:rgba(59,130,246,.2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent2);flex-shrink:0;">1</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+          Take feature map <strong style="color:#fff">F</strong> of shape
+          <span class="chip" style="background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.3);">8 rows</span> ×
+          <span class="chip" style="background:rgba(249,115,22,.1);color:var(--accent);border:1px solid rgba(249,115,22,.3);">64 cols</span> ×
+          <span class="chip" style="background:rgba(59,130,246,.1);color:var(--accent2);border:1px solid rgba(59,130,246,.3);">512 ch</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+        <div style="width:22px;height:22px;border-radius:6px;background:rgba(168,85,247,.2);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent3);flex-shrink:0;">2</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+          Slice along columns: patch <em>c</em> = F[ <span style="color:var(--green)">all 8 rows</span>, column c, <span style="color:var(--accent2)">all 512 channels</span> ]
+          → shape <strong style="color:#fff">[8 × 1 × 512]</strong>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+        <div style="width:22px;height:22px;border-radius:6px;background:rgba(249,115,22,.2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;">3</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+          Flatten each patch: 8 × 1 × 512 &nbsp;→&nbsp;
+          <strong style="color:var(--accent)">4096-dimensional vector</strong>
+          &nbsp;(one vector per column)
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+        <div style="width:22px;height:22px;border-radius:6px;background:rgba(34,197,94,.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">4</div>
+        <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+          Stack all 64 vectors → sequence of shape
+          <strong style="color:var(--green)">64 × 4096</strong>.
+          This is the input to the Transformer. &nbsp;<strong style="color:#fff">n = 64 (much smaller than old n = 248!)</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">64 patches × 4096-dim vectors enter Transformer</div></div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 4 — WHAT EACH ROW MEANS           -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-orange" style="animation-delay:.15s">
+  <div class="card-label" style="color:var(--accent)">📐 Part 4 — What Each Row Encodes: Vertical Khmer Structure</div>
+  <h2>The 8 rows map to distinct Khmer character zones</h2>
+  <p style="margin-bottom:14px">
+    This is the <strong style="color:#fff">key insight</strong> of the paper.
+    Khmer characters stack vertically: diacritics above, base consonant in the middle,
+    subscripts below. The 8 rows of the feature map directly correspond to these zones.
+    A patch vector of size 4096 = 8 groups × 512 — each group encodes one row's features.
+  </p>
+
+  <!-- Row table -->
+  <table class="row-table">
+    <thead>
+      <tr>
+        <th>Row</th>
+        <th>Image zone (approx.)</th>
+        <th>Typical Khmer content</th>
+        <th>Example glyphs</th>
+        <th>Position in patch vector</th>
+      </tr>
+    </thead>
+    <tbody id="rowTableBody">
+      <tr>
+        <td><span class="chip" style="background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);">Row 1</span></td>
+        <td>Top of image (px 0–4)</td>
+        <td>Upper diacritics, tone marks</td>
+        <td style="font-size:18px;line-height:1.4;">៉ ៊ ់ ័</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[0 … 511]</span></td>
+      </tr>
+      <tr>
+        <td><span class="chip" style="background:rgba(249,115,22,.15);color:#fbbf24;border:1px solid rgba(249,115,22,.3);">Row 2</span></td>
+        <td>Upper-mid (px 4–8)</td>
+        <td>Vowels above consonant</td>
+        <td style="font-size:18px;line-height:1.4;">ិ ី ឹ ឺ</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[512 … 1023]</span></td>
+      </tr>
+      <tr>
+        <td><span class="chip" style="background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);">Row 3</span></td>
+        <td>Upper body (px 8–12)</td>
+        <td>Top of base consonants, vowel ៀ ើ</td>
+        <td style="font-size:18px;line-height:1.4;">ក ខ ស ៀ</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[1024 … 1535]</span></td>
+      </tr>
+      <tr style="background:rgba(59,130,246,.04);">
+        <td><span class="chip" style="background:rgba(59,130,246,.15);color:var(--accent2);border:1px solid rgba(59,130,246,.3);">Row 4</span></td>
+        <td>Mid body (px 12–16)</td>
+        <td><strong style="color:var(--accent2)">Main body of base consonants (1st + 2nd series)</strong></td>
+        <td style="font-size:18px;line-height:1.4;">ក គ ប ស</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[1536 … 2047]</span></td>
+      </tr>
+      <tr style="background:rgba(59,130,246,.04);">
+        <td><span class="chip" style="background:rgba(59,130,246,.15);color:var(--accent2);border:1px solid rgba(59,130,246,.3);">Row 5</span></td>
+        <td>Lower body (px 16–20)</td>
+        <td><strong style="color:var(--accent2)">Lower strokes + vowels ា ុ ូ</strong></td>
+        <td style="font-size:18px;line-height:1.4;">ង ណ ា ុ</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[2048 … 2559]</span></td>
+      </tr>
+      <tr>
+        <td><span class="chip" style="background:rgba(168,85,247,.15);color:var(--accent3);border:1px solid rgba(168,85,247,.3);">Row 6</span></td>
+        <td>Upper subscript (px 20–24)</td>
+        <td>Coeng (្) connector + top of subscript</td>
+        <td style="font-size:18px;line-height:1.4;">្ក ្គ ្ត ្ន</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[2560 … 3071]</span></td>
+      </tr>
+      <tr>
+        <td><span class="chip" style="background:rgba(168,85,247,.15);color:var(--accent3);border:1px solid rgba(168,85,247,.3);">Row 7</span></td>
+        <td>Lower subscript (px 24–28)</td>
+        <td><strong style="color:var(--accent3)">Main body of subscript consonants (32 forms)</strong></td>
+        <td style="font-size:18px;line-height:1.4;">្រ  ្ល  ្វ  ្ស</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[3072 … 3583]</span></td>
+      </tr>
+      <tr>
+        <td><span class="chip" style="background:rgba(100,116,139,.15);color:var(--muted);border:1px solid rgba(100,116,139,.3);">Row 8</span></td>
+        <td>Bottom (px 28–32)</td>
+        <td>Below-vowels ួ ូ, Khmer numerals ០–៩</td>
+        <td style="font-size:18px;line-height:1.4;">ុ ូ ួ ០</td>
+        <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[3584 … 4095]</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="takeaway" style="margin-top:14px;">
+    <strong style="color:var(--text)">Why this matters for Khmer:</strong>
+    When the Transformer receives a patch vector of 4096 numbers, the numbers at positions 1536–2047
+    (Row 4) encode the base consonant body, while the numbers at 3072–3583 (Row 7) encode any subscript.
+    These are <strong style="color:#fff">different dimensions of the same vector</strong> — the Transformer's
+    self-attention can learn to attend to both simultaneously when decoding a consonant cluster.
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">patch vector layout enables vertical-aware decoding</div></div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 5 — WORKED EXAMPLE                -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-green" style="animation-delay:.20s">
+  <div class="card-label" style="color:var(--green)">🔢 Part 5 — Worked Example: The Cluster ក្រ</div>
+  <h2>Tracing the consonant cluster through the patch vector</h2>
+  <p style="margin-bottom:16px">
+    Let's trace exactly what happens when the CNN scans a column of the image that contains
+    the cluster <strong style="font-size:20px;color:#fff"> ក្រ</strong>
+    (base consonant ក with subscript ្រ below it).
+  </p>
+
+  <!-- Visual: annotated column -->
+  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-bottom:16px;">
+
+    <!-- Column illustration -->
+    <div style="flex-shrink:0;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;text-align:center;">Image column<br>containing ក្រ</div>
+      <div style="display:flex;gap:4px;align-items:flex-start;">
+        <!-- The column cells -->
+        <div style="display:flex;flex-direction:column;gap:3px;">
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--danger);">~0</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fbbf24;">low</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(59,130,246,.5);border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">HIGH</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(59,130,246,.7);border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;">HIGH</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(59,130,246,.55);border:2px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;">HIGH</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(168,85,247,.4);border:2px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--accent3);font-weight:700;">med</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(168,85,247,.7);border:2px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;">HIGH</div>
+          <div style="width:36px;height:26px;border-radius:4px;background:rgba(100,116,139,.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted);">~0</div>
+        </div>
+        <!-- Row labels -->
+        <div style="display:flex;flex-direction:column;gap:3px;padding-top:0;">
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--danger);padding-left:4px;">r1 — blank (no diacritic)</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:#fbbf24;padding-left:4px;">r2 — faint vowel trace</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--accent2);padding-left:4px;font-weight:700;">r3 — top of ក</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--accent2);padding-left:4px;font-weight:700;">r4 — main body of ក ← base consonant</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--accent2);padding-left:4px;font-weight:700;">r5 — lower stroke of ក</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--accent3);padding-left:4px;">r6 — coeng connector</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--accent3);padding-left:4px;font-weight:700;">r7 — main body of ្រ ← subscript</div>
+          <div style="height:26px;display:flex;align-items:center;font-family:var(--mono);font-size:9px;color:var(--muted);padding-left:4px;">r8 — blank</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow -->
+    <div style="font-size:24px;color:var(--muted);align-self:center;padding-top:10px;">→<br><span style="font-family:var(--mono);font-size:9px;color:var(--muted);">flatten</span></div>
+
+    <!-- Resulting patch vector layout -->
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">Resulting patch vector (4096 dims, shown as 8 groups of 512):</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--danger);">dims 0–511 &nbsp;(r1)</span>
+          <span style="font-size:10px;color:var(--danger);">≈ zeros — no content</span>
+        </div>
+        <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:#fbbf24;">dims 512–1023 (r2)</span>
+          <span style="font-size:10px;color:#fbbf24;">low — faint trace</span>
+        </div>
+        <div style="background:rgba(59,130,246,.15);border:2px solid var(--accent2);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--accent2);font-weight:700;">dims 1024–1535 (r3)</span>
+          <span style="font-size:10px;color:var(--accent2);font-weight:700;">HIGH — top of ក</span>
+        </div>
+        <div style="background:rgba(59,130,246,.2);border:2px solid var(--accent2);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:#fff;font-weight:700;">dims 1536–2047 (r4) ← BASE CONSONANT ក</span>
+          <span style="font-size:10px;color:#fff;font-weight:700;">HIGH</span>
+        </div>
+        <div style="background:rgba(59,130,246,.15);border:2px solid var(--accent2);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--accent2);font-weight:700;">dims 2048–2559 (r5)</span>
+          <span style="font-size:10px;color:var(--accent2);font-weight:700;">HIGH — lower stroke</span>
+        </div>
+        <div style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--accent3);">dims 2560–3071 (r6)</span>
+          <span style="font-size:10px;color:var(--accent3);">med — coeng connector</span>
+        </div>
+        <div style="background:rgba(168,85,247,.2);border:2px solid var(--accent3);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:#fff;font-weight:700;">dims 3072–3583 (r7) ← SUBSCRIPT ្រ</span>
+          <span style="font-size:10px;color:#fff;font-weight:700;">HIGH</span>
+        </div>
+        <div style="background:rgba(100,116,139,.06);border:1px solid var(--border);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted);">dims 3584–4095 (r8)</span>
+          <span style="font-size:10px;color:var(--muted);">≈ zeros — no content</span>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:8px;">
+        ✓ Both ក (dims 1536–2047) and ្រ (dims 3072–3583) are present in the same vector!<br>
+        The Transformer sees the full cluster in one token.
+      </div>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <strong style="color:var(--text)">The crucial difference:</strong>
+    In the old 1D approach, the rows were collapsed — ក and ្រ would share the same dimensions
+    in the vector, overwriting each other. In the new 2D patch approach,
+    they occupy <strong style="color:#fff">separate, non-overlapping dimensions</strong> (1536–2047 vs 3072–3583)
+    of the same 4096-dim patch vector. The Transformer can distinguish them without ambiguity.
+  </div>
+</div>
+
+<div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">n = 64 patches · each 4096-dim · Transformer input ready</div></div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- PART 6 — OLD vs NEW COMPARISON         -->
+<!-- ─────────────────────────────────────── -->
+<div class="card c-blue" style="animation-delay:.25s">
+  <div class="card-label" style="color:var(--accent2)">⚖️ Part 6 — Old Way vs New Way: Side by Side</div>
+  <h2>The complete comparison</h2>
+
+  <div class="cmp-grid">
+    <div class="cmp-box old">
+      <h3 style="color:var(--danger);">❌ Old Way (1D collapse)</h3>
+      <ul>
+        <li>Feature map 8×64×256</li>
+        <li>8 rows collapsed → averaged into 1</li>
+        <li>Sequence: <strong>248 × 256</strong></li>
+        <li>Vertical structure <strong>destroyed</strong></li>
+        <li>ក and ្រ share the same dims → confused</li>
+        <li>Self-attention cost: <strong>248² = 61,504</strong></li>
+        <li>Khmer clusters often misread</li>
+      </ul>
+    </div>
+    <div class="cmp-box new">
+      <h3 style="color:var(--green);">✅ New Way (2D patches)</h3>
+      <ul>
+        <li>Feature map 8×64×512</li>
+        <li>8 rows <strong>preserved</strong> in each patch</li>
+        <li>Sequence: <strong>64 × 4096</strong></li>
+        <li>Vertical structure <strong>preserved</strong></li>
+        <li>ក at dims 1536–2047, ្រ at 3072–3583 → separate</li>
+        <li>Self-attention cost: <strong>64² = 4,096 (15× less!)</strong></li>
+        <li>Khmer clusters decoded correctly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px 18px;margin-top:14px;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:8px;letter-spacing:1px;">COMPLEXITY COMPARISON</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--danger);width:160px;">Old: n=248 → n²=61,504</div>
+        <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+          <div style="height:100%;width:100%;background:linear-gradient(90deg,var(--danger),rgba(239,68,68,.3));border-radius:4px;"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--green);width:160px;">New: n=64 → n²=4,096</div>
+        <div style="flex:1;height:14px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+          <div style="height:100%;width:6.6%;background:linear-gradient(90deg,var(--green),rgba(34,197,94,.3));border-radius:4px;"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--green);">15× less</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────── -->
+<!-- FINAL SUMMARY                          -->
+<!-- ─────────────────────────────────────── -->
+<div class="card" style="background:rgba(249,115,22,.06);border-color:rgba(249,115,22,.25);animation-delay:.30s">
+  <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;">🔑 Summary: Why 2D Patches are the Right Approach for Khmer</div>
+  <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:#94a3b8;line-height:1.8;">
+    <div>1. The CNN produces a <strong style="color:#fff">3D feature map</strong> (Rows × Cols × Channels) that preserves vertical spatial structure.</div>
+    <div>2. Instead of collapsing rows, the map is sliced into <strong style="color:#fff">vertical patch vectors</strong> — each patch spans ALL rows.</div>
+    <div>3. Each patch vector's dimensions are <strong style="color:#fff">partitioned by row</strong>: base consonant features and subscript features occupy different, non-overlapping ranges.</div>
+    <div>4. The Transformer's self-attention can now <strong style="color:#fff">directly compare</strong> the base consonant zone and subscript zone within a single patch, correctly reading clusters like ក្រ, ស្ត, ប្រ.</div>
+    <div>5. Bonus: n=64 patches instead of n=248 → self-attention cost drops from <span style="color:var(--danger)">61,504</span> to <span style="color:var(--green)">4,096</span> pairs — a <strong style="color:#fff">15× reduction</strong>.</div>
+  </div>
+</div>
+
+<script>
+// ── Interactive Feature Map Grid ──
+const ROWS = 8, COLS = 20;
+const rowColors = [
+  'rgba(239,68,68,A)',    // r1 - danger
+  'rgba(251,191,36,A)',   // r2 - yellow
+  'rgba(59,130,246,A)',   // r3 - blue
+  'rgba(59,130,246,A)',   // r4 - blue (base consonant)
+  'rgba(59,130,246,A)',   // r5 - blue
+  'rgba(168,85,247,A)',   // r6 - purple
+  'rgba(168,85,247,A)',   // r7 - purple (subscript)
+  'rgba(100,116,139,A)',  // r8 - muted
+];
+const rowNames = [
+  'r1 diacritics', 'r2 vowels above', 'r3 consonant top',
+  'r4 BASE', 'r5 consonant low', 'r6 coeng', 'r7 SUBSCRIPT', 'r8 vowels below'
+];
+
+// Column labels
+const colLabels = document.getElementById('colLabels');
+for (let c = 0; c < COLS; c++) {
+  const lbl = document.createElement('div');
+  lbl.style.cssText = `width:28px;text-align:center;font-family:var(--mono);font-size:8px;color:var(--muted);`;
+  lbl.textContent = `c${c+1}`;
+  colLabels.appendChild(lbl);
+}
+
+// Row labels
+const rowLabels = document.getElementById('rowLabels');
+for (let r = 0; r < ROWS; r++) {
+  const lbl = document.createElement('div');
+  lbl.style.cssText = `height:28px;display:flex;align-items:center;font-family:var(--mono);font-size:8px;white-space:nowrap;`;
+  lbl.style.color = rowColors[r].replace('A', '0.8');
+  lbl.textContent = rowNames[r];
+  rowLabels.appendChild(lbl);
+}
+
+// Grid cells
+const fmGrid = document.getElementById('fmGrid');
+fmGrid.style.gridTemplateColumns = `repeat(${COLS}, 28px)`;
+const cells = [];
+let activePatch = null;
+
+for (let r = 0; r < ROWS; r++) {
+  cells[r] = [];
+  for (let c = 0; c < COLS; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'fm-cell';
+    const intensity = (0.2 + Math.random() * 0.65).toFixed(2);
+    cell.dataset.r = r; cell.dataset.c = c;
+    cell.dataset.intensity = intensity;
+    cell.style.background = rowColors[r].replace('A', intensity);
+    cell.title = `row ${r+1}, col ${c+1}`;
+
+    cell.addEventListener('click', () => selectPatch(c));
+    cells[r][c] = cell;
+    fmGrid.appendChild(cell);
+  }
+}
+
+function selectPatch(col) {
+  // Reset all
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) {
+      cells[r][c].style.border = '1px solid rgba(255,255,255,.06)';
+      cells[r][c].style.transform = '';
+    }
+
+  // Highlight selected column
+  for (let r = 0; r < ROWS; r++) {
+    cells[r][col].style.border = '2px solid #fff';
+    cells[r][col].style.transform = 'scale(1.1)';
+  }
+  activePatch = col;
+
+  // Update detail panel
+  const patchInfo = document.getElementById('patchInfo');
+  patchInfo.innerHTML = `
+    <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:8px;font-weight:700;">Patch at column ${col+1}</div>
+    <div style="margin-bottom:8px;font-size:12px;">Shape: <strong style="color:#fff">[8 rows × 1 col × 512 ch]</strong></div>
+    <div style="margin-bottom:8px;font-size:12px;">Flattened vector: <strong style="color:var(--accent)">8 × 512 = 4096 dims</strong></div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;">Row activations (sampled):</div>
+    ${[0,1,2,3,4,5,6,7].map(r => {
+      const intensity = parseFloat(cells[r][col].dataset.intensity);
+      const pct = Math.round(intensity * 100);
+      const col2 = rowColors[r].replace('A', '0.7');
+      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-family:var(--mono);font-size:9px;color:${col2};width:24px;">r${r+1}</span>
+        <div style="flex:1;height:10px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${col2};border-radius:3px;"></div>
+        </div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--muted);width:28px;">${pct}%</span>
+      </div>`;
+    }).join('')}
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px;">Dims 0–511 = r1 · 512–1023 = r2 · … · 3584–4095 = r8</div>
+  `;
+}
+
+// Auto-select patch 8 on load
+setTimeout(() => selectPatch(7), 400);
+</script>
+</body>
+</html>
