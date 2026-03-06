@@ -1,1027 +1,1738 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>The Old Way — 1D Feature Sequences in Khmer OCR</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Noto+Sans+Khmer:wght@100..900&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khmer OCR — The Old Way: 1D Feature Pipeline</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+
   :root {
-    --bg: #0f1117;
-    --card: #1a1d27;
-    --card2: #21253a;
-    --accent: #e65100;
-    --accent2: #ff8a50;
-    --blue: #1565c0;
-    --blue2: #42a5f5;
-    --green: #1b5e20;
-    --green2: #66bb6a;
-    --purple: #4a148c;
-    --purple2: #ab47bc;
-    --red: #b71c1c;
-    --red2: #ef5350;
-    --gold: #f9a825;
-    --text: #e8eaf6;
-    --muted: #9fa8da;
-    --border: #2a2d3e;
+    --bg: #0a0c14;
+    --surface: #111520;
+    --surface2: #161b2e;
+    --border: #1e2640;
+    --accent: #f97316;
+    --accent2: #3b82f6;
+    --accent3: #a855f7;
+    --danger: #ef4444;
+    --green: #22c55e;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer OS', 'Syne', sans-serif;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
+    font-family: var(--sans);
+    padding: 40px 20px 80px;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(59,130,246,0.08), transparent),
+      radial-gradient(ellipse 60% 30% at 80% 90%, rgba(249,115,22,0.06), transparent);
   }
 
-  /* ── HERO ── */
-  .hero {
-    background: linear-gradient(135deg, #1a0a00 0%, #2d1200 40%, #1a0033 100%);
-    border-bottom: 3px solid var(--accent);
-    padding: 48px 32px 40px;
+  /* ── Header ── */
+  .header {
     text-align: center;
+    margin-bottom: 48px;
   }
-  .hero .tag {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
+  .header .label {
+    font-family: var(--mono);
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 4px 14px;
-    border-radius: 20px;
-    margin-bottom: 16px;
-  }
-  .hero h1 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 10px;
-  }
-  .hero h1 span { color: var(--accent2); }
-  .hero p {
-    color: var(--muted);
-    font-size: 1.05rem;
-    max-width: 640px;
-    margin: 0 auto 20px;
-  }
-  .hero .source {
-    font-size: 11px;
-    color: #6b7280;
-    font-style: italic;
-  }
-
-  /* ── LAYOUT ── */
-  .container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
-  .section { margin-top: 48px; }
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 3px;
     color: var(--accent2);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    margin-bottom: 12px;
   }
-  .section-title .icon { font-size: 1.3rem; }
+  .header h1 {
+    font-size: clamp(24px, 4vw, 40px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #f97316, #fb923c, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 10px;
+    font-family: var(--mono);
+  }
 
-  /* ── PIPELINE STEPS ── */
+  /* ── Input Banner ── */
+  .input-banner {
+    max-width: 860px;
+    margin: 0 auto 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .input-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent3));
+  }
+  .input-banner .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .khmer-text {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .dims-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dim-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .dim-chip span { color: var(--accent); font-weight: 700; }
+  .warning-chip {
+    background: rgba(249,115,22,0.1);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #fb923c;
+    font-family: var(--mono);
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Image Visual ── */
+  .image-visual {
+    margin-top: 18px;
+    position: relative;
+  }
+  .pixel-grid {
+    width: 100%;
+    height: 32px;
+    background: linear-gradient(90deg,
+      #1a1a2e 0%, #16213e 5%, #0f3460 12%, #533483 20%,
+      #1a1a2e 28%, #16213e 35%, #0f3460 45%,
+      #533483 55%, #1a1a2e 65%, #16213e 75%,
+      #0f3460 85%, #533483 95%, #1a1a2e 100%);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+  .pixel-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+  }
+  .pixel-grid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(255,255,255,0.03) 7px, rgba(255,255,255,0.03) 8px);
+  }
+  .dim-arrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .dim-h { color: var(--green); }
+  .dim-w { color: var(--accent2); }
+
+  /* ── Steps ── */
   .pipeline {
+    max-width: 860px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 0;
   }
-  .step {
-    display: flex;
-    gap: 0;
-    align-items: stretch;
-  }
-  .step-connector {
+
+  .connector {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 48px;
-    flex-shrink: 0;
+    padding: 6px 0;
+  }
+  .connector-line {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--border), var(--accent2));
+  }
+  .connector-arrow {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--accent2);
+  }
+  .connector-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .step:nth-child(2)  { animation-delay: 0.05s; }
+  .step:nth-child(4)  { animation-delay: 0.1s; }
+  .step:nth-child(6)  { animation-delay: 0.15s; }
+  .step:nth-child(8)  { animation-delay: 0.2s; }
+  .step:nth-child(10) { animation-delay: 0.25s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px;
+    height: 100%;
+    border-radius: 16px 0 0 16px;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
   }
   .step-num {
+    flex-shrink: 0;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    font-family: var(--mono);
     font-size: 14px;
-    flex-shrink: 0;
-    border: 2px solid;
+    font-weight: 700;
   }
-  .step-line {
-    width: 2px;
-    flex: 1;
-    min-height: 24px;
-    background: var(--border);
-    margin: 4px 0;
+  .step-meta { flex: 1; }
+  .step-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .step-subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
   }
   .step-body {
-    flex: 1;
-    background: var(--card);
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  /* ── Viz blocks ── */
+  .viz { margin-top: 4px; }
+
+  /* Step 1 — full image bar */
+  .full-image-bar {
+    background: var(--surface2);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 18px 20px;
-    margin-bottom: 12px;
-  }
-  .step-body h3 {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .step-body p { color: #c5cae9; font-size: 0.93rem; margin-bottom: 8px; }
-  .step-body p:last-child { margin-bottom: 0; }
-
-  /* colors per step */
-  .s1 .step-num { background: #0d47a1; border-color: var(--blue2); color: #fff; }
-  .s2 .step-num { background: #1b5e20; border-color: var(--green2); color: #fff; }
-  .s3 .step-num { background: #4a148c; border-color: var(--purple2); color: #fff; }
-  .s4 .step-num { background: #b71c1c; border-color: var(--red2); color: #fff; }
-  .s5 .step-num { background: #e65100; border-color: var(--accent2); color: #fff; }
-
-  .s1 .step-body { border-color: #1565c0; }
-  .s2 .step-body { border-color: #2e7d32; }
-  .s3 .step-body { border-color: #6a1b9a; }
-  .s4 .step-body { border-color: #c62828; }
-  .s5 .step-body { border-color: var(--accent); }
-
-  .s1 .step-body h3 { color: var(--blue2); }
-  .s2 .step-body h3 { color: var(--green2); }
-  .s3 .step-body h3 { color: var(--purple2); }
-  .s4 .step-body h3 { color: var(--red2); }
-  .s5 .step-body h3 { color: var(--accent2); }
-
-  /* ── IMAGE VISUALIZER ── */
-  .img-strip {
-    background: var(--card2);
-    border: 1px solid #1565c0;
     border-radius: 10px;
-    padding: 16px;
-    margin: 12px 0;
-  }
-  .img-strip-label {
-    font-size: 11px;
-    color: var(--blue2);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
-    margin-bottom: 10px;
+    padding: 14px 16px;
   }
   .img-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    gap: 10px;
+    margin-bottom: 8px;
   }
-  .img-pixel-block {
-    height: 40px;
+  .img-block {
+    flex: 1;
+    height: 32px;
+    background: linear-gradient(90deg,
+      #1e3a5f 0%, #2d5a9e 8%, #1e3a5f 16%, #1a3254 24%,
+      #2d5a9e 32%, #1e3a5f 40%, #2d5a9e 50%,
+      #1e3a5f 60%, #2d5a9e 70%, #1e3a5f 80%,
+      #2d5a9e 90%, #1e3a5f 100%);
     border-radius: 4px;
+    border: 1px solid rgba(59,130,246,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    color: rgba(255,255,255,0.7);
-    font-weight: 600;
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-family: var(--mono);
+    position: relative;
+    overflow: hidden;
+  }
+  .img-block::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(255,255,255,0.04) 9px, rgba(255,255,255,0.04) 10px);
+  }
+  .size-label {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  /* Step 2 — CNN grid */
+  .cnn-transform {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .matrix {
     flex-shrink: 0;
   }
-  .khmer-text-block {
-    background: linear-gradient(90deg, #1a237e, #283593, #303f9f, #283593, #1a237e);
-    width: 480px;
-    height: 44px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer OS', serif;
-    font-size: 18px;
-    color: #fff;
-    letter-spacing: 2px;
-    border: 1px solid #3949ab;
+  .matrix-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-align: center;
   }
-  .dim-badge {
-    display: inline-block;
-    background: #0d47a1;
-    color: #90caf9;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-family: monospace;
-    margin: 4px 2px;
+  .pixel-matrix {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    width: 130px;
   }
-  .dim-badge.green { background: #1b5e20; color: #a5d6a7; }
-  .dim-badge.purple { background: #4a148c; color: #ce93d8; }
-  .dim-badge.red { background: #b71c1c; color: #ef9a9a; }
-  .dim-badge.gold { background: #f57f17; color: #fff9c4; }
-  .dim-badge.gray { background: #263238; color: #90a4ae; }
-
-  /* ── FEATURE SEQUENCE VIZ ── */
-  .feat-seq-container {
-    background: var(--card2);
-    border: 1px solid #6a1b9a;
-    border-radius: 10px;
-    padding: 16px;
-    margin: 12px 0;
+  .pm-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
   }
-  .feat-seq-label {
-    font-size: 11px;
-    color: var(--purple2);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
-    margin-bottom: 12px;
+  .feat-matrix {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    width: 130px;
   }
-  .feat-vectors {
-    display: flex;
-    gap: 4px;
-    align-items: flex-end;
-    overflow-x: auto;
-    padding-bottom: 6px;
+  .fm-cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
   }
-  .vec-col {
+  .cnn-arrow {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     flex-shrink: 0;
   }
-  .vec-box {
+  .cnn-arrow-line {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--green));
+    position: relative;
+  }
+  .cnn-arrow-line::after {
+    content: '▶';
+    position: absolute;
+    right: -8px;
+    top: -7px;
+    font-size: 10px;
+    color: var(--green);
+  }
+  .cnn-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .formula-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .formula {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+  .formula span { color: #fff; }
+  .formula-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  /* Step 3 — flatten */
+  .flatten-viz {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .grid-2d {
+    display: grid;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .grid-cell {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(168,85,247,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: rgba(255,255,255,0.4);
+  }
+  .flatten-arrow {
+    font-size: 20px;
+    color: var(--accent3);
+    flex-shrink: 0;
+  }
+  .seq-1d {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .seq-cell {
+    width: 60px;
+    height: 16px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgba(168,85,247,0.6), rgba(59,130,246,0.4));
+    border: 1px solid rgba(168,85,247,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  /* Step 4 — attention matrix */
+  .attention-section { }
+  .attention-matrix-wrap {
+    overflow-x: auto;
+  }
+  .attention-matrix {
+    display: grid;
+    gap: 2px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .att-cell {
     width: 22px;
+    height: 22px;
     border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 7px;
+    font-family: var(--mono);
+    font-size: 6px;
     color: rgba(255,255,255,0.5);
+    transition: transform 0.2s;
   }
-  .vec-label {
-    font-size: 9px;
-    color: #9e9e9e;
-    margin-top: 4px;
-    font-family: monospace;
+  .att-cell:hover { transform: scale(1.3); }
+
+  .complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 16px;
   }
-  .vec-index-label {
+  .complexity-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
     font-size: 10px;
-    color: var(--purple2);
-    font-weight: 700;
-    margin-bottom: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .complexity-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(30,38,64,0.5);
+  }
+  .complexity-table tr.highlight td { color: var(--danger); font-weight: 700; }
+  .bar-cell { width: 140px; }
+  .bar-inner {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--danger);
+    opacity: 0.8;
   }
 
-  /* ── ATTENTION GRID ── */
-  .attn-section {
-    background: var(--card2);
-    border: 1px solid #b71c1c;
+  .problem-box {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.3);
     border-radius: 10px;
-    padding: 16px;
-    margin: 12px 0;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #fca5a5;
   }
-  .attn-label {
-    font-size: 11px;
-    color: var(--red2);
-    text-transform: uppercase;
+  .problem-box strong { color: var(--danger); }
+
+  /* Step 5 — decoder */
+  .decoder-viz {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .enc-block {
+    background: var(--surface2);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    flex-shrink: 0;
+  }
+  .enc-block-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    margin-bottom: 8px;
     letter-spacing: 1px;
-    font-weight: 700;
+  }
+  .enc-tokens {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .enc-tok {
+    width: 80px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, rgba(59,130,246,0.5), rgba(59,130,246,0.2));
+    border: 1px solid rgba(59,130,246,0.3);
+  }
+  .dec-flow {
+    flex: 1;
+  }
+  .char-output {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
     margin-bottom: 12px;
   }
-  .attn-grid-wrap {
-    overflow-x: auto;
+  .char-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    border: 1px solid;
+    position: relative;
   }
-  .attn-grid {
-    display: inline-grid;
-    gap: 2px;
+  .char-box.active {
+    background: rgba(249,115,22,0.15);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 16px rgba(249,115,22,0.2);
   }
-  .attn-cell {
-    width: 18px;
-    height: 18px;
-    border-radius: 2px;
+  .char-box.done {
+    background: rgba(34,197,94,0.08);
+    border-color: rgba(34,197,94,0.3);
+    color: var(--green);
+  }
+  .char-box.pending {
+    background: var(--surface2);
+    border-color: var(--border);
+    color: var(--muted);
+    font-size: 18px;
+  }
+  .prob-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .prob-bar-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .prob-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .prob-char {
+    width: 24px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .prob-track {
+    flex: 1;
+    height: 10px;
+    background: var(--surface);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .prob-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: var(--accent2);
+  }
+  .prob-fill.top { background: var(--accent); }
+  .prob-pct {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    width: 36px;
+    text-align: right;
   }
 
-  /* ── COMPLEXITY CHART ── */
-  .complexity-chart {
-    background: var(--card2);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 20px;
-    margin: 16px 0;
+  /* ── Summary ── */
+  .summary {
+    max-width: 860px;
+    margin: 32px auto 0;
+    background: rgba(239,68,68,0.07);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 16px;
+    padding: 24px 28px;
   }
-  .chart-title {
-    font-size: 13px;
-    color: var(--accent2);
+  .summary-title {
+    font-size: 16px;
     font-weight: 700;
+    color: var(--danger);
     margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .chart-row {
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .sc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .sc-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--danger);
+  }
+  .sc-value.good { color: var(--green); }
+  .sc-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  /* colours per step */
+  .s1 { --sc: #3b82f6; }
+  .s2 { --sc: #22c55e; }
+  .s3 { --sc: #a855f7; }
+  .s4 { --sc: #ef4444; }
+  .s5 { --sc: #f97316; }
+
+  .step .step-accent-bar { background: var(--sc); }
+  .step .step-num { background: color-mix(in srgb, var(--sc) 15%, transparent); color: var(--sc); border: 1px solid color-mix(in srgb, var(--sc) 30%, transparent); }
+  .step .step-name { color: var(--sc); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="label">IEEE Access · Khmer OCR Paper Explainer</div>
+  <h1>The Old Way — 1D Feature Pipeline</h1>
+  <p>How traditional OCR tried (and struggled) to read Khmer text</p>
+</div>
+
+<!-- Intro: What is a Feature Sequence -->
+<div class="input-banner" style="margin-bottom:20px;">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),#fbbf24,var(--accent3));"></div>
+
+  <div class="tag" style="color:var(--accent);font-size:11px;letter-spacing:2px;margin-bottom:14px;">
+    🎯 FIRST — What Does "Feature Sequence" Even Mean?
+  </div>
+
+  <p style="font-size:14px;color:#94a3b8;line-height:1.8;margin-bottom:18px;">
+    A computer cannot "read" an image directly. The OCR model first needs to
+    <strong style="color:var(--text);">translate the image into numbers</strong>.
+    Those numbers are called <strong style="color:var(--accent);">features</strong>.
+    When they are arranged in a list (one after another), it becomes a
+    <strong style="color:var(--accent);">feature sequence</strong>.
+  </p>
+
+  <!-- Analogy card -->
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;">
+    <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+      💡 Simple Analogy
+    </div>
+    <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
+      Think of the image as a long sentence written on a strip of paper.
+      A feature sequence is what you get when you <strong style="color:var(--text);">describe each small section
+      of that strip in numbers</strong>. Instead of
+      <span style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;color:#fff;font-size:15px;"> "ក looks like this"</span>,
+      you get:
+    </p>
+
+    <!-- Visual: strip → positions → vectors -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+
+      <!-- Paper strip -->
+      <div style="flex-shrink:0;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:5px;text-align:center;">Image strip</div>
+        <div style="display:flex;gap:2px;">
+          <div style="width:32px;height:36px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:16px;color:#fff;">ត</div>
+          <div style="width:32px;height:36px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:16px;color:#fff;">ា</div>
+          <div style="width:32px;height:36px;background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:16px;color:#fff;">ក</div>
+          <div style="width:32px;height:36px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:16px;color:#fff;">ែ</div>
+          <div style="width:32px;height:36px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;font-size:16px;color:#fff;">វ</div>
+        </div>
+      </div>
+
+      <div style="font-size:20px;color:var(--muted);flex-shrink:0;">→</div>
+
+      <!-- Positions -->
+      <div style="flex-shrink:0;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:5px;text-align:center;">Positions</div>
+        <div style="display:flex;gap:2px;">
+          <div style="width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);">p1</div>
+          <div style="width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);">p2</div>
+          <div style="width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);">p3</div>
+          <div style="width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);">p4</div>
+          <div style="width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);">p5</div>
+        </div>
+      </div>
+
+      <div style="font-size:20px;color:var(--muted);flex-shrink:0;">→</div>
+
+      <!-- Feature vector example -->
+      <div style="flex:1;min-width:160px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:5px;">Feature vector at position 5</div>
+        <div style="background:var(--surface);border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:10px 12px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:6px;">position 5 →</div>
+          <div style="font-family:var(--mono);font-size:11px;color:#94a3b8;">[<span style="color:var(--green);">0.8</span>, <span style="color:var(--accent2);">0.1</span>, <span style="color:var(--accent3);">0.4</span>, <span style="color:#fbbf24;">0.9</span>, <span style="color:var(--green);">0.3</span>, <span style="color:var(--muted);">…</span>]</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:5px;">D = 256 numbers total</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:#94a3b8;line-height:1.6;">
+      A vector of <strong style="color:var(--text);">D = 256 numbers</strong> encodes what the model "saw" at that position.
+      The full sequence of <strong style="color:var(--accent);">n such vectors</strong> is the
+      <strong style="color:var(--text);">feature sequence</strong> — the image turned into structured numbers the Transformer can reason about.
+    </div>
+  </div>
+</div>
+
+<!-- Input Banner -->
+<div class="input-banner">
+  <div class="tag">📷 Input — Khmer text line image</div>
+  <div class="khmer-text">តាកែវ គឺ ស៊ីសាមុត ប្រជាពលរដ្ឋ</div>
+  <div class="dims-row">
+    <div class="dim-chip">Height H = <span>32 px</span></div>
+    <div class="dim-chip">Width W = <span>500 px</span></div>
+    <div class="dim-chip">Channels = <span>1</span> (grayscale)</div>
+  </div>
+  <div class="warning-chip">⚠️ Khmer text lines are very wide — no spaces between words!</div>
+  <div class="image-visual">
+    <div class="pixel-grid">
+      <span class="pixel-text">តាកែវ គឺ ស៊ីសាមុត ប្រជាពលរដ្ឋ</span>
+    </div>
+    <div class="dim-arrow">
+      <span class="dim-h">H = 32 px ↕</span>
+      &nbsp;&nbsp;
+      <span class="dim-w">W = 500 px ↔</span>
+    </div>
+  </div>
+</div>
+
+<!-- Pipeline -->
+<div class="pipeline">
+
+  <!-- STEP 1 -->
+  <div class="step s1">
+    <div class="step-accent-bar"></div>
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <div class="step-meta">
+        <div class="step-name">INPUT — Full-width Khmer text line</div>
+        <div class="step-subtitle">The complete image enters as one wide tensor</div>
+      </div>
+    </div>
+    <div class="step-body">
+      The model receives the complete text line as a single image. <strong>No splitting or chunking is done.</strong>
+      The entire 500-pixel width is handed to the next step at once.
+      The wider the Khmer sentence, the harder the problem.
+    </div>
+    <div class="viz">
+      <div class="full-image-bar">
+        <div class="img-row">
+          <div class="img-block" style="height:44px; font-size:14px; color:rgba(255,255,255,0.7);">
+            <span style="position:relative;z-index:3;">តាកែវ គឺ ស៊ីសាមុត ប្រជាពលរដ្ឋ</span>
+          </div>
+          <div class="size-label" style="color:#3b82f6; font-weight:700; flex-shrink:0;">32 × 500 × 1</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--muted);">
+          <span style="color:var(--green);">↕ H=32</span>
+          <div style="flex:1;height:6px;background:var(--surface);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:3px;width:100%;"></div>
+          </div>
+          <span style="color:#3b82f6;">↔ W=500</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">32×500×1 tensor</div></div>
+
+  <!-- STEP 2 -->
+  <div class="step s2">
+    <div class="step-accent-bar"></div>
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <div class="step-meta">
+        <div class="step-name">CNN — Extract a 2D feature map</div>
+        <div class="step-subtitle">Convolutional Neural Network · spatial compression + semantic depth</div>
+      </div>
+    </div>
+    <div class="step-body">
+      A CNN scans the image like a magnifying glass, detecting edges, curves, and character shapes.
+      It shrinks the spatial size (÷8 each dimension) but adds depth (256 channels of learned features).
+    </div>
+    <div class="viz">
+      <div class="formula-box">
+        <div class="formula">F = CNN(I)</div>
+        <div class="formula">
+          <span>32 × 500 × 1</span>
+          &nbsp;→&nbsp;
+          <span style="color:var(--green);">4 × 62 × 256</span>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:20px;flex-wrap:wrap;">
+          <div style="font-family:var(--mono);font-size:11px;">
+            <span style="color:var(--muted);">Height:</span>
+            <span style="color:#fff;"> 32 ÷ 8 = </span>
+            <span style="color:var(--green);">4</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;">
+            <span style="color:var(--muted);">Width:</span>
+            <span style="color:#fff;"> 500 ÷ 8 = </span>
+            <span style="color:var(--green);">62</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;">
+            <span style="color:var(--muted);">Channels:</span>
+            <span style="color:#fff;"> 1 → </span>
+            <span style="color:var(--green);">256</span>
+          </div>
+        </div>
+        <div class="formula-note" style="margin-top:10px;">Each cell in the 4×62 grid holds 256 numbers describing what the CNN detected in that patch.</div>
+      </div>
+
+      <!-- Visual: small pixel grid → feature map -->
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <div class="matrix">
+          <div class="matrix-title">Input pixels (simplified)</div>
+          <div class="pixel-matrix" id="pixelMatrix"></div>
+          <div style="text-align:center;font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;">8×10 shown</div>
+        </div>
+        <div class="cnn-arrow">
+          <div class="cnn-arrow-line"></div>
+          <div class="cnn-label">CNN ÷8</div>
+        </div>
+        <div class="matrix">
+          <div class="matrix-title">Feature map (4 rows × 10 cols shown)</div>
+          <div class="feat-matrix" id="featMatrix"></div>
+          <div style="text-align:center;font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;">4×10 (each cell = 256-dim)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">Feature Map 4×62×256</div></div>
+
+  <!-- STEP 3 -->
+  <div class="step s3">
+    <div class="step-accent-bar"></div>
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <div class="step-meta">
+        <div class="step-name">PATCH_ENC — Flatten 2D → 1D sequence</div>
+        <div class="step-subtitle">Reading the grid column-by-column into a flat list</div>
+      </div>
+    </div>
+    <div class="step-body">
+      The 2D feature map (a grid) must be turned into a <strong>1D sequence</strong> — a flat list of vectors —
+      so the Transformer can process it like a sentence. PATCH_ENC reads column by column and stacks everything.
+    </div>
+    <div class="viz">
+      <div class="formula-box" style="margin-bottom:16px;">
+        <div class="formula">P = PATCH_ENC(F)</div>
+        <div class="formula">
+          <span>4 × 62 × 256</span>
+          &nbsp;→&nbsp;
+          <span style="color:var(--accent3);">248 × 256</span>
+        </div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+          n = 4 × 62 = <span style="color:var(--accent3);">248 vectors</span> &nbsp;|&nbsp;
+          D = <span style="color:#fff;">256</span> numbers per vector
+        </div>
+      </div>
+
+      <div class="flatten-viz">
+        <!-- 2D grid -->
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;text-align:center;">2D Feature Map (4×8 shown)</div>
+          <div id="grid2d" class="grid-2d" style="grid-template-columns:repeat(8,1fr);"></div>
+        </div>
+        <div class="flatten-arrow">→</div>
+        <!-- 1D sequence -->
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;text-align:center;">1D Sequence (32 shown)</div>
+          <div id="seq1d" style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px;">📌 What is D?</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+          <strong style="color:var(--accent3);">D = 256</strong> is the dimension of each feature vector — how many numbers are packed inside one position.
+          Every position (1 to n=248) has exactly 256 numbers describing that image patch.
+          <br>So the full sequence = <strong style="color:#fff;">248 positions × 256 numbers each</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">Sequence 248 × 256</div></div>
+
+  <!-- STEP 4 -->
+  <div class="step s4">
+    <div class="step-accent-bar"></div>
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <div class="step-meta">
+        <div class="step-name">TR_ENC — Transformer Encoder (⚠️ The Bottleneck)</div>
+        <div class="step-subtitle">Self-Attention · O(n²) complexity · explodes for long Khmer lines</div>
+      </div>
+    </div>
+    <div class="step-body">
+      The Transformer Encoder reads all 248 vectors and uses <strong>self-attention</strong> to let every vector
+      "look at" every other vector. This is powerful but expensive — it computes <strong>n × n pairs</strong>.
+    </div>
+    <div class="viz">
+
+      <!-- Attention matrix -->
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;">🔴 Self-Attention grid (n=16 small example) — every vector attends to every other</div>
+      <div class="attention-matrix-wrap">
+        <div class="attention-matrix" id="attMatrix" style="grid-template-columns:repeat(16,1fr);"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px;">16 × 16 = 256 pairs shown · for n=248 this is 61,504 pairs</div>
+
+      <!-- Complexity table -->
+      <table class="complexity-table">
+        <thead>
+          <tr>
+            <th>Sequence length n</th>
+            <th>Attention pairs (n²)</th>
+            <th>Relative cost</th>
+            <th class="bar-cell">Growth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--green);">62 (short)</td>
+            <td>3,844</td>
+            <td style="color:var(--green);">1×</td>
+            <td class="bar-cell"><div class="bar-inner" style="width:8%;background:var(--green);"></div></td>
+          </tr>
+          <tr>
+            <td>248 (our case)</td>
+            <td>61,504</td>
+            <td>16×</td>
+            <td class="bar-cell"><div class="bar-inner" style="width:25%;background:#f59e0b;"></div></td>
+          </tr>
+          <tr>
+            <td>500 (medium)</td>
+            <td>250,000</td>
+            <td>65×</td>
+            <td class="bar-cell"><div class="bar-inner" style="width:50%;"></div></td>
+          </tr>
+          <tr class="highlight">
+            <td>1000 (long Khmer)</td>
+            <td>1,000,000</td>
+            <td>260×</td>
+            <td class="bar-cell"><div class="bar-inner" style="width:100%;"></div></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="problem-box">
+        <strong>⚠️ O(n²) Problem:</strong> If you double the width of the image (longer Khmer sentence),
+        n doubles and the attention cost <strong>quadruples (×4)</strong>.
+        Memory and time grow <em>explosively</em> for long Khmer text lines with no word boundaries.
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div><div class="connector-label">Encoded sequence T (248 × 256)</div></div>
+
+  <!-- STEP 5 -->
+  <div class="step s5">
+    <div class="step-accent-bar"></div>
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <div class="step-meta">
+        <div class="step-name">TR_DEC — Decoder generates text character by character</div>
+        <div class="step-subtitle">Autoregressive · one character per step · outputs over 131 Khmer classes</div>
+      </div>
+    </div>
+    <div class="step-body">
+      The Transformer Decoder reads the encoded sequence and generates output text
+      <strong>one character at a time</strong>. At each step it outputs a probability over all C = 131 Khmer
+      characters, then feeds that character back as input for the next step.
+      The decoder itself is <em>not</em> the bottleneck — the bottleneck is TR_ENC's O(n²) attention.
+    </div>
+    <div class="viz">
+      <div class="decoder-viz">
+        <!-- Encoded sequence -->
+        <div class="enc-block">
+          <div class="enc-block-title">ENCODED SEQUENCE T</div>
+          <div class="enc-tokens" id="encTokens"></div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px;">248 vectors × 256-dim</div>
+        </div>
+        <!-- Arrow -->
+        <div style="font-size:24px;color:var(--accent);flex-shrink:0;align-self:center;">→</div>
+        <!-- Decoder output -->
+        <div class="dec-flow" style="flex:1;min-width:180px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Output characters (step by step)</div>
+          <div class="char-output">
+            <div class="char-box done">ត</div>
+            <div class="char-box done">ា</div>
+            <div class="char-box done">ក</div>
+            <div class="char-box done">ែ</div>
+            <div class="char-box done">វ</div>
+            <div class="char-box active">?</div>
+            <div class="char-box pending">…</div>
+          </div>
+          <div class="prob-bar">
+            <div class="prob-bar-title">Probability at current step (over 131 chars)</div>
+            <div class="prob-row">
+              <div class="prob-char">គ</div>
+              <div class="prob-track"><div class="prob-fill top" style="width:72%;"></div></div>
+              <div class="prob-pct">72%</div>
+            </div>
+            <div class="prob-row">
+              <div class="prob-char">ក</div>
+              <div class="prob-track"><div class="prob-fill" style="width:14%;"></div></div>
+              <div class="prob-pct">14%</div>
+            </div>
+            <div class="prob-row">
+              <div class="prob-char">ង</div>
+              <div class="prob-track"><div class="prob-fill" style="width:8%;background:var(--muted);"></div></div>
+              <div class="prob-pct">8%</div>
+            </div>
+            <div class="prob-row">
+              <div class="prob-char">…</div>
+              <div class="prob-track"><div class="prob-fill" style="width:6%;background:var(--muted);"></div></div>
+              <div class="prob-pct">6%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pipeline -->
+
+<!-- Summary -->
+<div class="summary">
+  <div class="summary-title">🔴 Why the Old Way Fails for Khmer</div>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-label">Bottleneck</div>
+      <div class="sc-value">O(n²)</div>
+      <div class="sc-note">Self-attention pairs grow quadratically with image width</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">At W = 500 px</div>
+      <div class="sc-value">250,000 pairs</div>
+      <div class="sc-note">vs 3,844 for a short word image</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Root cause</div>
+      <div class="sc-value">No word spaces</div>
+      <div class="sc-note">Khmer lines are arbitrarily long — can't assume max width</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">The fix (new paper)</div>
+      <div class="sc-value good">Chunking → O(n)</div>
+      <div class="sc-note">Split into small chunks · reduces complexity to linear</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Generate pixel matrix (step 2)
+const pm = document.getElementById('pixelMatrix');
+for (let i = 0; i < 80; i++) {
+  const cell = document.createElement('div');
+  cell.className = 'pm-cell';
+  const v = Math.floor(Math.random() * 180 + 40);
+  cell.style.background = `rgb(${Math.floor(v*0.3)},${Math.floor(v*0.4)},${Math.floor(v*0.9)})`;
+  pm.appendChild(cell);
+}
+
+// Feature matrix (step 2)
+const fm = document.getElementById('featMatrix');
+const featColors = ['#1e40af','#1d4ed8','#2563eb','#3b82f6','#1e3a8a','#1e40af'];
+for (let i = 0; i < 40; i++) {
+  const cell = document.createElement('div');
+  cell.className = 'fm-cell';
+  const h = 180 + Math.floor(Math.random() * 60);
+  const s = 60 + Math.floor(Math.random() * 30);
+  const l = 35 + Math.floor(Math.random() * 25);
+  cell.style.background = `hsl(${h},${s}%,${l}%)`;
+  fm.appendChild(cell);
+}
+
+// 2D grid step 3
+const g2 = document.getElementById('grid2d');
+for (let r = 0; r < 4; r++) {
+  for (let c = 0; c < 8; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell';
+    cell.style.background = `rgba(168,85,247,${0.15 + Math.random()*0.45})`;
+    cell.textContent = r * 8 + c + 1;
+    g2.appendChild(cell);
+  }
+}
+
+// 1D sequence step 3
+const s1 = document.getElementById('seq1d');
+const purpleShades = [0.4, 0.5, 0.6, 0.7, 0.5, 0.45, 0.55, 0.65];
+for (let i = 0; i < 32; i++) {
+  const cell = document.createElement('div');
+  cell.style.cssText = `height:14px;border-radius:3px;background:linear-gradient(90deg,rgba(168,85,247,${0.3+Math.random()*0.5}),rgba(59,130,246,${0.2+Math.random()*0.4}));border:1px solid rgba(168,85,247,0.3);`;
+  s1.appendChild(cell);
+}
+
+// Attention matrix step 4
+const am = document.getElementById('attMatrix');
+for (let r = 0; r < 16; r++) {
+  for (let c = 0; c < 16; c++) {
+    const cell = document.createElement('div');
+    cell.className = 'att-cell';
+    const diag = Math.abs(r - c);
+    const intensity = diag === 0 ? 0.95 : Math.max(0.05, 0.7 - diag * 0.06 + Math.random() * 0.2);
+    const red = Math.floor(intensity * 220);
+    const alpha = Math.max(0.15, intensity * 0.85);
+    cell.style.background = `rgba(${red}, ${Math.floor(red*0.1)}, ${Math.floor(red*0.05)}, ${alpha})`;
+    cell.title = `pos(${r},${c})`;
+    am.appendChild(cell);
+  }
+}
+
+// Encoded tokens step 5
+const et = document.getElementById('encTokens');
+for (let i = 0; i < 10; i++) {
+  const tok = document.createElement('div');
+  tok.style.cssText = `height:12px;border-radius:3px;margin-bottom:3px;background:linear-gradient(90deg,rgba(59,130,246,${0.3+Math.random()*0.4}),rgba(59,130,246,0.1));border:1px solid rgba(59,130,246,0.25);width:${60+Math.random()*20}px;`;
+  et.appendChild(tok);
+}
+</script>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- ADDED SECTIONS                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<style>
+  /* ── Section wrapper ── */
+  .ext-section {
+    max-width: 860px;
+    margin: 40px auto 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .ext-section-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+  }
+  .ext-section-title .icon {
+    font-size: 20px;
+  }
+
+  /* ── Interactive slider section ── */
+  .demo-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .demo-box-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .slider-row label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 190px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    min-width: 140px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 60px;
+    text-align: right;
+  }
+  .demo-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .result-card {
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid;
+  }
+  .result-card.seq  { background: rgba(59,130,246,0.08);  border-color: rgba(59,130,246,0.25); }
+  .result-card.attn { background: rgba(239,68,68,0.08);   border-color: rgba(239,68,68,0.25); }
+  .result-card.mem  { background: rgba(249,115,22,0.08);  border-color: rgba(249,115,22,0.25); }
+  .r-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .r-val {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: var(--mono);
+  }
+  .result-card.seq  .r-val { color: var(--accent2); }
+  .result-card.attn .r-val { color: var(--danger); }
+  .result-card.mem  .r-val { color: var(--accent); }
+  .demo-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .demo-bar-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 80px;
+  }
+  .demo-bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--surface);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .demo-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  /* ── Complexity chart section ── */
+  .chart-bar-row {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
   }
-  .chart-label {
-    width: 120px;
-    font-size: 12px;
+  .chart-bar-label {
+    font-family: var(--mono);
+    font-size: 11px;
     color: var(--muted);
-    flex-shrink: 0;
+    min-width: 200px;
   }
-  .chart-bar-wrap {
+  .chart-bar-track {
     flex: 1;
-    background: #1a1d27;
-    border-radius: 4px;
-    height: 26px;
+    height: 22px;
+    background: var(--surface2);
+    border-radius: 6px;
     overflow: hidden;
-    position: relative;
+    border: 1px solid var(--border);
   }
-  .chart-bar {
+  .chart-bar-fill {
     height: 100%;
-    border-radius: 4px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    padding-left: 10px;
+    padding-left: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 700;
+    transition: width 0.5s ease;
+  }
+  .chart-bar-fill.pulse-anim {
+    animation: pulseBar 1.8s ease-in-out infinite;
+  }
+  @keyframes pulseBar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .chart-val-label {
+    font-family: var(--mono);
     font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    transition: width 1s ease;
-    min-width: 40px;
-  }
-  .chart-val {
-    width: 80px;
+    min-width: 80px;
     text-align: right;
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--accent2);
-    flex-shrink: 0;
+    color: var(--muted);
   }
 
-  /* ── FORMULA BOX ── */
-  .formula {
-    background: var(--card2);
-    border-left: 4px solid var(--gold);
-    border-radius: 0 8px 8px 0;
-    padding: 14px 20px;
-    margin: 12px 0;
-    font-family: monospace;
-  }
-  .formula .eq {
-    font-size: 1.15rem;
-    color: var(--gold);
-    font-weight: 700;
-  }
-  .formula .sub { font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
-
-  /* ── CALLOUT ── */
-  .callout {
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin: 16px 0;
+  /* ── Callout box ── */
+  .callout-warn {
     display: flex;
     gap: 14px;
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 20px;
     align-items: flex-start;
   }
-  .callout.warn { background: #1a1000; border: 1px solid #e65100; }
-  .callout.info { background: #0a1628; border: 1px solid #1565c0; }
-  .callout.tip  { background: #0a1f0a; border: 1px solid #2e7d32; }
-  .callout .icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
-  .callout .body {}
-  .callout .body strong { display: block; margin-bottom: 4px; font-size: 0.95rem; }
-  .callout .body p { color: #c5cae9; font-size: 0.9rem; }
+  .callout-warn .cw-icon { font-size: 22px; flex-shrink: 0; }
+  .callout-warn .cw-body { font-size: 13px; color: #94a3b8; line-height: 1.7; }
+  .callout-warn .cw-body strong { color: var(--accent); }
+  .callout-warn .cw-body em { color: #fff; font-style: normal; font-weight: 600; }
 
-  /* ── COMPARE TABLE ── */
+  /* ── Compare table ── */
   .compare-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 0.9rem;
+    font-size: 13px;
+    font-family: var(--mono);
+    margin-bottom: 16px;
   }
   .compare-table th {
-    background: #1a1d27;
-    padding: 10px 14px;
     text-align: left;
-    font-weight: 700;
-    border-bottom: 2px solid var(--border);
+    padding: 10px 14px;
+    background: var(--surface2);
     color: var(--muted);
-    font-size: 11px;
-    text-transform: uppercase;
+    font-size: 10px;
     letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
   }
   .compare-table td {
     padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    color: #c5cae9;
+    border-bottom: 1px solid rgba(30,38,64,0.6);
+    color: #94a3b8;
     vertical-align: top;
   }
-  .compare-table tr:last-child td { border-bottom: none; }
-  .compare-table td:first-child { font-weight: 600; color: var(--text); }
-  .compare-table .bad  { color: var(--red2); }
-  .compare-table .good { color: var(--green2); }
-
-  /* ── INTERACTIVE DEMO ── */
-  .demo-section {
-    background: var(--card);
-    border: 1px solid var(--gold);
-    border-radius: 12px;
-    padding: 24px;
-    margin: 20px 0;
-  }
-  .demo-title {
-    font-size: 1rem;
+  .compare-table td:first-child {
+    color: var(--text);
     font-weight: 700;
-    color: var(--gold);
-    margin-bottom: 16px;
   }
-  .slider-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  .slider-row label { color: var(--muted); font-size: 13px; width: 160px; flex-shrink: 0; }
-  input[type=range] {
-    flex: 1;
-    accent-color: var(--accent);
-    height: 6px;
-    cursor: pointer;
-  }
-  .slider-val {
-    width: 60px;
-    text-align: right;
-    font-weight: 700;
-    color: var(--accent2);
-    font-family: monospace;
-    font-size: 14px;
-  }
-  .demo-results {
-    background: var(--bg);
-    border-radius: 8px;
-    padding: 16px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .result-card {
-    background: var(--card2);
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-  }
-  .result-card .r-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-  .result-card .r-val {
-    font-size: 1.4rem;
-    font-weight: 800;
-    font-family: monospace;
-  }
-  .result-card.seq .r-val { color: var(--purple2); }
-  .result-card.attn .r-val { color: var(--red2); }
-  .result-card.mem .r-val { color: var(--gold); }
-
-  /* ── FOOTER ── */
-  .footer {
-    text-align: center;
-    color: #4a4f6a;
-    font-size: 11px;
-    margin-top: 60px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* ── ARROW ── */
-  .arrow-down {
-    text-align: center;
-    color: var(--border);
-    font-size: 1.4rem;
-    line-height: 1;
-    margin: 4px 0;
-  }
-
-  /* animations */
-  @keyframes pulse-bar { 0%,100%{opacity:1} 50%{opacity:0.7} }
-  .pulse { animation: pulse-bar 2s infinite; }
-
-  /* ── Khmer font ── */
-  .khmer, .khmer-text-block, [lang="km"] {
-    font-family: 'Kantumruy Pro', 'Noto Sans Khmer', 'Khmer OS', serif;
-  }
-
-  .highlight-box {
-    background: #1a0a00;
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 10px 0;
-    font-size: 0.92rem;
-    color: #ffccbc;
-  }
-
+  .compare-table td.bad  { color: var(--danger); }
+  .compare-table td.good { color: var(--green); }
   .tag-inline {
     display: inline-block;
-    background: #1a237e;
-    color: #90caf9;
+    padding: 2px 8px;
+    border-radius: 5px;
     font-size: 11px;
     font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-family: monospace;
   }
-  .tag-inline.red { background: #4a0000; color: #ef9a9a; }
-  .tag-inline.green { background: #002200; color: #a5d6a7; }
-  .tag-inline.gold { background: #2d1f00; color: #fff176; }
+  .tag-inline.red { background: rgba(239,68,68,0.15); color: var(--danger); }
 
+  /* ── What is D section ── */
   .d-label {
     display: inline-block;
-    background: var(--purple);
-    color: #e1bee7;
-    font-family: monospace;
-    font-weight: 800;
+    background: rgba(168,85,247,0.15);
+    color: var(--accent3);
+    border: 1px solid rgba(168,85,247,0.3);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-family: var(--mono);
+    font-weight: 700;
     font-size: 13px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin: 0 2px;
   }
-</style>
-</head>
-<body>
+  .highlight-box {
+    background: rgba(168,85,247,0.07);
+    border: 1px solid rgba(168,85,247,0.25);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-top: 16px;
+  }
+  .highlight-box strong { color: var(--text); }
 
-<!-- HERO -->
-<div class="hero">
-  <div class="tag">Khmer OCR — Architecture Deep Dive</div>
-  <h1>The <span>Old Way</span>: 1D Feature Sequences</h1>
-  <p>How the baseline OCR model converts an image into a feature sequence — and why it struggles with wide Khmer text lines.</p>
-  <div class="source">Buoy et al., "Toward a Low-Resource Non-Latin-Complete Baseline: An Exploration of Khmer OCR," IEEE Access Vol. 11, 2023</div>
+  /* ── Old vs New ── */
+  .compare-table td.old { color: #fca5a5; }
+  .compare-table td.new { color: #86efac; }
+
+  /* ── Summary box ── */
+  .final-summary-box {
+    background: rgba(249,115,22,0.06);
+    border: 1px solid rgba(249,115,22,0.25);
+    border-radius: 12px;
+    padding: 22px 24px;
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.85;
+  }
+  .final-summary-box strong { color: var(--text); }
+  .final-summary-box .d-label { font-size: 12px; }
+</style>
+
+<!-- ── Section 2: Interactive Demo ── -->
+<div class="ext-section">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent3));"></div>
+  <div class="ext-section-title"><span class="icon">🧮</span> Interactive — See How n² Grows</div>
+
+  <div class="demo-box">
+    <div class="demo-box-title">🎛️ Drag the slider to change image width and see the impact</div>
+
+    <div class="slider-row">
+      <label>Image width (pixels)</label>
+      <input type="range" id="width-slider" min="100" max="2000" step="50" value="500"/>
+      <div class="slider-val" id="width-val">500 px</div>
+    </div>
+    <div class="slider-row">
+      <label>CNN downscale factor</label>
+      <input type="range" id="cnn-slider" min="4" max="16" step="2" value="8"/>
+      <div class="slider-val" id="cnn-val">÷ 8</div>
+    </div>
+
+    <div class="demo-results">
+      <div class="result-card seq">
+        <div class="r-label">Sequence length n<br/>(after CNN + PATCH_ENC)</div>
+        <div class="r-val" id="r-n">62</div>
+      </div>
+      <div class="result-card attn">
+        <div class="r-label">Self-attention pairs<br/>(n × n)</div>
+        <div class="r-val" id="r-n2">3,844</div>
+      </div>
+      <div class="result-card mem">
+        <div class="r-label">Memory factor<br/>(relative to n=13)</div>
+        <div class="r-val" id="r-mem">1×</div>
+      </div>
+    </div>
+
+    <div id="demo-bar-area" style="margin-top:18px;">
+      <div class="demo-bar-row">
+        <div class="demo-bar-label">n (length)</div>
+        <div class="demo-bar-track">
+          <div class="demo-bar-fill" id="bar-n" style="width:30%;background:var(--accent2);"></div>
+        </div>
+      </div>
+      <div class="demo-bar-row">
+        <div class="demo-bar-label">n² (pairs)</div>
+        <div class="demo-bar-track">
+          <div class="demo-bar-fill" id="bar-n2" style="width:6%;background:var(--danger);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="container">
+<!-- ── Section 3: Complexity Chart ── -->
+<div class="ext-section">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--danger));"></div>
+  <div class="ext-section-title"><span class="icon">📈</span> O(n²) Complexity — The Growth Problem</div>
 
-  <!-- SECTION 0: What is a Feature Sequence? -->
-  <div class="section">
-    <div class="section-title"><span class="icon">🎯</span> First — What Does "Feature Sequence" Even Mean?</div>
-
-    <p style="color:#c5cae9; margin-bottom:14px;">A computer cannot "read" an image directly. The OCR model first needs to <strong>translate the image into numbers</strong>. Those numbers are called <em>features</em>. When they are arranged in a list (one after another), it becomes a <em>feature sequence</em>.</p>
-
-    <div class="callout info">
-      <div class="icon">💡</div>
-      <div class="body">
-        <strong>Simple analogy</strong>
-        <p>Think of the image as a long sentence written on a strip of paper. A feature sequence is what you get when you <strong>describe each small section of that strip in numbers</strong>. Instead of "<span class="khmer">ក</span> looks like this", you get "position 5 → [0.8, 0.1, 0.4, …, 0.9]" — a vector of <span class="d-label">D</span> numbers that encodes what the model saw at that position.</p>
-      </div>
-    </div>
-
-    <div class="img-strip">
-      <div class="img-strip-label">📷 Input — Khmer text line image</div>
-      <div class="img-row">
-        <div class="khmer-text-block khmer">តាកែវ  គឺ  ស៊ីសាមុត  ប្រជាពលរដ្ឋ</div>
-        <div style="color:#9fa8da; font-size:12px; margin-left:8px; white-space:nowrap;">
-          <div><span class="dim-badge">H = 32 px</span></div>
-          <div><span class="dim-badge">W = 500 px</span></div>
-        </div>
-      </div>
-      <div style="font-size:11px; color:#5c6bc0; margin-top:8px;">⚠️ Khmer text lines are very wide because there are no spaces between words.</div>
-    </div>
+  <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px;">
+    Self-attention cost vs. image width &nbsp;·&nbsp; CNN ÷8 &nbsp;·&nbsp; height = 4 patches
   </div>
 
-  <!-- SECTION 1: The 5-Step Pipeline -->
-  <div class="section">
-    <div class="section-title"><span class="icon">🔄</span> The Old Way — 5 Steps</div>
-
-    <div class="pipeline">
-
-      <!-- STEP 1 -->
-      <div class="step s1">
-        <div class="step-connector">
-          <div class="step-num">1</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-body">
-          <h3>INPUT — Full-width Khmer text line image</h3>
-          <p>The model receives the complete text line as a single image. In the <strong>old way</strong>, no splitting or chunking is done. The entire width is processed at once.</p>
-          <div style="margin:10px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <span class="dim-badge">Height H = 32 px</span>
-            <span class="dim-badge">Width W = 500 px</span>
-            <span style="color:#5c6bc0; font-size:12px;">→ one image, full width</span>
-          </div>
-          <p style="font-size:12px; color:#7986cb;">The wider the text line, the harder the problem — and Khmer lines can be very wide because there are no word spaces.</p>
-        </div>
-      </div>
-
-      <!-- STEP 2 -->
-      <div class="step s2">
-        <div class="step-connector">
-          <div class="step-num">2</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-body">
-          <h3>CNN — Extract a 2D feature map</h3>
-          <p>A <strong>Convolutional Neural Network (CNN)</strong> scans the image like a magnifying glass, picking up edges, curves, and shapes. It outputs a smaller <strong>grid of features</strong> — not raw pixels, but learned descriptions.</p>
-          <div class="formula">
-            <div class="eq">Image (H × W × 1)  →  Feature Map (H' × W' × C_feat)</div>
-            <div class="sub">Example: 32 × 500 × 1 pixel image → 4 × 62 × 256 feature map<br/>The CNN shrinks the spatial size (÷8 each) but adds depth (C_feat = 256 channels).</div>
-          </div>
-          <p style="font-size:12px; color:#81c784;">Each cell in the 4×62 grid holds <strong>256 numbers</strong> (one per channel) describing what the CNN detected in that patch of the image.</p>
-        </div>
-      </div>
-
-      <!-- STEP 3 -->
-      <div class="step s3">
-        <div class="step-connector">
-          <div class="step-num">3</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-body">
-          <h3>PATCH_ENC — Flatten the grid into a sequence</h3>
-          <p>The 2D feature map (a grid) must be turned into a 1D <strong>sequence</strong> (a flat list) so the Transformer can read it. <strong>PATCH_ENC</strong> does this by reading the grid column by column (or patch by patch) and stacking everything into a sequence of vectors.</p>
-          <div class="formula">
-            <div class="eq">Feature Map (4 × 62 × 256)  →  Sequence (n × D)</div>
-            <div class="sub">n = 4 × 62 = 248 vectors  |  D = 256 (feature dimension per vector)<br/>Each of the 248 vectors is a D-dimensional number array summarising one image patch.</div>
-          </div>
-
-          <div class="feat-seq-container">
-            <div class="feat-seq-label">📊 Feature sequence — n = 248 vectors, each of dimension D = 256</div>
-            <div class="feat-vectors" id="feat-vectors-demo">
-              <!-- generated by JS -->
-            </div>
-            <div style="margin-top:8px; font-size:11px; color:#7e57c2;">Each column above = one feature vector (position in the sequence). Height = depth D. Value = what the model "saw" at that position.</div>
-          </div>
-
-          <div class="callout tip">
-            <div class="icon">📌</div>
-            <div class="body">
-              <strong>What is <span class="d-label">D</span>?</strong>
-              <p><span class="d-label">D</span> is the <strong>dimension of each feature vector</strong> — how many numbers are inside one vector. In this paper D = 256. It is fixed by the model design. Every position in the sequence (from position 1 to n) has exactly <span class="d-label">D</span> numbers inside it. So "D feature sequence" = a sequence of <strong>n vectors, each of length D</strong>.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 4 -->
-      <div class="step s4">
-        <div class="step-connector">
-          <div class="step-num">4</div>
-          <div class="step-line"></div>
-        </div>
-        <div class="step-body">
-          <h3>TR_ENC — Transformer Encoder with Self-Attention (⚠️ The Problem)</h3>
-          <p>The Transformer Encoder reads the sequence of <strong>n = 248 vectors</strong>. It uses <strong>self-attention</strong> to let every vector "look at" every other vector and decide what is important.</p>
-
-          <div class="attn-section">
-            <div class="attn-label">🔴 Self-Attention Grid — every vector attends to every other vector</div>
-            <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
-              <div>
-                <div class="attn-grid-wrap">
-                  <div class="attn-grid" id="attn-grid-small" style="grid-template-columns: repeat(16,18px);"></div>
-                </div>
-                <div style="font-size:10px; color:#9fa8da; margin-top:6px; text-align:center;">n = 16 (small example)</div>
-                <div style="font-size:11px; color:#ef5350; text-align:center; font-weight:700;">16 × 16 = 256 pairs ✓</div>
-              </div>
-              <div style="flex:1; min-width:200px;">
-                <p style="color:#ef9a9a; font-size:0.9rem; margin-bottom:10px;">For the full sequence (n = 248), every one of the 248 vectors must compute attention with every other 247 vectors:</p>
-                <div class="formula">
-                  <div class="eq" style="color:#ef5350;">Attention cost = n × n = n²</div>
-                  <div class="sub">n = 248  →  248² = <strong style="color:#ef5350;">61,504 pairs</strong><br/>n = 500  →  500² = <strong style="color:#ef5350;">250,000 pairs</strong><br/>n = 1000 →  1000² = <strong style="color:#ef5350;">1,000,000 pairs</strong></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="callout warn">
-            <div class="icon">⚠️</div>
-            <div class="body">
-              <strong>O(n²) Complexity — why it is a problem</strong>
-              <p>If you <strong>double</strong> the width of the image (e.g., a longer Khmer sentence), the sequence length n doubles, and the self-attention cost <strong>quadruples</strong> (n² = (2n)² ÷ n² = 4×). Memory and time grow explosively for long Khmer text lines.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 5 -->
-      <div class="step s5">
-        <div class="step-connector">
-          <div class="step-num">5</div>
-        </div>
-        <div class="step-body">
-          <h3>TR_DEC — Decoder generates text character by character</h3>
-          <p>The Transformer Decoder reads the encoded sequence from TR_ENC and generates the output text <strong>one character at a time</strong>. At each step, it outputs a probability over all <strong>C = 131</strong> Khmer characters.</p>
-          <div class="formula">
-            <div class="eq">Encoded sequence (n × D)  →  Text: "<span class="khmer">តាកែវ គឺ ស៊ីសាមុត …</span>"</div>
-            <div class="sub">TR_DEC outputs one character per step, then feeds it back as input for the next step (autoregressive).</div>
-          </div>
-          <p style="font-size:12px; color:#ffb74d;">The decoder itself is not the bottleneck — the bottleneck is the O(n²) self-attention in TR_ENC when n is large.</p>
-        </div>
-      </div>
-
-    </div><!-- end pipeline -->
+  <div class="chart-bar-row">
+    <div class="chart-bar-label">W = 100 px → n=13</div>
+    <div class="chart-bar-track">
+      <div class="chart-bar-fill" style="width:0.3%;background:linear-gradient(90deg,#14532d,#22c55e);">169</div>
+    </div>
+    <div class="chart-val-label" style="color:var(--green);">169 pairs</div>
+  </div>
+  <div class="chart-bar-row">
+    <div class="chart-bar-label">W = 250 px → n=31</div>
+    <div class="chart-bar-track">
+      <div class="chart-bar-fill" style="width:1.5%;background:linear-gradient(90deg,#1e3a8a,#3b82f6);">961</div>
+    </div>
+    <div class="chart-val-label">961 pairs</div>
+  </div>
+  <div class="chart-bar-row">
+    <div class="chart-bar-label">W = 500 px → n=62</div>
+    <div class="chart-bar-track">
+      <div class="chart-bar-fill" style="width:6%;background:linear-gradient(90deg,#581c87,#a855f7);">3,844</div>
+    </div>
+    <div class="chart-val-label">3,844 pairs</div>
+  </div>
+  <div class="chart-bar-row">
+    <div class="chart-bar-label">W = 1000 px → n=125</div>
+    <div class="chart-bar-track">
+      <div class="chart-bar-fill" style="width:25%;background:linear-gradient(90deg,#c2410c,#f97316);">15,625</div>
+    </div>
+    <div class="chart-val-label">15,625 pairs</div>
+  </div>
+  <div class="chart-bar-row">
+    <div class="chart-bar-label">W = 2000 px → n=250</div>
+    <div class="chart-bar-track">
+      <div class="chart-bar-fill pulse-anim" style="width:100%;background:linear-gradient(90deg,#991b1b,#ef4444);">62,500</div>
+    </div>
+    <div class="chart-val-label" style="color:var(--danger);font-weight:700;">62,500 pairs</div>
   </div>
 
-  <!-- SECTION 2: Interactive Demo -->
-  <div class="section">
-    <div class="section-title"><span class="icon">🧮</span> Interactive — See How n² Grows</div>
-
-    <div class="demo-section">
-      <div class="demo-title">🎛️ Drag the slider to change image width and see the impact</div>
-      <div class="slider-row">
-        <label>Image width (pixels)</label>
-        <input type="range" id="width-slider" min="100" max="2000" step="50" value="500"/>
-        <div class="slider-val" id="width-val">500 px</div>
-      </div>
-      <div class="slider-row">
-        <label>CNN downscale factor</label>
-        <input type="range" id="cnn-slider" min="4" max="16" step="2" value="8"/>
-        <div class="slider-val" id="cnn-val">÷ 8</div>
-      </div>
-      <div class="demo-results">
-        <div class="result-card seq">
-          <div class="r-label">Sequence length n<br/>(after CNN + PATCH_ENC)</div>
-          <div class="r-val" id="r-n">248</div>
-        </div>
-        <div class="result-card attn">
-          <div class="r-label">Self-attention pairs<br/>(n × n)</div>
-          <div class="r-val" id="r-n2">61,504</div>
-        </div>
-        <div class="result-card mem">
-          <div class="r-label">Memory factor<br/>(relative to n=62)</div>
-          <div class="r-val" id="r-mem">16×</div>
-        </div>
-      </div>
-      <div id="demo-bar-area" style="margin-top:16px;"></div>
+  <div class="callout-warn">
+    <div class="cw-icon">🔢</div>
+    <div class="cw-body">
+      <strong>The maths of O(n²)</strong><br/>
+      If W = 100 px needs 169 attention pairs, then W = 2000 px (20× wider) needs 62,500 pairs —
+      that is <strong>370× more computation</strong>, not 20×. This is what O(n²) means:
+      cost grows with the <em>square</em> of length, not linearly.
     </div>
   </div>
+</div>
 
-  <!-- SECTION 3: Complexity Chart -->
-  <div class="section">
-    <div class="section-title"><span class="icon">📈</span> O(n²) Complexity — The Growth Problem</div>
+<!-- ── Section 4: What is D ── -->
+<div class="ext-section">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent3),var(--accent2));"></div>
+  <div class="ext-section-title"><span class="icon">🔑</span> What Exactly is <span class="d-label" style="font-size:16px;margin-left:4px;">D</span> ?</div>
 
-    <div class="complexity-chart">
-      <div class="chart-title">Self-attention cost vs. image width (CNN ÷8, height=4 patches)</div>
+  <p style="color:#94a3b8;font-size:14px;margin-bottom:18px;line-height:1.7;">
+    The letter <span class="d-label">D</span> appears in the paper as the
+    <strong>dimension of each feature vector</strong> in the sequence. Here is what that means:
+  </p>
 
-      <div class="chart-row">
-        <div class="chart-label">W = 100 px → n=13</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:1%; background:linear-gradient(90deg,#1b5e20,#43a047);">169</div>
-        </div>
-        <div class="chart-val">169 pairs</div>
-      </div>
-      <div class="chart-row">
-        <div class="chart-label">W = 250 px → n=31</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:4%; background:linear-gradient(90deg,#1565c0,#42a5f5);">961</div>
-        </div>
-        <div class="chart-val">961 pairs</div>
-      </div>
-      <div class="chart-row">
-        <div class="chart-label">W = 500 px → n=62</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:14%; background:linear-gradient(90deg,#6a1b9a,#ab47bc);">3,844</div>
-        </div>
-        <div class="chart-val">3,844 pairs</div>
-      </div>
-      <div class="chart-row">
-        <div class="chart-label">W = 1000 px → n=125</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:56%; background:linear-gradient(90deg,#e65100,#ff8a50);">15,625</div>
-        </div>
-        <div class="chart-val">15,625 pairs</div>
-      </div>
-      <div class="chart-row">
-        <div class="chart-label">W = 2000 px → n=250</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar pulse" style="width:100%; background:linear-gradient(90deg,#b71c1c,#ef5350);">62,500</div>
-        </div>
-        <div class="chart-val" style="color:var(--red2);">62,500 pairs</div>
-      </div>
-    </div>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Term</th><th>Meaning</th><th>Example value</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>n</td>
+        <td>Number of vectors in the sequence (sequence <em style="color:#fff;font-style:normal;">length</em>). Grows with image width. <strong style="color:var(--danger);">This is the problem.</strong></td>
+        <td><span class="tag-inline red">248 vectors</span></td>
+      </tr>
+      <tr>
+        <td><span class="d-label">D</span></td>
+        <td>Number of numbers <em style="color:#fff;font-style:normal;">inside</em> each vector (vector <em style="color:#fff;font-style:normal;">dimension</em>). Fixed by model design — does not change with image width.</td>
+        <td><span class="tag-inline" style="background:rgba(168,85,247,0.15);color:var(--accent3);">D = 256</span></td>
+      </tr>
+      <tr>
+        <td>Feature sequence</td>
+        <td>The full list: n vectors × D numbers each. Written as a matrix of shape n × D.</td>
+        <td><span class="tag-inline" style="background:rgba(30,38,64,0.8);color:#94a3b8;">248 × 256</span></td>
+      </tr>
+      <tr>
+        <td>Self-attention cost</td>
+        <td>Grows as n² — squaring the sequence length. D does not affect this cost directly.</td>
+        <td><span class="tag-inline red">n² = 61,504</span></td>
+      </tr>
+    </tbody>
+  </table>
 
-    <div class="callout warn">
-      <div class="icon">🔢</div>
-      <div class="body">
-        <strong>The maths of O(n²)</strong>
-        <p>If W = 100 px needs 169 attention pairs, then W = 2000 px (20× wider) needs 62,500 pairs — that is <strong>370× more computation</strong>, not 20×. This is what O(n²) means: cost grows with the <em>square</em> of length, not linearly.</p>
-      </div>
-    </div>
+  <div class="highlight-box">
+    <strong>So when the paper says "D feature sequences"</strong> — it means: a sequence of feature vectors,
+    where each vector has <span class="d-label">D</span> = 256 dimensions.
+    The problem in the old way is not D (that is fixed and small), but
+    <strong style="color:var(--danger);">n</strong>
+    (which grows with image width and makes self-attention expensive).
   </div>
+</div>
 
-  <!-- SECTION 4: What is D -->
-  <div class="section">
-    <div class="section-title"><span class="icon">🔑</span> What Exactly is <span style="font-family:monospace; color:var(--purple2); font-style:normal;">D</span>?</div>
+<!-- ── Section 5: Old vs New ── -->
+<div class="ext-section">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--danger),var(--green));"></div>
+  <div class="ext-section-title"><span class="icon">⚡</span> Old Way vs New Way — Side by Side</div>
 
-    <p style="color:#c5cae9; margin-bottom:14px;">The letter <span class="d-label">D</span> appears in the paper as the <strong>dimension of each feature vector</strong> in the sequence. Here is what that means:</p>
+  <table class="compare-table">
+    <thead>
+      <tr><th>Aspect</th><th style="color:var(--danger);">Old Way (no chunking)</th><th style="color:var(--green);">New Way (chunking)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Input to CNN</td>
+        <td class="old">Full wide image at once</td>
+        <td class="new">Small 100 px chunks</td>
+      </tr>
+      <tr>
+        <td>Feature sequence length n</td>
+        <td class="old">Large — proportional to full width W</td>
+        <td class="new">Small — proportional to chunk width (100 px)</td>
+      </tr>
+      <tr>
+        <td>Self-attention cost</td>
+        <td class="old">O(n²) — grows explosively</td>
+        <td class="new">O(n_chunk²) — small and fixed</td>
+      </tr>
+      <tr>
+        <td>Memory for wide images</td>
+        <td class="old">Very large — may run out</td>
+        <td class="new">Small and predictable</td>
+      </tr>
+      <tr>
+        <td>MERGE step needed?</td>
+        <td style="color:var(--muted);">No — one sequence only</td>
+        <td class="new">Yes — MERGE block combines chunk features</td>
+      </tr>
+      <tr>
+        <td>Works for long Khmer lines?</td>
+        <td class="old">Struggles / fails</td>
+        <td class="new">Yes — scales linearly with chunks</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-    <table class="compare-table">
-      <thead>
-        <tr>
-          <th>Term</th>
-          <th>Meaning</th>
-          <th>Example value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>n</td>
-          <td>Number of vectors in the sequence (sequence <em>length</em>). Grows with image width. This is the problem.</td>
-          <td><span class="tag-inline red">248 vectors</span></td>
-        </tr>
-        <tr>
-          <td><span class="d-label">D</span></td>
-          <td>Number of numbers <em>inside</em> each vector (vector <em>dimension</em>). Fixed by model design — does not change with image width.</td>
-          <td><span class="tag-inline" style="background:#4a148c; color:#e1bee7;">D = 256</span></td>
-        </tr>
-        <tr>
-          <td>Feature sequence</td>
-          <td>The full list: n vectors × D numbers each. Written as a matrix of shape n × D.</td>
-          <td><span class="tag-inline" style="background:#263238; color:#90a4ae;">248 × 256</span></td>
-        </tr>
-        <tr>
-          <td>Self-attention cost</td>
-          <td>Grows as n² — squaring the sequence length. D does not affect this cost directly.</td>
-          <td><span class="tag-inline red">n² = 61,504</span></td>
-        </tr>
-      </tbody>
-    </table>
+<!-- ── Section 6: Summary ── -->
+<div class="ext-section" style="margin-bottom:0;">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),#fbbf24);"></div>
+  <div class="ext-section-title"><span class="icon">✅</span> Summary in Plain Language</div>
 
-    <div class="highlight-box">
-      <strong>So when the paper says "D feature sequences"</strong> — it means: a sequence of feature vectors, where each vector has <span class="d-label">D</span> dimensions. The problem in the old way is not D (that is fixed and small), but <strong>n</strong> (which grows with image width and makes self-attention expensive).
-    </div>
-  </div>
-
-  <!-- SECTION 5: Old vs New Summary -->
-  <div class="section">
-    <div class="section-title"><span class="icon">⚡</span> Old Way vs New Way — Side by Side</div>
-
-    <table class="compare-table">
-      <thead>
-        <tr>
-          <th>Aspect</th>
-          <th>Old Way (no chunking)</th>
-          <th>New Way (chunking)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Input to CNN</td>
-          <td class="bad">Full wide image at once</td>
-          <td class="good">Small 100px chunks</td>
-        </tr>
-        <tr>
-          <td>Feature sequence length n</td>
-          <td class="bad">Large (proportional to full width W)</td>
-          <td class="good">Small (proportional to chunk width 100px)</td>
-        </tr>
-        <tr>
-          <td>Self-attention cost</td>
-          <td class="bad">O(n²) — grows explosively</td>
-          <td class="good">O(n_chunk²) — small and fixed</td>
-        </tr>
-        <tr>
-          <td>Memory for wide images</td>
-          <td class="bad">Very large — may run out</td>
-          <td class="good">Small and predictable</td>
-        </tr>
-        <tr>
-          <td>MERGE step needed?</td>
-          <td>No (one sequence only)</td>
-          <td class="good">Yes — MERGE block combines chunk features into context Z</td>
-        </tr>
-        <tr>
-          <td>Works for long Khmer lines?</td>
-          <td class="bad">Struggles / fails</td>
-          <td class="good">Yes — scales linearly with number of chunks</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- SECTION 6: Summary -->
-  <div class="section">
-    <div class="section-title"><span class="icon">✅</span> Summary in Plain Language</div>
-
-    <div style="background:var(--card); border:1px solid var(--accent); border-radius:12px; padding:24px;">
-      <p style="color:#ffccbc; font-size:1.05rem; line-height:1.8; margin-bottom:0;">
-        In the <strong>old way</strong>, the OCR model takes the full-width Khmer image and runs it through a CNN to get a <strong>feature map</strong>. That map is then flattened into a <strong>sequence of n vectors</strong>, each vector having <span class="d-label">D</span> = 256 numbers (the "D feature sequence"). The Transformer Encoder then runs <strong>self-attention</strong> on those n vectors — but self-attention compares every vector to every other, so it costs <strong>n²</strong> in memory and time. Since Khmer text lines are wide (no spaces between words), n is large, and n² is huge. This is the core problem the <strong>chunking approach</strong> (the new way, Figure 15) solves — by splitting the image into short chunks first, so n stays small.
-      </p>
-    </div>
-  </div>
-
-</div><!-- end container -->
-
-<div class="container">
-  <div class="footer">
-    Khmer OCR Research · Buoy et al., IEEE Access Vol. 11, 2023 · DOI: 10.1109/ACCESS.2023.3332361
+  <div class="final-summary-box">
+    In the <strong>old way</strong>, the OCR model takes the full-width Khmer image and runs it through a CNN
+    to get a <strong>feature map</strong>. That map is then flattened into a
+    <strong>sequence of n vectors</strong>, each vector having <span class="d-label">D</span> = 256 numbers
+    (the "D feature sequence"). The Transformer Encoder then runs <strong>self-attention</strong> on those n
+    vectors — but self-attention compares every vector to every other, so it costs
+    <strong style="color:var(--danger);">n²</strong> in memory and time.
+    Since Khmer text lines are wide (no spaces between words), n is large, and n² is huge.
+    This is the core problem the <strong>chunking approach</strong> (the new way, Figure 15) solves —
+    by splitting the image into short chunks first, so n stays small and cost stays
+    <strong style="color:var(--green);">linear O(n)</strong> instead of quadratic.
   </div>
 </div>
 
 <script>
-// ── Feature vector visualization ──
-(function(){
-  const wrap = document.getElementById('feat-vectors-demo');
-  const N = 36; // show 36 of 248
-  const D_slots = 12; // show 12 of 256 height slots
-  const colors = [
-    '#7b1fa2','#6a1b9a','#8e24aa','#ab47bc','#ce93d8',
-    '#4a148c','#9c27b0','#7e57c2','#673ab7','#9575cd',
-    '#5e35b1','#b39ddb','#4527a0','#d1c4e9','#311b92'
-  ];
-  let html = '';
-  for(let i=0; i<N; i++){
-    const showLabel = (i===0 || i===N-1 || i===Math.floor(N/2));
-    html += '<div class="vec-col">';
-    html += `<div class="vec-index-label">${showLabel ? 'v'+(i+1) : ''}</div>`;
-    for(let d=0; d<D_slots; d++){
-      const h = 3 + Math.floor(Math.random()*14);
-      const opacity = 0.3 + Math.random()*0.7;
-      const c = colors[Math.floor(Math.random()*colors.length)];
-      html += `<div class="vec-box" style="height:${h}px; background:${c}; opacity:${opacity};"></div>`;
-    }
-    html += `<div class="vec-label">·<br/>·<br/>D</div>`;
-    html += '</div>';
-  }
-  html += '<div class="vec-col" style="justify-content:center; padding-top:30px;">';
-  html += '<div style="color:#7e57c2; font-size:18px; font-weight:700; letter-spacing:2px;">···</div>';
-  html += '<div style="color:#9e9e9e; font-size:9px; margin-top:4px;">248 total</div>';
-  html += '</div>';
-  wrap.innerHTML = html;
-})();
+// ── Interactive slider logic ──
+const wSlider  = document.getElementById('width-slider');
+const cnnSlider = document.getElementById('cnn-slider');
+const wVal     = document.getElementById('width-val');
+const cnnVal   = document.getElementById('cnn-val');
+const rN       = document.getElementById('r-n');
+const rN2      = document.getElementById('r-n2');
+const rMem     = document.getElementById('r-mem');
+const barN     = document.getElementById('bar-n');
+const barN2    = document.getElementById('bar-n2');
 
-// ── Attention grid ──
-(function(){
-  const grid = document.getElementById('attn-grid-small');
-  const N = 16;
-  let html = '';
-  for(let r=0; r<N; r++){
-    for(let c=0; c<N; c++){
-      const diag = (r===c);
-      const intensity = diag ? 1.0 : (0.15 + Math.random()*0.6);
-      const alpha = diag ? 1.0 : intensity;
-      const baseR = 183, baseG = 28, baseB = 28;
-      const bg = diag
-        ? '#ef5350'
-        : `rgba(${baseR},${baseG},${baseB},${alpha})`;
-      html += `<div class="attn-cell" style="background:${bg};"></div>`;
-    }
-  }
-  grid.innerHTML = html;
-})();
+const BASE_N   = 13; // n at W=100, cnn=8
 
-// ── Interactive demo ──
-(function(){
-  const wSlider = document.getElementById('width-slider');
-  const cSlider = document.getElementById('cnn-slider');
-  const wVal   = document.getElementById('width-val');
-  const cVal   = document.getElementById('cnn-val');
-  const rN     = document.getElementById('r-n');
-  const rN2    = document.getElementById('r-n2');
-  const rMem   = document.getElementById('r-mem');
-  const barArea= document.getElementById('demo-bar-area');
+function updateDemo() {
+  const W   = parseInt(wSlider.value);
+  const cnn = parseInt(cnnSlider.value);
+  const n   = Math.floor(W / cnn);
+  const n2  = n * n;
+  const mem = Math.round((n * n) / (BASE_N * BASE_N));
 
-  const H_patches = 4;
-  const BASE_N = 62; // reference n at W=500, ÷8
+  wVal.textContent   = W + ' px';
+  cnnVal.textContent = '÷ ' + cnn;
+  rN.textContent     = n.toLocaleString();
+  rN2.textContent    = n2.toLocaleString();
+  rMem.textContent   = mem + '×';
 
-  function update(){
-    const W  = parseInt(wSlider.value);
-    const ds = parseInt(cSlider.value);
-    wVal.textContent = W + ' px';
-    cVal.textContent = '÷ ' + ds;
+  const maxN  = 500;
+  const maxN2 = 250000;
+  barN.style.width  = Math.min(100, (n / maxN) * 100) + '%';
+  barN2.style.width = Math.min(100, (n2 / maxN2) * 100) + '%';
 
-    const n  = H_patches * Math.round(W / ds);
-    const n2 = n * n;
-    const mem= (n2 / (BASE_N * BASE_N)).toFixed(1);
+  // colour gradient: green → orange → red
+  const pct = Math.min(1, n2 / maxN2);
+  const r = Math.floor(pct * 239 + (1-pct) * 59);
+  const g = Math.floor((1-pct) * 130);
+  const b = Math.floor((1-pct) * 246);
+  barN2.style.background = `rgb(${r},${g},${b})`;
+}
 
-    rN.textContent  = n.toLocaleString();
-    rN2.textContent = n2.toLocaleString();
-    rMem.textContent = mem + '×';
-
-    // color the attention count
-    if(n2 > 100000) rN2.style.color = '#ef5350';
-    else if(n2 > 30000) rN2.style.color = '#ff8a50';
-    else rN2.style.color = '#ab47bc';
-
-    // mini bar
-    const maxN2 = H_patches * Math.round(2000/4) * H_patches * Math.round(2000/4);
-    const pct = Math.min(100, Math.round(n2 / maxN2 * 100));
-    const color = n2 > 100000 ? '#b71c1c' : n2 > 30000 ? '#e65100' : '#6a1b9a';
-    barArea.innerHTML = `
-      <div style="font-size:11px; color:#9fa8da; margin-bottom:6px;">Attention pairs relative to maximum (W=2000px):</div>
-      <div style="background:#1a1d27; border-radius:6px; height:28px; overflow:hidden;">
-        <div style="width:${pct}%; height:100%; background:linear-gradient(90deg,${color},${color}cc);
-          border-radius:6px; display:flex; align-items:center; padding-left:10px;
-          font-size:11px; font-weight:700; color:#fff; transition:width 0.4s ease;">
-          ${pct}%
-        </div>
-      </div>`;
-  }
-
-  wSlider.addEventListener('input', update);
-  cSlider.addEventListener('input', update);
-  update();
-})();
+wSlider.addEventListener('input', updateDemo);
+cnnSlider.addEventListener('input', updateDemo);
+updateDemo();
 </script>
+
 </body>
 </html>
