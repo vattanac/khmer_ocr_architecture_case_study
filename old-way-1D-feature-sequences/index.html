@@ -461,7 +461,7 @@
   /* Step 3 — flatten */
   .flatten-viz {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
   }
@@ -1056,10 +1056,20 @@
           <div id="grid2d" class="grid-2d" style="grid-template-columns:repeat(8,1fr);"></div>
         </div>
         <div class="flatten-arrow">→</div>
-        <!-- 1D sequence -->
-        <div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:6px;text-align:center;">1D Sequence (32 shown)</div>
-          <div id="seq1d" style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;"></div>
+        <!-- 1D sequence — horizontal strip, NOT a grid -->
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">
+            1D Sequence — a <strong style="color:var(--accent3);">single flat row</strong> of n=248 vectors (32 shown)
+          </div>
+          <!-- position index row -->
+          <div id="seq1dLabels" style="display:flex;gap:3px;overflow-x:auto;padding-bottom:2px;"></div>
+          <!-- the actual 1D cells in ONE ROW -->
+          <div id="seq1d" style="display:flex;flex-direction:row;gap:3px;overflow-x:auto;padding-bottom:4px;margin-top:3px;"></div>
+          <!-- trailing ellipsis -->
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:2px;">
+            p1 → p2 → p3 → … → <span style="color:var(--accent3);">p248</span>
+            &nbsp;<span style="color:var(--muted);font-size:10px;">(one long line, left to right)</span>
+          </div>
         </div>
       </div>
 
@@ -1219,7 +1229,7 @@
               </div>
               <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
                 Dot product of Query_i and Key_j measures <strong style="color:#fff;">how well position i's question matches position j's answer</strong>.
-                Dividing by √d_k (where d_k is the key dimension, typically 64) keeps gradients stable during training — without it, large values would cause vanishing gradients after softmax.
+                Dividing by √d_k (where d_k is the key dimension, typically 64) keeps dot products in a stable range during training — without it, large values push softmax into its saturation region where gradients become near-zero, making learning grind to a halt.
               </div>
             </div>
           </div>
@@ -1757,7 +1767,7 @@
               maps it from D=256 dimensions to <strong style="color:#fff;">C=131 dimensions</strong> —
               one score per possible output character. Softmax converts these raw scores
               into a <strong style="color:var(--green);">probability distribution</strong> over all 131 classes.
-              The 131 classes cover: 33 base consonants, 32 subscripts, ~37 vowels (16 dependent + 7 compound + 14 independent), 8 diacritics, 10 numerals, 10 punctuation, and 3 special tokens (SOS/EOS/PAD).
+              The 131 classes cover: 33 base consonants, 32 subscripts, ~35 vowels (16 dependent simple + 5 compound + 14 independent), 8 diacritics, 10 numerals, 10 punctuation, and 3 special tokens (SOS/EOS/PAD).
               The character with the highest probability is selected as ŷ_t.
             </div>
             <div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;background:rgba(0,0,0,0.3);border-radius:6px;padding:6px 10px;">
@@ -1794,8 +1804,8 @@
           </div>
           <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:10px 12px;">
             <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);margin-bottom:4px;">Vowels (dep + indep)</div>
-            <div style="font-size:22px;font-weight:800;color:#fff;">~37</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:2px;">16 dep simple + 7 compound + 14 indep</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;">~35</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;">16 dep simple + 5 compound + 14 indep</div>
           </div>
           <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:10px 12px;">
             <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;margin-bottom:4px;">Diacritics</div>
@@ -1912,8 +1922,8 @@
     </div>
     <div class="summary-card">
       <div class="sc-label">At W = 500 px</div>
-      <div class="sc-value">250,000 pairs</div>
-      <div class="sc-note">vs 3,844 for a short word image</div>
+      <div class="sc-value">3,844 pairs</div>
+      <div class="sc-note">n=62 → 62²=3,844 · but grows to 250,000 at W=4000 px</div>
     </div>
     <div class="summary-card">
       <div class="sc-label">Root cause</div>
@@ -1963,13 +1973,38 @@ if (g2) { for (let r = 0; r < 4; r++) {
   }
 } }
 
-// 1D sequence step 3
+// 1D sequence step 3 — single horizontal row
 const s1 = document.getElementById('seq1d');
-if (s1) { for (let i = 0; i < 32; i++) {
-  const cell = document.createElement('div');
-  cell.style.cssText = `height:14px;border-radius:3px;background:linear-gradient(90deg,rgba(168,85,247,${0.3+Math.random()*0.5}),rgba(59,130,246,${0.2+Math.random()*0.4}));border:1px solid rgba(168,85,247,0.3);`;
-  s1.appendChild(cell);
-} }
+const s1Labels = document.getElementById('seq1dLabels');
+if (s1) {
+  for (let i = 0; i < 32; i++) {
+    // position label above
+    if (s1Labels) {
+      const lbl = document.createElement('div');
+      lbl.style.cssText = `width:22px;flex-shrink:0;text-align:center;font-family:var(--mono);font-size:8px;color:var(--muted);`;
+      lbl.textContent = `p${i+1}`;
+      s1Labels.appendChild(lbl);
+    }
+    // cell — fixed width so they stay in ONE row
+    const cell = document.createElement('div');
+    const purpleAmt = (0.35 + Math.random() * 0.45).toFixed(2);
+    const blueAmt   = (0.15 + Math.random() * 0.35).toFixed(2);
+    cell.style.cssText = `
+      width:22px;height:36px;flex-shrink:0;border-radius:5px;
+      background:linear-gradient(180deg,
+        rgba(168,85,247,${purpleAmt}),
+        rgba(59,130,246,${blueAmt}));
+      border:1px solid rgba(168,85,247,0.3);
+    `;
+    cell.title = `position ${i+1} · D=256 dim vector`;
+    s1.appendChild(cell);
+  }
+  // add a "…" end cell
+  const dots = document.createElement('div');
+  dots.style.cssText = `width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;color:var(--muted);`;
+  dots.textContent = '…';
+  s1.appendChild(dots);
+}
 
 // ── Step 4: n=4 vs n=8 comparison grids ──
 function makeCompGrid(id, n, baseColor) {
