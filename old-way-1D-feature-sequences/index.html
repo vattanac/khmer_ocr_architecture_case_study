@@ -692,6 +692,10 @@
   }
 
   /* ── Summary ── */
+  /* first child spacing inside collapsed part bodies */
+  [id^="s4p"] > *:first-child,
+  [id^="s5p"] > *:first-child { margin-top: 16px; }
+
   .summary {
     max-width: 860px;
     margin: 32px auto 0;
@@ -834,55 +838,62 @@
       </div>
     </div>
 
-    <!-- ⚠️ WHERE DO THESE NUMBERS COME FROM — the key clarification -->
-    <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px 18px;margin-bottom:12px;">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:10px;">⚠️ IMPORTANT — Where do those numbers [0.8, 0.1, 0.4, …] actually come from?</div>
+    <!-- ⚠️ WHERE DO THESE NUMBERS COME FROM — toggleable -->
+    <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <!-- clickable header -->
+      <div id="numToggleBtn" onclick="toggleNumbers()" style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:1px;">
+          ⚠️ IMPORTANT — Where do those numbers [0.8, 0.1, 0.4, …] actually come from?
+        </div>
+        <div id="numArrow" style="font-family:var(--mono);font-size:12px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▼ explain</div>
+      </div>
 
-      <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:12px;">
-        Those specific values are <strong style="color:#fff;">illustrative placeholders only</strong> — they were chosen to show the shape of a vector, not real data.
-        In reality, the numbers are produced by the <strong style="color:var(--accent);">CNN (Convolutional Neural Network)</strong> in Step 2.
-        Here is the real process:
-      </p>
+      <!-- expandable body -->
+      <div id="numDetail" style="display:none;border-top:1px solid rgba(239,68,68,0.2);padding:14px 18px;">
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:12px;">
+          Those specific values are <strong style="color:#fff;">illustrative placeholders only</strong> — they were chosen to show the shape of a vector, not real data.
+          In reality, the numbers are produced by the <strong style="color:var(--accent);">CNN (Convolutional Neural Network)</strong> in Step 2.
+          Here is the real process:
+        </p>
 
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <!-- Step A -->
-        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
-          <div style="width:22px;height:22px;border-radius:5px;background:rgba(249,115,22,0.2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;">1</div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
-            <strong style="color:var(--text);">The raw image pixels at position 5</strong> are a small rectangular patch of grey values —
-            for example a 4×4 patch of numbers between 0 (black) and 255 (white), describing the ink strokes of the character at that location.
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <!-- Step 1 -->
+          <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:22px;height:22px;border-radius:5px;background:rgba(249,115,22,0.2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;">1</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              <strong style="color:var(--text);">The raw image pixels at position 5</strong> are a small rectangular patch of grey values —
+              a 4×4 patch of numbers between 0 (black) and 255 (white), describing the ink strokes of the character at that location.
+            </div>
           </div>
-        </div>
-        <!-- Step B -->
-        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
-          <div style="width:22px;height:22px;border-radius:5px;background:rgba(59,130,246,0.2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent2);flex-shrink:0;">2</div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
-            <strong style="color:var(--text);">The CNN applies learned filters</strong> (convolution kernels) to that patch.
-            Each filter detects a specific visual pattern — one filter detects horizontal edges,
-            another detects curved strokes, another detects the circular loops common in Khmer consonants, and so on.
-            The CNN has <strong style="color:#fff;">256 such filters</strong> (one per output dimension D).
+          <!-- Step 2 -->
+          <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:22px;height:22px;border-radius:5px;background:rgba(59,130,246,0.2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent2);flex-shrink:0;">2</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              <strong style="color:var(--text);">The CNN applies 256 learned filters</strong> (convolution kernels) to that patch.
+              Each filter detects one specific visual pattern — horizontal edges, curved strokes,
+              the circular loops common in Khmer consonants, and so on.
+            </div>
           </div>
-        </div>
-        <!-- Step C -->
-        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
-          <div style="width:22px;height:22px;border-radius:5px;background:rgba(168,85,247,0.2);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent3);flex-shrink:0;">3</div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
-            <strong style="color:var(--text);">Each filter produces one activation number</strong> for that patch —
-            a high number means "this pattern was strongly present here", a low number means "not present".
-            After passing through a ReLU activation function, negative values become 0 and positive values stay.
-            <br><br>
-            So <span style="color:var(--green);font-family:var(--mono);">0.8</span> in dim 1 means <em>"filter 1's pattern (e.g. horizontal edge) was strongly detected at position 5"</em>.
-            <span style="color:var(--accent2);font-family:var(--mono);">0.1</span> in dim 2 means <em>"filter 2's pattern was barely present"</em>. And so on for all 256 filters.
+          <!-- Step 3 -->
+          <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+            <div style="width:22px;height:22px;border-radius:5px;background:rgba(168,85,247,0.2);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent3);flex-shrink:0;">3</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              <strong style="color:var(--text);">Each filter produces one activation number.</strong>
+              High = pattern strongly present. Low = not present.
+              After ReLU, negatives become 0.<br><br>
+              <span style="color:var(--green);font-family:var(--mono);">0.8</span> in dim 1 → <em>"filter 1 (horizontal edge) was strongly detected here"</em><br>
+              <span style="color:var(--accent2);font-family:var(--mono);">0.1</span> in dim 2 → <em>"filter 2's pattern was barely present"</em>
+            </div>
           </div>
-        </div>
-        <!-- Step D -->
-        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 14px;">
-          <div style="width:22px;height:22px;border-radius:5px;background:rgba(34,197,94,0.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">4</div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
-            <strong style="color:var(--text);">The 256 activation numbers are stacked into one vector</strong> →
-            that is the feature vector for position 5.
-            The actual values are determined entirely by what the CNN learned during training on thousands of Khmer images —
-            <strong style="color:#fff;">no human sets these numbers manually.</strong>
+          <!-- Step 4 -->
+          <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 14px;">
+            <div style="width:22px;height:22px;border-radius:5px;background:rgba(34,197,94,0.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">4</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+              <strong style="color:var(--text);">All 256 activation numbers are stacked into one vector</strong> →
+              that is the feature vector for position 5.
+              The values are determined entirely by what the CNN learned during training —
+              <strong style="color:#fff;">no human sets these numbers manually.</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -1249,15 +1260,17 @@
     </div>
     <div class="viz">
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 1 — WHY CONTEXT IS NEEDED AT ALL              -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🧠 Part 1 — Why does each position need to see others?
+      <!-- PART 1 — WHY CONTEXT IS NEEDED AT ALL -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s4p1','s4a1')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;">
+            🧠 Part 1 — Why does each position need to see others?
+          </div>
+          <div id="s4a1" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s4p1" style="padding:0 20px 20px;border-top:1px solid var(--border);">
 
-        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
+        <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;margin-top:16px;">
           After PATCH_ENC, each vector in the sequence describes only its own small patch of the image —
           it has <strong style="color:#fff;">no awareness of neighbouring patches</strong>.
           But in Khmer, one character's meaning depends heavily on what is around it:
@@ -1316,15 +1329,18 @@
           will often misread Khmer clusters. Self-attention solves this by letting every position
           <strong style="color:#fff;">broadcast and receive information from every other position simultaneously</strong>.
         </div>
-      </div>
+        </div><!-- /s4p1 body -->
+      </div><!-- /part1 card -->
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 2 — Q / K / V MECHANICS                       -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          ⚙️ Part 2 — How Self-Attention Works: Q, K, V
+      <!-- PART 2 — Q / K / V MECHANICS -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s4p2','s4a2')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;">
+            ⚙️ Part 2 — How Self-Attention Works: Q, K, V
+          </div>
+          <div id="s4a2" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s4p2" style="padding:0 20px 20px;border-top:1px solid var(--border);">
 
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           Self-attention uses three learned linear projections of each vector — called
@@ -1439,15 +1455,18 @@
             output = n×d_v matrix
           </div>
         </div>
-      </div>
+        </div><!-- /s4p2 body -->
+      </div><!-- /part2 card -->
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 3 — WHY n×n PAIRS                             -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🔢 Part 3 — Why exactly n × n pairs?
+      <!-- PART 3 — WHY n×n PAIRS -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s4p3','s4a3')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;">
+            🔢 Part 3 — Why exactly n × n pairs?
+          </div>
+          <div id="s4a3" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s4p3" style="padding:0 20px 20px;border-top:1px solid var(--border);">
 
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           The matrix <strong style="color:var(--accent);">Q</strong><strong style="color:var(--accent2);">K</strong><sup style="color:var(--accent2);">T</sup>
@@ -1505,15 +1524,18 @@
           This <strong style="color:var(--danger);">n×n score matrix must be fully computed</strong> — there are no shortcuts in vanilla self-attention.
           For n=248, that is 248×248 = <strong style="color:var(--danger);">61,504 scores</strong> to compute, store, and operate on.
         </div>
-      </div>
+        </div><!-- /s4p3 body -->
+      </div><!-- /part3 card -->
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 4 — O(n²) COST EXPLOSION                      -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          📈 Part 4 — O(n²): The Quadratic Explosion
+      <!-- PART 4 — O(n²) COST EXPLOSION -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s4p4','s4a4')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:2px;text-transform:uppercase;">
+            📈 Part 4 — O(n²): The Quadratic Explosion
+          </div>
+          <div id="s4a4" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s4p4" style="padding:0 20px 20px;border-top:1px solid var(--border);">
 
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           "O(n²)" is Big-O notation. It means: <strong style="color:#fff;">if n grows by a factor of k,
@@ -1615,7 +1637,8 @@
             <strong style="color:var(--danger);">orders of magnitude more expensive</strong> than Latin OCR.
           </div>
         </div>
-      </div>
+        </div><!-- /s4p4 body -->
+      </div><!-- /part4 card -->
 
       <!-- ═══════════════════════════════════════════════════ -->
       <!-- PART 5 — FINAL TAKEAWAY                            -->
@@ -1655,12 +1678,15 @@
     <div class="viz">
 
       <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 1 — THE BIG PICTURE                           -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🗺️ Part 1 — The Big Picture: Encoder vs Decoder roles
+      <!-- PART 1 — THE BIG PICTURE -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p1','s5a1')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;">
+            🗺️ Part 1 — The Big Picture: Encoder vs Decoder roles
+          </div>
+          <div id="s5a1" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p1" style="padding:0 20px 20px;border-top:1px solid var(--border);margin-top:0px;">
 
         <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
           <!-- Encoder box -->
@@ -1695,15 +1721,18 @@
           The decoder generates sequentially — it <strong style="color:var(--accent);">cannot see future characters</strong>
           when predicting the current one. This is called <strong style="color:#fff;">autoregressive generation</strong>.
         </div>
+        </div><!-- /s5p1 -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 2 — SOS / EOS / PAD TOKENS                    -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🪙 Part 2 — Special Tokens: SOS, EOS, PAD
+      <!-- PART 2 — SOS / EOS / PAD TOKENS -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p2','s5a2')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;">
+            🪙 Part 2 — Special Tokens: SOS, EOS, PAD
+          </div>
+          <div id="s5a2" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p2" style="padding:0 20px 20px;border-top:1px solid var(--border);">
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           The decoder uses three special tokens that are <strong style="color:#fff;">not Khmer characters</strong>
           but control signals for the generation loop:
@@ -1763,15 +1792,18 @@
           </div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;">Each arrow = one decoder step. The decoder grows its context one character at a time.</div>
         </div>
+        </div><!-- /s5p2 -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 3 — WHAT AUTOREGRESSIVE MEANS                 -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🔁 Part 3 — What "Autoregressive" Actually Means
+      <!-- PART 3 — WHAT AUTOREGRESSIVE MEANS -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p3','s5a3')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:2px;text-transform:uppercase;">
+            🔁 Part 3 — What "Autoregressive" Actually Means
+          </div>
+          <div id="s5a3" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p3" style="padding:0 20px 20px;border-top:1px solid var(--border);">
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
           <strong style="color:#fff;">Auto</strong> = self. <strong style="color:#fff;">Regressive</strong> = depends on previous outputs.
           Autoregressive means: <strong style="color:var(--accent3);">each prediction uses its own previous predictions as input</strong>.
@@ -1844,15 +1876,18 @@
           The key consequence: <strong style="color:#fff;">errors compound</strong>. If step t=2 predicts the wrong character,
           every subsequent step sees that wrong character in its context and may be misled.
         </div>
+        </div><!-- /s5p3 -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 4 — INSIDE THE DECODER: 3 ATTENTION LAYERS   -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          🏗️ Part 4 — Inside the Decoder: Three Sub-Layers
+      <!-- PART 4 — INSIDE THE DECODER: 3 ATTENTION LAYERS -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p4','s5a4')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:2px;text-transform:uppercase;">
+            🏗️ Part 4 — Inside the Decoder: Three Sub-Layers
+          </div>
+          <div id="s5a4" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p4" style="padding:0 20px 20px;border-top:1px solid var(--border);">
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:16px;">
           Each Transformer decoder unit has three sequential sub-layers. Understanding all three explains
           exactly how T (image context) and Z (predicted-so-far) combine to predict the next character.
@@ -1920,15 +1955,18 @@
             </div>
           </div>
         </div>
+        </div><!-- /s5p4 -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 5 — THE 131 OUTPUT CLASSES                    -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          📊 Part 5 — The 131 Output Classes & Probability Distribution
+      <!-- PART 5 — THE 131 OUTPUT CLASSES -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p5','s5a5')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;">
+            📊 Part 5 — The 131 Output Classes & Probability Distribution
+          </div>
+          <div id="s5a5" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p5" style="padding:0 20px 20px;border-top:1px solid var(--border);">
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           At every step the decoder outputs a vector of <strong style="color:#fff;">131 numbers</strong>,
           one per possible output class. After softmax, they sum to 1.0 and represent
@@ -2008,15 +2046,18 @@
           </div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;">All 131 probabilities sum = 1.00 · argmax picks គ · it is appended to Z · loop continues</div>
         </div>
+        </div><!-- /s5p5 -->
       </div>
 
-      <!-- ═══════════════════════════════════════════════════ -->
-      <!-- PART 6 — LOSS FUNCTION (HOW IT LEARNS)             -->
-      <!-- ═══════════════════════════════════════════════════ -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;">
-        <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;">
-          📉 Part 6 — How the Decoder Learns: Cross-Entropy Loss
+      <!-- PART 6 — LOSS FUNCTION (HOW IT LEARNS) -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
+        <div onclick="togglePart('s5p6','s5a6')" style="padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;">
+          <div style="font-family:var(--mono);font-size:10px;color:#fbbf24;letter-spacing:2px;text-transform:uppercase;">
+            📉 Part 6 — How the Decoder Learns: Cross-Entropy Loss
+          </div>
+          <div id="s5a6" style="font-family:var(--mono);font-size:11px;color:var(--accent2);flex-shrink:0;margin-left:12px;">▲ collapse</div>
         </div>
+        <div id="s5p6" style="padding:0 20px 20px;border-top:1px solid var(--border);">
         <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:14px;">
           During training, the ground-truth sequence Y = [y₁, y₂, …, yL, EOS] is known.
           At each step t, the decoder predicts a probability distribution Ŷ_t over 131 classes.
@@ -2037,6 +2078,7 @@
           If the model predicted 2% for the correct character: loss contribution = −log(0.02) ≈ 3.91 (large, bad).<br>
           Backpropagation adjusts all weights (W_Q, W_K, W_V in both encoder and decoder) to minimise this loss over millions of training examples.
         </div>
+        </div><!-- /s5p6 -->
       </div>
 
       <!-- FINAL SUMMARY BOX -->
@@ -2200,7 +2242,25 @@ function toggleD() {
   const open   = detail.style.display === 'none';
   detail.style.display = open ? 'block' : 'none';
   arrow.textContent    = open ? '▲ collapse' : '▼ explain more';
-  arrow.style.transform = open ? 'none' : 'none';
+}
+
+// ── Numbers origin toggle ──
+function toggleNumbers() {
+  const detail = document.getElementById('numDetail');
+  const arrow  = document.getElementById('numArrow');
+  const open   = detail.style.display === 'none';
+  detail.style.display = open ? 'block' : 'none';
+  arrow.textContent    = open ? '▲ collapse' : '▼ explain';
+}
+
+// ── Generic part toggle (Step 4 & 5 parts) ──
+function togglePart(bodyId, arrowId) {
+  const body  = document.getElementById(bodyId);
+  const arrow = document.getElementById(arrowId);
+  if (!body || !arrow) return;
+  const open = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'block';
+  arrow.textContent   = open ? '▼ expand' : '▲ collapse';
 }
 
 </script>
