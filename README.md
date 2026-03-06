@@ -18,15 +18,15 @@ Khmer script presents unique challenges for OCR systems due to its complex chara
 |------|-------------|
 | [Khmer Unicode List](https://khmer-ocr-case-study-unicode-list.netlify.app/) | Khmer Unicode List U1780 ![U1780](/unicode_name_list/unicode_name_list.png) |
 | [Old Way](https://khmer-orc-case-study-oldway-1d-fs.netlify.app/) | Old Way 1D Feature Sequences |
-| [New Way](https://khmer-orc-case-study-oldway-1d-fs.netlify.app/) | New Way 2D Feature Map |
-| [Demo 1](https://khmer-ocr-study-01.netlify.app) | Initial architecture overview |
-| [Demo 2](https://khmer-ocr-case-study02.netlify.app/) | Extended case study |
-| [Figure 1 Demo](https://khmer-ocr-case-study-figure1.netlify.app/) | Figure 1 visualization from referenced paper ![Figure 1](/figure1/figure1.png) |
-| [Figure 2 Demo](https://khmer-ocr-case-study-figure2.netlify.app/) | Figure 2 visualization from referenced paper ![Figure 2](/figure2/figure2.png) |
-| [Figure 3 Demo](https://khmer-ocr-case-study-figure3.netlify.app/) | Figure 3 visualization from referenced paper ![Figure 3](/figure3/figure3.png) |
-| [Figure 12 Demo](https://khmer-ocr-case-study-figure12.netlify.app/) | Figure 12 visualization from referenced paper ![Figure 12](/figure12/figure12.png) |
-| [Figure 13 Demo](https://khmer-ocr-case-study-figure13.netlify.app/) | Figure 13 visualization from referenced paper ![Figure 13](/figure13/figure13.png) |
-| [Figure 15 Demo](https://khmer-ocr-case-study-figure15.netlify.app/) | Figure 15 visualization from referenced paper ![Figure 15](/figure15/figure15.png) |
+| [New Way](https://khmer-ocr-case-study-newway-2d.netlify.app/) | New Way 2D Feature Map |
+| [Demo1](https://khmer-ocr-study-01.netlify.app) | Initial architecture overview |
+| [Demo2](https://khmer-ocr-case-study02.netlify.app/) | Extended case study |
+| [Figure1 Demo](https://khmer-ocr-case-study-figure1.netlify.app/) | Figure 1 visualization from referenced paper ![Figure 1](/figure1/figure1.png) |
+| [Figure2 Demo](https://khmer-ocr-case-study-figure2.netlify.app/) | Figure 2 visualization from referenced paper ![Figure 2](/figure2/figure2.png) |
+| [Figure3 Demo](https://khmer-ocr-case-study-figure3.netlify.app/) | Figure 3 visualization from referenced paper ![Figure 3](/figure3/figure3.png) |
+| [Figure12 Demo](https://khmer-ocr-case-study-figure12.netlify.app/) | Figure 12 visualization from referenced paper ![Figure 12](/figure12/figure12.png) |
+| [Figure13 Demo](https://khmer-ocr-case-study-figure13.netlify.app/) | Figure 13 visualization from referenced paper ![Figure 13](/figure13/figure13.png) |
+| [Figure15 Demo](https://khmer-ocr-case-study-figure15.netlify.app/) | Figure 15 visualization from referenced paper ![Figure 15](/figure15/figure15.png) |
 
 
 ---
