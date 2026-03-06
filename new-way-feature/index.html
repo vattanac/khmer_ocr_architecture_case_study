@@ -23,6 +23,43 @@
   --sans:    'Kantumruy Pro', sans-serif;
 }
 
+/* ── Light mode overrides ── */
+html.light {
+  --bg:      #f4f6fb;
+  --surface: #ffffff;
+  --surface2:#eef1f8;
+  --border:  #d0d7e8;
+  --text:    #0f172a;
+  --muted:   #64748b;
+  --accent:  #ea6c0a;
+  --accent2: #2563eb;
+  --accent3: #9333ea;
+  --danger:  #dc2626;
+  --green:   #16a34a;
+}
+
+/* ── Theme toggle button ── */
+#themeToggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  transition: background .2s, border-color .2s, transform .15s;
+}
+#themeToggle:hover { transform: scale(1.1); border-color: var(--accent2); }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -31,7 +68,16 @@ body {
   font-family: var(--sans);
   min-height: 100vh;
   padding: 32px 16px 64px;
+  transition: background .3s, color .3s;
 }
+html.light body { background-image: none; }
+html.light p, html.light li { color: #334155; }
+html.light strong { color: #0f172a; }
+html.light .card  { background: #fff; }
+html.light .takeaway { color: #334155; }
+html.light .formula  { color: #0f172a; background: #eef1f8; border-color: #d0d7e8; }
+html.light .row-table td { color: #334155; }
+html.light .cmp-box li { color: #334155; }
 
 /* ── header ── */
 .page-header {
@@ -329,6 +375,8 @@ body {
 </head>
 <body>
 
+<button id="themeToggle" title="Toggle light/dark mode">🌙</button>
+
 <div class="page-header">
   <div class="eyebrow">IEEE Access · Khmer OCR Paper Explainer</div>
   <h1>The New Way — 2D Feature Maps Preserved as Patches</h1>
@@ -558,14 +606,14 @@ body {
         <td><span class="chip" style="background:rgba(168,85,247,.15);color:var(--accent3);border:1px solid rgba(168,85,247,.3);">Row 6</span></td>
         <td>Upper subscript (px 20–24)</td>
         <td>Coeng (្) connector + top of subscript</td>
-        <td style="font-size:18px;line-height:1.4;">្ក___    ្គ  ___    ្ត  ___   ្ន </td>
+        <td style="font-size:18px;line-height:1.4;">្ក ្គ ្ត ្ន</td>
         <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[2560 … 3071]</span></td>
       </tr>
       <tr>
         <td><span class="chip" style="background:rgba(168,85,247,.15);color:var(--accent3);border:1px solid rgba(168,85,247,.3);">Row 7</span></td>
         <td>Lower subscript (px 24–28)</td>
         <td><strong style="color:var(--accent3)">Main body of subscript consonants (32 forms)</strong></td>
-        <td style="font-size:18px;line-height:1.4;">្រ___  ្ល  ___   ្វ  ___  ្ស</td>
+        <td style="font-size:18px;line-height:1.4;">្រ ្ល ្វ ្ម</td>
         <td><span style="font-family:var(--mono);font-size:10px;color:var(--muted);">vector[3072 … 3583]</span></td>
       </tr>
       <tr>
@@ -859,6 +907,16 @@ function selectPatch(col) {
 
 // Auto-select patch 8 on load
 setTimeout(() => selectPatch(7), 400);
+
+// ── Theme toggle ──
+const toggle = document.getElementById('themeToggle');
+const stored = localStorage.getItem('theme');
+if (stored === 'light') { document.documentElement.classList.add('light'); toggle.textContent = '☀️'; }
+toggle.addEventListener('click', () => {
+  const isLight = document.documentElement.classList.toggle('light');
+  toggle.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
 </script>
 </body>
 </html>
