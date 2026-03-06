@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khmer Unicode Chart — U+1780</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Khmer:wght@300;400;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --parchment: #faf6ef;
+    --gold: #c5933a;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5e8c4;
+    --rust: #8b3a2a;
+    --muted: #7a6e5f;
+    --border: #d9cdb8;
+    --section-bg: #f2ead8;
+    --card-bg: #fffdf8;
+    --shadow: rgba(90, 60, 10, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Decorative top band */
+  .top-band {
+    height: 6px;
+    background: linear-gradient(90deg, var(--rust) 0%, var(--gold) 40%, var(--gold-light) 60%, var(--gold) 80%, var(--rust) 100%);
+  }
+
+  /* Header */
+  header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 56px 48px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(197,147,58,0.04) 40px,
+      rgba(197,147,58,0.04) 80px
+    );
+  }
+
+  header::after {
+    content: 'ក ខ គ ឃ ង ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ ន ប ផ ព ភ ម យ រ ល វ';
+    position: absolute;
+    bottom: -10px;
+    left: 0; right: 0;
+    font-family: 'Noto Serif Khmer', serif;
+    font-size: 48px;
+    color: rgba(197,147,58,0.08);
+    letter-spacing: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .header-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .header-badge {
+    display: inline-block;
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Crimson Pro', serif;
+    font-size: 3.6rem;
+    font-weight: 300;
+    color: var(--parchment);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .header-sub {
+    font-family: 'Noto Serif Khmer', serif;
+    font-size: 1.6rem;
+    color: rgba(250,246,239,0.55);
+    font-weight: 300;
+    margin-bottom: 28px;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.7;
+  }
+
+  .meta-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(250,246,239,0.8);
+  }
+
+  /* Nav / Anchor */
+  .nav-bar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 48px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-inner::-webkit-scrollbar { display: none; }
+
+  .nav-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 14px 18px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* Main content */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 48px 80px;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 56px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.10s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.20s; }
+  .section:nth-child(6) { animation-delay: 0.25s; }
+  .section:nth-child(7) { animation-delay: 0.30s; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+  }
+
+  .section-range {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    background: var(--gold-pale);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .section-note {
+    font-size: 0.88rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 16px;
+    padding: 10px 16px;
+    background: var(--section-bg);
+    border-left: 3px solid var(--gold-light);
+    line-height: 1.5;
+  }
+
+  /* Character grid */
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .char-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    cursor: default;
+    position: relative;
+  }
+
+  .char-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 4px 16px var(--shadow);
+    transform: translateY(-2px);
+    z-index: 2;
+  }
+
+  .char-glyph {
+    font-family: 'Noto Serif Khmer', serif;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--ink);
+    min-width: 44px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .char-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .char-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .char-name {
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  /* Notes tooltip */
+  .char-notes {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .note-item {
+    font-size: 0.78rem;
+    color: var(--rust);
+    font-style: italic;
+    line-height: 1.4;
+    padding-left: 10px;
+    border-left: 2px solid var(--gold-light);
+  }
+
+  /* Wide table for digits/symbols */
+  .char-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.92rem;
+  }
+
+  .char-table thead tr {
+    background: var(--section-bg);
+  }
+
+  .char-table th {
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .char-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .char-table tbody tr:hover {
+    background: var(--gold-pale);
+  }
+
+  .char-table td {
+    padding: 10px 14px;
+    vertical-align: top;
+  }
+
+  .char-table .td-glyph {
+    font-family: 'Noto Serif Khmer', serif;
+    font-size: 1.6rem;
+    line-height: 1;
+    text-align: center;
+    width: 60px;
+  }
+
+  .char-table .td-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    width: 80px;
+  }
+
+  .char-table .td-name {
+    color: var(--ink);
+  }
+
+  .char-table .td-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+    max-width: 340px;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--ink);
+    color: rgba(250,246,239,0.5);
+    text-align: center;
+    padding: 32px 48px;
+    font-size: 0.85rem;
+    font-style: italic;
+    border-top: 4px solid var(--gold);
+  }
+
+  footer a {
+    color: var(--gold-light);
+    text-decoration: none;
+  }
+
+  footer a:hover { text-decoration: underline; }
+
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Search */
+  .search-bar {
+    margin-bottom: 40px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    max-width: 380px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--card-bg);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(197,147,58,0.15);
+  }
+
+  .search-input::placeholder { color: var(--muted); }
+
+  .search-hint {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Deprecated warning card */
+  .deprecated-note {
+    background: #fdf3f0;
+    border: 1px solid #e8b4a0;
+    border-left: 4px solid var(--rust);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.88rem;
+    color: var(--rust);
+    font-style: italic;
+  }
+
+  /* Copy flash */
+  .char-card:active {
+    background: var(--gold-pale);
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    header { padding: 36px 24px 36px; }
+    h1 { font-size: 2.4rem; }
+    main { padding: 36px 24px 60px; }
+    .nav-bar { padding: 0 24px; }
+    .char-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+    .footer-inner { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-band"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="header-badge">Unicode Block · U+1780–U+17FF</div>
+    <h1>Khmer <span>Script</span></h1>
+    <div class="header-sub">ភាសាខ្មែរ · Unicode Names List</div>
+    <div class="header-meta">
+      <div class="meta-item">
+        <span class="meta-label">Range</span>
+        <span class="meta-value">U+1780 – U+17FF</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Characters</span>
+        <span class="meta-value">128 defined</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Version</span>
+        <span class="meta-value">Unicode 3.0+</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Source</span>
+        <span class="meta-value">unicode.org/charts</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-bar">
+  <div class="nav-inner">
+    <a class="nav-link" href="#consonants">Consonants</a>
+    <a class="nav-link" href="#deprecated">Deprecated Vowels</a>
+    <a class="nav-link" href="#independent">Independent Vowels</a>
+    <a class="nav-link" href="#inherent">Inherent Vowels</a>
+    <a class="nav-link" href="#dependent">Dependent Signs</a>
+    <a class="nav-link" href="#various">Various Signs</a>
+    <a class="nav-link" href="#digits">Digits</a>
+    <a class="nav-link" href="#divination">Divination Symbols</a>
+  </div>
+</nav>
+
+<main>
+
+  <div class="search-bar">
+    <input class="search-input" type="search" id="search" placeholder="Search by name or code point…">
+    <span class="search-hint" id="search-count"></span>
+  </div>
+
+  <!-- CONSONANTS -->
+  <section class="section" id="consonants">
+    <div class="section-header">
+      <span class="section-title">Consonants</span>
+      <span class="section-range">U+1780 – U+17A2</span>
+    </div>
+    <div class="char-grid" id="consonants-grid">
+      <!-- ក - អ -->
+      <div class="char-card" data-name="khmer letter ka" data-code="1780"><div class="char-glyph">ក</div><div class="char-info"><span class="char-code">U+1780</span><span class="char-name">Khmer Letter Ka</span></div></div>
+      <div class="char-card" data-name="khmer letter kha" data-code="1781"><div class="char-glyph">ខ</div><div class="char-info"><span class="char-code">U+1781</span><span class="char-name">Khmer Letter Kha</span></div></div>
+      <div class="char-card" data-name="khmer letter ko" data-code="1782"><div class="char-glyph">គ</div><div class="char-info"><span class="char-code">U+1782</span><span class="char-name">Khmer Letter Ko</span></div></div>
+      <div class="char-card" data-name="khmer letter kho" data-code="1783"><div class="char-glyph">ឃ</div><div class="char-info"><span class="char-code">U+1783</span><span class="char-name">Khmer Letter Kho</span></div></div>
+      <div class="char-card" data-name="khmer letter ngo" data-code="1784"><div class="char-glyph">ង</div><div class="char-info"><span class="char-code">U+1784</span><span class="char-name">Khmer Letter Ngo</span></div></div>
+      <div class="char-card" data-name="khmer letter ca" data-code="1785"><div class="char-glyph">ច</div><div class="char-info"><span class="char-code">U+1785</span><span class="char-name">Khmer Letter Ca</span></div></div>
+      <div class="char-card" data-name="khmer letter cha" data-code="1786"><div class="char-glyph">ឆ</div><div class="char-info"><span class="char-code">U+1786</span><span class="char-name">Khmer Letter Cha</span></div></div>
+      <div class="char-card" data-name="khmer letter co" data-code="1787"><div class="char-glyph">ជ</div><div class="char-info"><span class="char-code">U+1787</span><span class="char-name">Khmer Letter Co</span></div></div>
+      <div class="char-card" data-name="khmer letter cho" data-code="1788"><div class="char-glyph">ឈ</div><div class="char-info"><span class="char-code">U+1788</span><span class="char-name">Khmer Letter Cho</span></div></div>
+      <div class="char-card" data-name="khmer letter nyo" data-code="1789"><div class="char-glyph">ញ</div><div class="char-info"><span class="char-code">U+1789</span><span class="char-name">Khmer Letter Nyo</span></div></div>
+      <div class="char-card" data-name="khmer letter da" data-code="178A"><div class="char-glyph">ដ</div><div class="char-info"><span class="char-code">U+178A</span><span class="char-name">Khmer Letter Da</span></div></div>
+      <div class="char-card" data-name="khmer letter ttha" data-code="178B"><div class="char-glyph">ឋ</div><div class="char-info"><span class="char-code">U+178B</span><span class="char-name">Khmer Letter Ttha</span></div></div>
+      <div class="char-card" data-name="khmer letter do" data-code="178C"><div class="char-glyph">ឌ</div><div class="char-info"><span class="char-code">U+178C</span><span class="char-name">Khmer Letter Do</span></div></div>
+      <div class="char-card" data-name="khmer letter ttho" data-code="178D"><div class="char-glyph">ឍ</div><div class="char-info"><span class="char-code">U+178D</span><span class="char-name">Khmer Letter Ttho</span></div></div>
+      <div class="char-card" data-name="khmer letter nno" data-code="178E">
+        <div class="char-glyph">ណ</div>
+        <div class="char-info">
+          <span class="char-code">U+178E</span>
+          <span class="char-name">Khmer Letter Nno</span>
+          <div class="char-notes"><span class="note-item">First register; correct transliteration is nna, not nno</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer letter ta" data-code="178F"><div class="char-glyph">ត</div><div class="char-info"><span class="char-code">U+178F</span><span class="char-name">Khmer Letter Ta</span></div></div>
+      <div class="char-card" data-name="khmer letter tha" data-code="1790"><div class="char-glyph">ថ</div><div class="char-info"><span class="char-code">U+1790</span><span class="char-name">Khmer Letter Tha</span></div></div>
+      <div class="char-card" data-name="khmer letter to" data-code="1791"><div class="char-glyph">ទ</div><div class="char-info"><span class="char-code">U+1791</span><span class="char-name">Khmer Letter To</span></div></div>
+      <div class="char-card" data-name="khmer letter tho" data-code="1792"><div class="char-glyph">ធ</div><div class="char-info"><span class="char-code">U+1792</span><span class="char-name">Khmer Letter Tho</span></div></div>
+      <div class="char-card" data-name="khmer letter no" data-code="1793"><div class="char-glyph">ន</div><div class="char-info"><span class="char-code">U+1793</span><span class="char-name">Khmer Letter No</span></div></div>
+      <div class="char-card" data-name="khmer letter ba" data-code="1794"><div class="char-glyph">ប</div><div class="char-info"><span class="char-code">U+1794</span><span class="char-name">Khmer Letter Ba</span></div></div>
+      <div class="char-card" data-name="khmer letter pha" data-code="1795"><div class="char-glyph">ផ</div><div class="char-info"><span class="char-code">U+1795</span><span class="char-name">Khmer Letter Pha</span></div></div>
+      <div class="char-card" data-name="khmer letter po" data-code="1796"><div class="char-glyph">ព</div><div class="char-info"><span class="char-code">U+1796</span><span class="char-name">Khmer Letter Po</span></div></div>
+      <div class="char-card" data-name="khmer letter pho" data-code="1797"><div class="char-glyph">ភ</div><div class="char-info"><span class="char-code">U+1797</span><span class="char-name">Khmer Letter Pho</span></div></div>
+      <div class="char-card" data-name="khmer letter mo" data-code="1798"><div class="char-glyph">ម</div><div class="char-info"><span class="char-code">U+1798</span><span class="char-name">Khmer Letter Mo</span></div></div>
+      <div class="char-card" data-name="khmer letter yo" data-code="1799"><div class="char-glyph">យ</div><div class="char-info"><span class="char-code">U+1799</span><span class="char-name">Khmer Letter Yo</span></div></div>
+      <div class="char-card" data-name="khmer letter ro" data-code="179A"><div class="char-glyph">រ</div><div class="char-info"><span class="char-code">U+179A</span><span class="char-name">Khmer Letter Ro</span></div></div>
+      <div class="char-card" data-name="khmer letter lo" data-code="179B"><div class="char-glyph">ល</div><div class="char-info"><span class="char-code">U+179B</span><span class="char-name">Khmer Letter Lo</span></div></div>
+      <div class="char-card" data-name="khmer letter vo" data-code="179C"><div class="char-glyph">វ</div><div class="char-info"><span class="char-code">U+179C</span><span class="char-name">Khmer Letter Vo</span></div></div>
+      <div class="char-card" data-name="khmer letter sha" data-code="179D">
+        <div class="char-glyph">ឝ</div>
+        <div class="char-info">
+          <span class="char-code">U+179D</span>
+          <span class="char-name">Khmer Letter Sha</span>
+          <div class="char-notes"><span class="note-item">Used only for Pali/Sanskrit transliteration</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer letter sso" data-code="179E">
+        <div class="char-glyph">ឞ</div>
+        <div class="char-info">
+          <span class="char-code">U+179E</span>
+          <span class="char-name">Khmer Letter Sso</span>
+          <div class="char-notes"><span class="note-item">Used only for Pali/Sanskrit; first register, correct transliteration is ssa</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer letter sa" data-code="179F"><div class="char-glyph">ស</div><div class="char-info"><span class="char-code">U+179F</span><span class="char-name">Khmer Letter Sa</span></div></div>
+      <div class="char-card" data-name="khmer letter ha" data-code="17A0"><div class="char-glyph">ហ</div><div class="char-info"><span class="char-code">U+17A0</span><span class="char-name">Khmer Letter Ha</span></div></div>
+      <div class="char-card" data-name="khmer letter la" data-code="17A1"><div class="char-glyph">ឡ</div><div class="char-info"><span class="char-code">U+17A1</span><span class="char-name">Khmer Letter La</span></div></div>
+      <div class="char-card" data-name="khmer letter qa" data-code="17A2">
+        <div class="char-glyph">អ</div>
+        <div class="char-info">
+          <span class="char-code">U+17A2</span>
+          <span class="char-name">Khmer Letter Qa</span>
+          <div class="char-notes"><span class="note-item">Glottal stop</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPRECATED -->
+  <section class="section" id="deprecated">
+    <div class="section-header">
+      <span class="section-title">Deprecated Independent Vowels</span>
+      <span class="section-range">U+17A3 – U+17A4</span>
+    </div>
+    <div class="deprecated-note">⚠ These cloned independent vowels were originally intended only for Pali/Sanskrit transliteration. Their use is strongly discouraged.</div>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer independent vowel qaq" data-code="17A3">
+        <div class="char-glyph">ឣ</div>
+        <div class="char-info">
+          <span class="char-code">U+17A3</span>
+          <span class="char-name">Khmer Independent Vowel Qaq</span>
+          <div class="char-notes"><span class="note-item">Strongly discouraged; use U+17A2 អ instead</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer independent vowel qaa" data-code="17A4">
+        <div class="char-glyph">ឤ</div>
+        <div class="char-info">
+          <span class="char-code">U+17A4</span>
+          <span class="char-name">Khmer Independent Vowel Qaa</span>
+          <div class="char-notes"><span class="note-item">Strongly discouraged; use U+17A2 + U+17B6 ាinstead</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INDEPENDENT VOWELS -->
+  <section class="section" id="independent">
+    <div class="section-header">
+      <span class="section-title">Independent Vowels</span>
+      <span class="section-range">U+17A5 – U+17B3</span>
+    </div>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer independent vowel qi" data-code="17A5"><div class="char-glyph">ឥ</div><div class="char-info"><span class="char-code">U+17A5</span><span class="char-name">Khmer Independent Vowel Qi</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qii" data-code="17A6"><div class="char-glyph">ឦ</div><div class="char-info"><span class="char-code">U+17A6</span><span class="char-name">Khmer Independent Vowel Qii</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qu" data-code="17A7"><div class="char-glyph">ឧ</div><div class="char-info"><span class="char-code">U+17A7</span><span class="char-name">Khmer Independent Vowel Qu</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel quk" data-code="17A8">
+        <div class="char-glyph">ឨ</div>
+        <div class="char-info">
+          <span class="char-code">U+17A8</span>
+          <span class="char-name">Khmer Independent Vowel Quk</span>
+          <div class="char-notes"><span class="note-item">Obsolete ligature for U+17A7 + U+1780; sequence is now preferred</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer independent vowel quu" data-code="17A9"><div class="char-glyph">ឩ</div><div class="char-info"><span class="char-code">U+17A9</span><span class="char-name">Khmer Independent Vowel Quu</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel quuv" data-code="17AA"><div class="char-glyph">ឪ</div><div class="char-info"><span class="char-code">U+17AA</span><span class="char-name">Khmer Independent Vowel Quuv</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel ry" data-code="17AB"><div class="char-glyph">ឫ</div><div class="char-info"><span class="char-code">U+17AB</span><span class="char-name">Khmer Independent Vowel Ry</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel ryy" data-code="17AC"><div class="char-glyph">ឬ</div><div class="char-info"><span class="char-code">U+17AC</span><span class="char-name">Khmer Independent Vowel Ryy</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel ly" data-code="17AD"><div class="char-glyph">ឭ</div><div class="char-info"><span class="char-code">U+17AD</span><span class="char-name">Khmer Independent Vowel Ly</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel lyy" data-code="17AE"><div class="char-glyph">ឮ</div><div class="char-info"><span class="char-code">U+17AE</span><span class="char-name">Khmer Independent Vowel Lyy</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qe" data-code="17AF"><div class="char-glyph">ឯ</div><div class="char-info"><span class="char-code">U+17AF</span><span class="char-name">Khmer Independent Vowel Qe</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qai" data-code="17B0"><div class="char-glyph">ឰ</div><div class="char-info"><span class="char-code">U+17B0</span><span class="char-name">Khmer Independent Vowel Qai</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qoo type one" data-code="17B1"><div class="char-glyph">ឱ</div><div class="char-info"><span class="char-code">U+17B1</span><span class="char-name">Khmer Independent Vowel Qoo Type One</span></div></div>
+      <div class="char-card" data-name="khmer independent vowel qoo type two" data-code="17B2">
+        <div class="char-glyph">ឲ</div>
+        <div class="char-info">
+          <span class="char-code">U+17B2</span>
+          <span class="char-name">Khmer Independent Vowel Qoo Type Two</span>
+          <div class="char-notes"><span class="note-item">Variant of U+17B1 ឱ, used in only two words</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer independent vowel qau" data-code="17B3"><div class="char-glyph">ឳ</div><div class="char-info"><span class="char-code">U+17B3</span><span class="char-name">Khmer Independent Vowel Qau</span></div></div>
+    </div>
+  </section>
+
+  <!-- INHERENT VOWELS -->
+  <section class="section" id="inherent">
+    <div class="section-header">
+      <span class="section-title">Inherent Vowels</span>
+      <span class="section-range">U+17B4 – U+17B5</span>
+    </div>
+    <p class="section-note">Invisible combining marks for phonetic transcription to distinguish Indic language inherent vowels from Khmer inherent vowels. Included solely for compatibility with particular applications; use in other contexts is discouraged.</p>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer vowel inherent aq" data-code="17B4"><div class="char-glyph" style="font-size:1.1rem;color:var(--muted)">[invisible]</div><div class="char-info"><span class="char-code">U+17B4</span><span class="char-name">Khmer Vowel Inherent Aq</span></div></div>
+      <div class="char-card" data-name="khmer vowel inherent aa" data-code="17B5"><div class="char-glyph" style="font-size:1.1rem;color:var(--muted)">[invisible]</div><div class="char-info"><span class="char-code">U+17B5</span><span class="char-name">Khmer Vowel Inherent Aa</span></div></div>
+    </div>
+  </section>
+
+  <!-- DEPENDENT VOWEL SIGNS -->
+  <section class="section" id="dependent">
+    <div class="section-header">
+      <span class="section-title">Dependent Vowel Signs &amp; Consonant Shifters</span>
+      <span class="section-range">U+17B6 – U+17CA</span>
+    </div>
+    <p class="section-note">Two-part dependent vowel signs (U+17BE–U+17C0, U+17C4–U+17C5) have glyph pieces on both sides of the consonant. They follow the consonant in logical order and should be handled as a unit for processing.</p>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer vowel sign aa" data-code="17B6"><div class="char-glyph">ា</div><div class="char-info"><span class="char-code">U+17B6</span><span class="char-name">Khmer Vowel Sign Aa</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign i" data-code="17B7"><div class="char-glyph">◌ិ</div><div class="char-info"><span class="char-code">U+17B7</span><span class="char-name">Khmer Vowel Sign I</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ii" data-code="17B8"><div class="char-glyph">◌ី</div><div class="char-info"><span class="char-code">U+17B8</span><span class="char-name">Khmer Vowel Sign Ii</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign y" data-code="17B9"><div class="char-glyph">◌ឹ</div><div class="char-info"><span class="char-code">U+17B9</span><span class="char-name">Khmer Vowel Sign Y</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign yy" data-code="17BA"><div class="char-glyph">◌ឺ</div><div class="char-info"><span class="char-code">U+17BA</span><span class="char-name">Khmer Vowel Sign Yy</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign u" data-code="17BB"><div class="char-glyph">◌ុ</div><div class="char-info"><span class="char-code">U+17BB</span><span class="char-name">Khmer Vowel Sign U</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign uu" data-code="17BC"><div class="char-glyph">◌ូ</div><div class="char-info"><span class="char-code">U+17BC</span><span class="char-name">Khmer Vowel Sign Uu</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ua" data-code="17BD"><div class="char-glyph">◌ួ</div><div class="char-info"><span class="char-code">U+17BD</span><span class="char-name">Khmer Vowel Sign Ua</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign oe" data-code="17BE"><div class="char-glyph">ើ</div><div class="char-info"><span class="char-code">U+17BE</span><span class="char-name">Khmer Vowel Sign Oe <em style="font-size:.75rem;color:var(--gold)">(two-part)</em></span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ya" data-code="17BF"><div class="char-glyph">ឿ</div><div class="char-info"><span class="char-code">U+17BF</span><span class="char-name">Khmer Vowel Sign Ya <em style="font-size:.75rem;color:var(--gold)">(two-part)</em></span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ie" data-code="17C0"><div class="char-glyph">ៀ</div><div class="char-info"><span class="char-code">U+17C0</span><span class="char-name">Khmer Vowel Sign Ie <em style="font-size:.75rem;color:var(--gold)">(two-part)</em></span></div></div>
+      <div class="char-card" data-name="khmer vowel sign e" data-code="17C1"><div class="char-glyph">េ</div><div class="char-info"><span class="char-code">U+17C1</span><span class="char-name">Khmer Vowel Sign E</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ae" data-code="17C2"><div class="char-glyph">ែ</div><div class="char-info"><span class="char-code">U+17C2</span><span class="char-name">Khmer Vowel Sign Ae</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign ai" data-code="17C3"><div class="char-glyph">ៃ</div><div class="char-info"><span class="char-code">U+17C3</span><span class="char-name">Khmer Vowel Sign Ai</span></div></div>
+      <div class="char-card" data-name="khmer vowel sign oo" data-code="17C4"><div class="char-glyph">ោ</div><div class="char-info"><span class="char-code">U+17C4</span><span class="char-name">Khmer Vowel Sign Oo <em style="font-size:.75rem;color:var(--gold)">(two-part)</em></span></div></div>
+      <div class="char-card" data-name="khmer vowel sign au" data-code="17C5"><div class="char-glyph">ៅ</div><div class="char-info"><span class="char-code">U+17C5</span><span class="char-name">Khmer Vowel Sign Au <em style="font-size:.75rem;color:var(--gold)">(two-part)</em></span></div></div>
+      <div class="char-card" data-name="khmer sign muusikatoan" data-code="17C9">
+        <div class="char-glyph">◌៉</div>
+        <div class="char-info">
+          <span class="char-code">U+17C9</span>
+          <span class="char-name">Khmer Sign Muusikatoan</span>
+          <div class="char-notes"><span class="note-item">Shifts 2nd register → 1st; transliteration: muusekatoan</span></div>
+        </div>
+      </div>
+      <div class="char-card" data-name="khmer sign triisap" data-code="17CA">
+        <div class="char-glyph">◌៊</div>
+        <div class="char-info">
+          <span class="char-code">U+17CA</span>
+          <span class="char-name">Khmer Sign Triisap</span>
+          <div class="char-notes"><span class="note-item">Shifts 1st register → 2nd; transliteration: treisap</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VARIOUS SIGNS -->
+  <section class="section" id="various">
+    <div class="section-header">
+      <span class="section-title">Various Signs &amp; Punctuation</span>
+      <span class="section-range">U+17C6 – U+17DD</span>
+    </div>
+    <table class="char-table">
+      <thead>
+        <tr>
+          <th>Glyph</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-name="khmer sign nikahit srak am anusvara" data-code="17C6">
+          <td class="td-glyph">◌ំ</td><td class="td-code">U+17C6</td>
+          <td class="td-name">Khmer Sign Nikahit</td>
+          <td class="td-note">= srak am / anusvara · Final nasalization · Usually regarded as vowel sign am</td>
+        </tr>
+        <tr data-name="khmer sign reahmuk srak ah visarga" data-code="17C7">
+          <td class="td-glyph">ះ</td><td class="td-code">U+17C7</td>
+          <td class="td-name">Khmer Sign Reahmuk</td>
+          <td class="td-note">= srak ah / visarga</td>
+        </tr>
+        <tr data-name="khmer sign yuukaleapintu" data-code="17C8">
+          <td class="td-glyph">ៈ</td><td class="td-code">U+17C8</td>
+          <td class="td-name">Khmer Sign Yuukaleapintu</td>
+          <td class="td-note">Inserts short inherent vowel with abrupt glottal stop; transliteration: yukaleakpintu</td>
+        </tr>
+        <tr data-name="khmer sign bantoc bantak" data-code="17CB">
+          <td class="td-glyph">◌់</td><td class="td-code">U+17CB</td>
+          <td class="td-name">Khmer Sign Bantoc</td>
+          <td class="td-note">Shortens the vowel sound; transliteration: bantak</td>
+        </tr>
+        <tr data-name="khmer sign robat" data-code="17CC">
+          <td class="td-glyph">◌៌</td><td class="td-code">U+17CC</td>
+          <td class="td-name">Khmer Sign Robat</td>
+          <td class="td-note">Diacritic historically corresponding to repha form of ra in Devanagari</td>
+        </tr>
+        <tr data-name="khmer sign toandakhiat" data-code="17CD">
+          <td class="td-glyph">◌៍</td><td class="td-code">U+17CD</td>
+          <td class="td-name">Khmer Sign Toandakhiat</td>
+          <td class="td-note">Indicates the base character is not pronounced</td>
+        </tr>
+        <tr data-name="khmer sign kakabat" data-code="17CE">
+          <td class="td-glyph">◌៎</td><td class="td-code">U+17CE</td>
+          <td class="td-name">Khmer Sign Kakabat</td>
+          <td class="td-note">Used with some exclamations</td>
+        </tr>
+        <tr data-name="khmer sign ahsda" data-code="17CF">
+          <td class="td-glyph">◌៏</td><td class="td-code">U+17CF</td>
+          <td class="td-name">Khmer Sign Ahsda</td>
+          <td class="td-note">Denotes stressed intonation in some single-consonant words</td>
+        </tr>
+        <tr data-name="khmer sign samyok sannya" data-code="17D0">
+          <td class="td-glyph">◌័</td><td class="td-code">U+17D0</td>
+          <td class="td-name">Khmer Sign Samyok Sannya</td>
+          <td class="td-note">Denotes deviation from pronunciation rules; mostly loan words from Pali/Sanskrit, French</td>
+        </tr>
+        <tr data-name="khmer sign viriam killer" data-code="17D1">
+          <td class="td-glyph">◌៑</td><td class="td-code">U+17D1</td>
+          <td class="td-name">Khmer Sign Viriam</td>
+          <td class="td-note">Mostly obsolete "killer"; final consonant without inherent vowel sound</td>
+        </tr>
+        <tr data-name="khmer sign coeng subscript" data-code="17D2">
+          <td class="td-glyph">◌្</td><td class="td-code">U+17D2</td>
+          <td class="td-name">Khmer Sign Coeng</td>
+          <td class="td-note">Indicates following letter is rendered subscripted; shape is arbitrary and not visibly rendered</td>
+        </tr>
+        <tr data-name="khmer sign bathamasat lunar" data-code="17D3">
+          <td class="td-glyph">◌៓</td><td class="td-code">U+17D3</td>
+          <td class="td-name">Khmer Sign Bathamasat</td>
+          <td class="td-note">Originally for lunar date symbols; use discouraged in favor of complete set (→ U+19E0)</td>
+        </tr>
+        <tr data-name="khmer sign khan full stop period" data-code="17D4">
+          <td class="td-glyph">។</td><td class="td-code">U+17D4</td>
+          <td class="td-name">Khmer Sign Khan</td>
+          <td class="td-note">Functions as a full stop / period</td>
+        </tr>
+        <tr data-name="khmer sign bariyoosan section end" data-code="17D5">
+          <td class="td-glyph">៕</td><td class="td-code">U+17D5</td>
+          <td class="td-name">Khmer Sign Bariyoosan</td>
+          <td class="td-note">Indicates end of a section or text</td>
+        </tr>
+        <tr data-name="khmer sign camnuc pii kuuh colon" data-code="17D6">
+          <td class="td-glyph">៖</td><td class="td-code">U+17D6</td>
+          <td class="td-name">Khmer Sign Camnuc Pii Kuuh</td>
+          <td class="td-note">Functions as colon; transliteration: camnoc pii kuuh</td>
+        </tr>
+        <tr data-name="khmer sign lek too repetition" data-code="17D7">
+          <td class="td-glyph">ៗ</td><td class="td-code">U+17D7</td>
+          <td class="td-name">Khmer Sign Lek Too</td>
+          <td class="td-note">Repetition sign</td>
+        </tr>
+        <tr data-name="khmer sign beyyal et cetera" data-code="17D8">
+          <td class="td-glyph">៘</td><td class="td-code">U+17D8</td>
+          <td class="td-name">Khmer Sign Beyyal</td>
+          <td class="td-note">Et cetera; use discouraged — preferred: U+17D4 U+179B U+17D4</td>
+        </tr>
+        <tr data-name="khmer sign phnaek muan book beginning" data-code="17D9">
+          <td class="td-glyph">៙</td><td class="td-code">U+17D9</td>
+          <td class="td-name">Khmer Sign Phnaek Muan</td>
+          <td class="td-note">Indicates beginning of a book or treatise; transliteration: phnek moan</td>
+        </tr>
+        <tr data-name="khmer sign koomuut book end" data-code="17DA">
+          <td class="td-glyph">៚</td><td class="td-code">U+17DA</td>
+          <td class="td-name">Khmer Sign Koomuut</td>
+          <td class="td-note">Indicates end of a book; pairs with U+17D9 ៙; transliteration: koomoot</td>
+        </tr>
+        <tr data-name="khmer currency symbol riel" data-code="17DB">
+          <td class="td-glyph">៛</td><td class="td-code">U+17DB</td>
+          <td class="td-name">Khmer Currency Symbol Riel</td>
+          <td class="td-note">Currency symbol for the Cambodian riel (KHR)</td>
+        </tr>
+        <tr data-name="khmer sign avakrahasanya apostrophe omission" data-code="17DC">
+          <td class="td-glyph">ៜ</td><td class="td-code">U+17DC</td>
+          <td class="td-name">Khmer Sign Avakrahasanya</td>
+          <td class="td-note">Rare; shows omitted Sanskrit vowel, like an apostrophe; transliteration: avakraha sannya</td>
+        </tr>
+        <tr data-name="khmer sign atthacan" data-code="17DD">
+          <td class="td-glyph">◌៝</td><td class="td-code">U+17DD</td>
+          <td class="td-name">Khmer Sign Atthacan</td>
+          <td class="td-note">Mostly obsolete; final consonant with its inherent vowel sound</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- DIGITS -->
+  <section class="section" id="digits">
+    <div class="section-header">
+      <span class="section-title">Digits</span>
+      <span class="section-range">U+17E0 – U+17E9</span>
+    </div>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer digit zero 0" data-code="17E0"><div class="char-glyph">០</div><div class="char-info"><span class="char-code">U+17E0</span><span class="char-name">Khmer Digit Zero</span></div></div>
+      <div class="char-card" data-name="khmer digit one 1" data-code="17E1"><div class="char-glyph">១</div><div class="char-info"><span class="char-code">U+17E1</span><span class="char-name">Khmer Digit One</span></div></div>
+      <div class="char-card" data-name="khmer digit two 2" data-code="17E2"><div class="char-glyph">២</div><div class="char-info"><span class="char-code">U+17E2</span><span class="char-name">Khmer Digit Two</span></div></div>
+      <div class="char-card" data-name="khmer digit three 3" data-code="17E3"><div class="char-glyph">៣</div><div class="char-info"><span class="char-code">U+17E3</span><span class="char-name">Khmer Digit Three</span></div></div>
+      <div class="char-card" data-name="khmer digit four 4" data-code="17E4"><div class="char-glyph">៤</div><div class="char-info"><span class="char-code">U+17E4</span><span class="char-name">Khmer Digit Four</span></div></div>
+      <div class="char-card" data-name="khmer digit five 5" data-code="17E5"><div class="char-glyph">៥</div><div class="char-info"><span class="char-code">U+17E5</span><span class="char-name">Khmer Digit Five</span></div></div>
+      <div class="char-card" data-name="khmer digit six 6" data-code="17E6"><div class="char-glyph">៦</div><div class="char-info"><span class="char-code">U+17E6</span><span class="char-name">Khmer Digit Six</span></div></div>
+      <div class="char-card" data-name="khmer digit seven 7" data-code="17E7"><div class="char-glyph">៧</div><div class="char-info"><span class="char-code">U+17E7</span><span class="char-name">Khmer Digit Seven</span></div></div>
+      <div class="char-card" data-name="khmer digit eight 8" data-code="17E8"><div class="char-glyph">៨</div><div class="char-info"><span class="char-code">U+17E8</span><span class="char-name">Khmer Digit Eight</span></div></div>
+      <div class="char-card" data-name="khmer digit nine 9" data-code="17E9"><div class="char-glyph">៩</div><div class="char-info"><span class="char-code">U+17E9</span><span class="char-name">Khmer Digit Nine</span></div></div>
+    </div>
+  </section>
+
+  <!-- DIVINATION SYMBOLS -->
+  <section class="section" id="divination">
+    <div class="section-header">
+      <span class="section-title">Numeric Symbols for Divination Lore</span>
+      <span class="section-range">U+17F0 – U+17F9</span>
+    </div>
+    <p class="section-note">These characters have numeric values 0–9 respectively, but are <em>not</em> used for calculation. They appear in traditional divination and astrological texts.</p>
+    <div class="char-grid">
+      <div class="char-card" data-name="khmer symbol lek attak son 0" data-code="17F0"><div class="char-glyph">៰</div><div class="char-info"><span class="char-code">U+17F0</span><span class="char-name">Khmer Symbol Lek Attak Son</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak muoy 1" data-code="17F1"><div class="char-glyph">៱</div><div class="char-info"><span class="char-code">U+17F1</span><span class="char-name">Khmer Symbol Lek Attak Muoy</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pii 2" data-code="17F2"><div class="char-glyph">៲</div><div class="char-info"><span class="char-code">U+17F2</span><span class="char-name">Khmer Symbol Lek Attak Pii</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak bei 3" data-code="17F3"><div class="char-glyph">៳</div><div class="char-info"><span class="char-code">U+17F3</span><span class="char-name">Khmer Symbol Lek Attak Bei</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak buon 4" data-code="17F4"><div class="char-glyph">៴</div><div class="char-info"><span class="char-code">U+17F4</span><span class="char-name">Khmer Symbol Lek Attak Buon</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pram 5" data-code="17F5"><div class="char-glyph">៵</div><div class="char-info"><span class="char-code">U+17F5</span><span class="char-name">Khmer Symbol Lek Attak Pram</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pram muoy 6" data-code="17F6"><div class="char-glyph">៶</div><div class="char-info"><span class="char-code">U+17F6</span><span class="char-name">Khmer Symbol Lek Attak Pram-Muoy</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pram pii 7" data-code="17F7"><div class="char-glyph">៷</div><div class="char-info"><span class="char-code">U+17F7</span><span class="char-name">Khmer Symbol Lek Attak Pram-Pii</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pram bei 8" data-code="17F8"><div class="char-glyph">៸</div><div class="char-info"><span class="char-code">U+17F8</span><span class="char-name">Khmer Symbol Lek Attak Pram-Bei</span></div></div>
+      <div class="char-card" data-name="khmer symbol lek attak pram buon 9" data-code="17F9"><div class="char-glyph">៹</div><div class="char-info"><span class="char-code">U+17F9</span><span class="char-name">Khmer Symbol Lek Attak Pram-Buon</span></div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2003–2025 Unicode, Inc. Unicode and the Unicode Logo are registered trademarks of Unicode, Inc.</span>
+    <span><a href="https://www.unicode.org/terms_of_use.html" target="_blank">Terms of Use</a> · <a href="https://www.unicode.org/charts/nameslist/n_1780.html" target="_blank">Original Source</a></span>
+  </div>
+</footer>
+
+<script>
+  // Click to copy character
+  document.querySelectorAll('.char-card').forEach(card => {
+    card.title = 'Click to copy character';
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      const glyph = card.querySelector('.char-glyph');
+      const text = glyph ? glyph.textContent.trim() : '';
+      if (text && !text.includes('[')) {
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = card.style.background;
+          card.style.background = 'var(--gold-pale)';
+          card.style.borderColor = 'var(--gold)';
+          setTimeout(() => {
+            card.style.background = '';
+            card.style.borderColor = '';
+          }, 600);
+        });
+      }
+    });
+  });
+
+  // Table row click to copy
+  document.querySelectorAll('.char-table tbody tr').forEach(row => {
+    row.style.cursor = 'pointer';
+    row.title = 'Click to copy character';
+    row.addEventListener('click', () => {
+      const glyph = row.querySelector('.td-glyph');
+      if (glyph) {
+        navigator.clipboard.writeText(glyph.textContent.trim());
+        row.style.background = 'var(--gold-pale)';
+        setTimeout(() => row.style.background = '', 500);
+      }
+    });
+  });
+
+  // Search
+  const search = document.getElementById('search');
+  const countEl = document.getElementById('search-count');
+  const allCards = [...document.querySelectorAll('.char-card')];
+  const allRows = [...document.querySelectorAll('.char-table tbody tr')];
+
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase().trim();
+    let visible = 0;
+    allCards.forEach(card => {
+      const name = (card.dataset.name || '').toLowerCase();
+      const code = (card.dataset.code || '').toLowerCase();
+      const match = !q || name.includes(q) || code.includes(q);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    allRows.forEach(row => {
+      const name = (row.dataset.name || '').toLowerCase();
+      const code = (row.dataset.code || '').toLowerCase();
+      const match = !q || name.includes(q) || code.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    countEl.textContent = q ? `${visible} result${visible !== 1 ? 's' : ''}` : '';
+  });
+</script>
+
+</body>
+</html>
