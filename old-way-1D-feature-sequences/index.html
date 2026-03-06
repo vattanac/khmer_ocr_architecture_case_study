@@ -789,7 +789,7 @@
       A feature sequence is what you get when you <strong style="color:var(--text);">describe each small section
       of that strip in numbers</strong>. Instead of
       <span style="font-family:'Kantumruy Pro','Noto Sans Khmer','Khmer OS',serif;color:#fff;font-size:15px;"> "ក looks like this"</span>,
-      you get:
+      you get a vector of numbers describing that patch — produced by the CNN in Step 2.
     </p>
 
     <!-- Visual: strip → positions → vectors -->
@@ -823,9 +823,9 @@
 
       <div style="font-size:20px;color:var(--muted);flex-shrink:0;">→</div>
 
-      <!-- Feature vector example -->
-      <div style="flex:1;min-width:160px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:5px;">Feature vector at position 5</div>
+      <!-- Feature vector — labelled as CNN output, not made-up -->
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:5px;">CNN output vector at position 5 <span style="color:var(--danger);">(see note below)</span></div>
         <div style="background:var(--surface);border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:10px 12px;">
           <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:6px;">position 5 →</div>
           <div style="font-family:var(--mono);font-size:11px;color:#94a3b8;">[<span style="color:var(--green);">0.8</span>, <span style="color:var(--accent2);">0.1</span>, <span style="color:var(--accent3);">0.4</span>, <span style="color:#fbbf24;">0.9</span>, <span style="color:var(--green);">0.3</span>, <span style="color:var(--muted);">…</span>]</div>
@@ -834,10 +834,64 @@
       </div>
     </div>
 
+    <!-- ⚠️ WHERE DO THESE NUMBERS COME FROM — the key clarification -->
+    <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:14px 18px;margin-bottom:12px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:1px;margin-bottom:10px;">⚠️ IMPORTANT — Where do those numbers [0.8, 0.1, 0.4, …] actually come from?</div>
+
+      <p style="font-size:13px;color:#94a3b8;line-height:1.8;margin-bottom:12px;">
+        Those specific values are <strong style="color:#fff;">illustrative placeholders only</strong> — they were chosen to show the shape of a vector, not real data.
+        In reality, the numbers are produced by the <strong style="color:var(--accent);">CNN (Convolutional Neural Network)</strong> in Step 2.
+        Here is the real process:
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Step A -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+          <div style="width:22px;height:22px;border-radius:5px;background:rgba(249,115,22,0.2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;">1</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+            <strong style="color:var(--text);">The raw image pixels at position 5</strong> are a small rectangular patch of grey values —
+            for example a 4×4 patch of numbers between 0 (black) and 255 (white), describing the ink strokes of the character at that location.
+          </div>
+        </div>
+        <!-- Step B -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+          <div style="width:22px;height:22px;border-radius:5px;background:rgba(59,130,246,0.2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent2);flex-shrink:0;">2</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+            <strong style="color:var(--text);">The CNN applies learned filters</strong> (convolution kernels) to that patch.
+            Each filter detects a specific visual pattern — one filter detects horizontal edges,
+            another detects curved strokes, another detects the circular loops common in Khmer consonants, and so on.
+            The CNN has <strong style="color:#fff;">256 such filters</strong> (one per output dimension D).
+          </div>
+        </div>
+        <!-- Step C -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+          <div style="width:22px;height:22px;border-radius:5px;background:rgba(168,85,247,0.2);border:1px solid var(--accent3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent3);flex-shrink:0;">3</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+            <strong style="color:var(--text);">Each filter produces one activation number</strong> for that patch —
+            a high number means "this pattern was strongly present here", a low number means "not present".
+            After passing through a ReLU activation function, negative values become 0 and positive values stay.
+            <br><br>
+            So <span style="color:var(--green);font-family:var(--mono);">0.8</span> in dim 1 means <em>"filter 1's pattern (e.g. horizontal edge) was strongly detected at position 5"</em>.
+            <span style="color:var(--accent2);font-family:var(--mono);">0.1</span> in dim 2 means <em>"filter 2's pattern was barely present"</em>. And so on for all 256 filters.
+          </div>
+        </div>
+        <!-- Step D -->
+        <div style="display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 14px;">
+          <div style="width:22px;height:22px;border-radius:5px;background:rgba(34,197,94,0.2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">4</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.7;">
+            <strong style="color:var(--text);">The 256 activation numbers are stacked into one vector</strong> →
+            that is the feature vector for position 5.
+            The actual values are determined entirely by what the CNN learned during training on thousands of Khmer images —
+            <strong style="color:#fff;">no human sets these numbers manually.</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:#94a3b8;line-height:1.6;">
-      A vector of <strong style="color:var(--text);">D = 256 numbers</strong> encodes what the model "saw" at that position.
+      A vector of <strong style="color:var(--text);">D = 256 numbers</strong> = the outputs of 256 CNN filters at that position.
       The full sequence of <strong style="color:var(--accent);">n such vectors</strong> is the
-      <strong style="color:var(--text);">feature sequence</strong> — the image turned into structured numbers the Transformer can reason about.
+      <strong style="color:var(--text);">feature sequence</strong> — the image translated into structured numbers the Transformer can reason about.
     </div>
   </div>
 </div>
