@@ -934,6 +934,55 @@
         <div class="step-header">
           <span class="step-tag" style="color:var(--purple); border-color:var(--purple);">PATCH<sub>ENC</sub></span>
           <span class="step-name c-purple">Patching Module — "Slice the Image into Columns"</span>
+          <button onclick="openModal('step2-modal')" style="
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(168,85,247,0.12);
+            border: 1px solid rgba(168,85,247,0.45);
+            color: #c084fc;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+          "
+          onmouseover="this.style.background='rgba(168,85,247,0.22)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.background='rgba(168,85,247,0.12)'; this.style.transform='translateY(0)';">
+            🖼 View Image
+          </button>
+        </div>
+
+        <div id="step2-modal" onclick="closeModal('step2-modal')" style="
+          display: none; position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+          align-items: center; justify-content: center; padding: 24px;
+        ">
+          <div onclick="event.stopPropagation()" style="
+            background: var(--card); border: 1px solid rgba(168,85,247,0.3);
+            border-radius: 16px; padding: 20px; max-width: 90vw; max-height: 90vh;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+          ">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+              <span style="font-size:13px; font-weight:700; color:#c084fc; letter-spacing:0.5px;">🖼 PATCH<sub style="font-size:10px;">ENC</sub> — Patching Module Diagram</span>
+              <button onclick="closeModal('step2-modal')" style="
+                background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+                color: var(--muted); border-radius: 6px; width: 28px; height: 28px;
+                cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+              "
+              onmouseover="this.style.color='var(--text)'; this.style.background='rgba(255,255,255,0.12)';"
+              onmouseout="this.style.color='var(--muted)'; this.style.background='rgba(255,255,255,0.07)';">✕</button>
+            </div>
+            <img src="image2.png" alt="PATCH ENC diagram" style="
+              max-width: 100%; max-height: 75vh; object-fit: contain;
+              border-radius: 10px; border: 1px solid var(--border);
+            ">
+          </div>
         </div>
         <p class="step-desc">
           The feature map is 2D (like a table). But Transformers need a <strong>1D sequence</strong> (like a list of words). 
@@ -980,6 +1029,55 @@
         <div class="step-header">
           <span class="step-tag" style="color:var(--green); border-color:var(--green);">TR<sub>ENC</sub></span>
           <span class="step-name c-green">Transformer Encoder — "Understanding Context"</span>
+          <button onclick="openModal('step3-modal')" style="
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.45);
+            color: #4ade80;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+          "
+          onmouseover="this.style.background='rgba(34,197,94,0.22)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.background='rgba(34,197,94,0.12)'; this.style.transform='translateY(0)';">
+            🖼 View Image
+          </button>
+        </div>
+
+        <div id="step3-modal" onclick="closeModal('step3-modal')" style="
+          display: none; position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+          align-items: center; justify-content: center; padding: 24px;
+        ">
+          <div onclick="event.stopPropagation()" style="
+            background: var(--card); border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 16px; padding: 20px; max-width: 90vw; max-height: 90vh;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+          ">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+              <span style="font-size:13px; font-weight:700; color:#4ade80; letter-spacing:0.5px;">🖼 TR<sub style="font-size:10px;">ENC</sub> — Transformer Encoder Diagram</span>
+              <button onclick="closeModal('step3-modal')" style="
+                background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+                color: var(--muted); border-radius: 6px; width: 28px; height: 28px;
+                cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+              "
+              onmouseover="this.style.color='var(--text)'; this.style.background='rgba(255,255,255,0.12)';"
+              onmouseout="this.style.color='var(--muted)'; this.style.background='rgba(255,255,255,0.07)';">✕</button>
+            </div>
+            <img src="image3.png" alt="TR ENC diagram" style="
+              max-width: 100%; max-height: 75vh; object-fit: contain;
+              border-radius: 10px; border: 1px solid var(--border);
+            ">
+          </div>
         </div>
         <p class="step-desc">
           Now we have a sequence of patches P₁…Pₙ. The Transformer Encoder uses <strong>self-attention</strong>
@@ -1070,6 +1168,55 @@
         <div class="step-header">
           <span class="step-tag" style="color:var(--blue); border-color:var(--blue);">TR<sub>DEC</sub></span>
           <span class="step-name c-blue">Transformer Decoder — "Writing the Answer"</span>
+          <button onclick="openModal('step4-modal')" style="
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.45);
+            color: #60a5fa;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+          "
+          onmouseover="this.style.background='rgba(59,130,246,0.22)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.background='rgba(59,130,246,0.12)'; this.style.transform='translateY(0)';">
+            🖼 View Image
+          </button>
+        </div>
+
+        <div id="step4-modal" onclick="closeModal('step4-modal')" style="
+          display: none; position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+          align-items: center; justify-content: center; padding: 24px;
+        ">
+          <div onclick="event.stopPropagation()" style="
+            background: var(--card); border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 16px; padding: 20px; max-width: 90vw; max-height: 90vh;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+          ">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+              <span style="font-size:13px; font-weight:700; color:#60a5fa; letter-spacing:0.5px;">🖼 TR<sub style="font-size:10px;">DEC</sub> — Transformer Decoder Diagram</span>
+              <button onclick="closeModal('step4-modal')" style="
+                background: rgba(255,255,255,0.07); border: 1px solid var(--border);
+                color: var(--muted); border-radius: 6px; width: 28px; height: 28px;
+                cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+              "
+              onmouseover="this.style.color='var(--text)'; this.style.background='rgba(255,255,255,0.12)';"
+              onmouseout="this.style.color='var(--muted)'; this.style.background='rgba(255,255,255,0.07)';">✕</button>
+            </div>
+            <img src="image4.png" alt="TR DEC diagram" style="
+              max-width: 100%; max-height: 75vh; object-fit: contain;
+              border-radius: 10px; border: 1px solid var(--border);
+            ">
+          </div>
         </div>
         <p class="step-desc">
           The decoder takes two inputs: the contextual features <strong>T</strong> (what the image says) 
@@ -1124,7 +1271,9 @@
             <span class="tok-arrow">→</span>
             <span class="tok tok-blue" title="base consonant">ក</span>
             <span class="tok-arrow">→</span>
-            <span class="tok tok-blue" title="ក + Lek Attak ់">ក់</span>
+            <span class="tok tok-blue" title="ក + Lek Attak ់">ក</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="">់</span>
             <span class="tok-arrow">→</span>
             <span class="tok tok-blue" title="Khmer digit 2">២</span>
             <span class="tok-arrow">→</span>
@@ -1150,7 +1299,8 @@
               <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ឹ</strong> <span style="font-family:'JetBrains Mono',monospace;">vowel</span></span>
               <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ង</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
               <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ក</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
-              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>ក់</strong> <span style="font-family:'JetBrains Mono',monospace;">base+Lek</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>ក</strong> <span style="font-family:'JetBrains Mono',monospace;">base+Lek</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>់</strong> <span style="font-family:'JetBrains Mono',monospace;">base+Lek</span></span>
               <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>២</strong> <span style="font-family:'JetBrains Mono',monospace;">digit</span></span>
             </div>
             <div style="margin-top:8px; font-size:11px; color:var(--muted);">🟦 single codepoint &nbsp;|&nbsp; 🟪 multi-codepoint unit — both count as <strong style="color:var(--text);">1 token</strong> each — total: <strong style="color:var(--text);">19 tokens</strong></div>
@@ -1207,7 +1357,8 @@
             <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ឹ</div><div class="char-conf">95%</div><div style="font-size:9px;color:var(--muted);">vowel</div></div>
             <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ង</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
             <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ក</div><div class="char-conf">97%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
-            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">ក់</div><div class="char-conf">93%</div><div style="font-size:9px;color:var(--muted);">base+Lek</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">ក</div><div class="char-conf">93%</div><div style="font-size:9px;color:var(--muted);">base+Lek</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">់</div><div class="char-conf">93%</div><div style="font-size:9px;color:var(--muted);">base+Lek</div></div>
             <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">២</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">digit</div></div>
           </div>
           <div style="margin-top:10px; font-size:11px; color:var(--muted);">🟡 single codepoint &nbsp;|&nbsp; 🟣 multi-codepoint unit &nbsp;— &nbsp;total <strong style="color:var(--text);">19 tokens</strong> from 1 word</div>
@@ -1363,8 +1514,8 @@ function runDemo() {
     { label: 'Decode: token 5',  val: 'Z=[…ស]      → "្ត" coeng+ត (96%)', color: '#3b82f6', delay: 4400 },
     { label: 'Decode: token 6',  val: 'Z=[…្ត]     → "ិ"  vowel (93%)', color: '#3b82f6', delay: 4900 },
     { label: 'Decode: token 7',  val: 'Z=[…ិ]      → "៍"  silencer (91%)', color: '#3b82f6', delay: 5400 },
-    { label: 'Decode: tokens…',  val: 'ស → ង → ្ក → ា → ត → ់ → ប → ឹ → ង → ក → ក់ → ២', color: '#3b82f6', delay: 5900 },
-    { label: 'Final Output',     val: 'ប ៉ ុ ស ្ត ិ ៍ ស ង ្ក ា ត ់ ប ឹ ង ក ក់ ២  ✓  (19 tokens)', color: '#eab308', delay: 6600 },
+    { label: 'Decode: tokens…',  val: 'ស → ង → ្ក → ា → ត → ់ → ប → ឹ → ង → ក → ក →  ់→២', color: '#3b82f6', delay: 5900 },
+    { label: 'Final Output',     val: 'ប៉ុស្តិ៍សង្កាត់បឹងកក់២ ✓  (19 tokens)', color: '#eab308', delay: 6600 },
   ];
 
   steps.forEach((s, i) => {
@@ -1376,20 +1527,25 @@ function runDemo() {
   });
 }
 
-function openImageModal() {
-  const modal = document.getElementById('cnn-image-modal');
+function openModal(id) {
+  const modal = document.getElementById(id);
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
-function closeImageModal() {
-  const modal = document.getElementById('cnn-image-modal');
+function closeModal(id) {
+  const modal = document.getElementById(id);
   modal.style.display = 'none';
   document.body.style.overflow = '';
 }
 
+function openImageModal() { openModal('cnn-image-modal'); }
+function closeImageModal() { closeModal('cnn-image-modal'); }
+
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeImageModal();
+  if (e.key === 'Escape') {
+    ['cnn-image-modal','step2-modal','step3-modal','step4-modal'].forEach(closeModal);
+  }
 });
 
 function toggleTheme() {
