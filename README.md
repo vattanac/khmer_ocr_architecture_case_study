@@ -17,6 +17,7 @@ Khmer script presents unique challenges for OCR systems due to its complex chara
 | Demo | Description |
 |------|-------------|
 | [Khmer Unicode List](https://khmer-ocr-case-study-unicode-list.netlify.app/) | Khmer Unicode List U1780 ![U1780](/unicode_name_list/unicode_name_list.png) |
+| [Figure12Pro Demo](https://khmer-ocr-case-study-figure12pro.netlify.app/) | Figure 12 visualization from referenced paper ![Figure 12](/figure12/figure12.png) |
 | [Old Way](https://khmer-orc-case-study-oldway-1d-fs.netlify.app/) | Old Way 1D Feature Sequences |
 | [New Way](https://khmer-ocr-case-study-newway-2d.netlify.app/) | New Way 2D Feature Map |
 | [Demo1](https://khmer-ocr-study-01.netlify.app) | Initial architecture overview |
