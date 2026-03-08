@@ -19,7 +19,103 @@
     --blue: #3b82f6;
     --gold: #eab308;
     --red: #ef4444;
+    --hero-bg: linear-gradient(135deg, #0d0f1a 0%, #111827 60%, #1a1025 100%);
+    --step-desc-color: #9ca3af;
+    --analogy-p-color: #9ca3af;
+    --shadow-hover: rgba(0,0,0,0.3);
+    --code-bg: rgba(0,0,0,0.3);
+    --tok-gray-bg: rgba(107,114,128,0.15);
+    --tok-gray-border: rgba(107,114,128,0.3);
+    --tok-gray-color: #9ca3af;
+    --demo-step-bg: rgba(255,255,255,0.04);
+    --khmer-sample-bg: rgba(255,255,255,0.04);
+    --khmer-sample-color: #f0f0f0;
+    --section-line: var(--border);
+    --toggle-bg: #1e2336;
+    --toggle-border: rgba(255,255,255,0.12);
   }
+
+  html.light {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --card2: #eef1f8;
+    --border: rgba(0,0,0,0.08);
+    --text: #111827;
+    --muted: #6b7280;
+    --orange: #ea6500;
+    --purple: #7c3aed;
+    --green: #16a34a;
+    --blue: #2563eb;
+    --gold: #b45309;
+    --red: #dc2626;
+    --hero-bg: linear-gradient(135deg, #eef1fb 0%, #e8eaf6 60%, #f0e8ff 100%);
+    --step-desc-color: #4b5563;
+    --analogy-p-color: #4b5563;
+    --shadow-hover: rgba(0,0,0,0.1);
+    --code-bg: rgba(0,0,0,0.05);
+    --tok-gray-bg: rgba(107,114,128,0.08);
+    --tok-gray-border: rgba(107,114,128,0.2);
+    --tok-gray-color: #6b7280;
+    --demo-step-bg: rgba(0,0,0,0.02);
+    --khmer-sample-bg: rgba(0,0,0,0.04);
+    --khmer-sample-color: #111827;
+    --section-line: rgba(0,0,0,0.08);
+    --toggle-bg: #ffffff;
+    --toggle-border: rgba(0,0,0,0.12);
+  }
+
+  /* ── THEME TOGGLE BUTTON ── */
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 999;
+    background: var(--toggle-bg);
+    border: 1px solid var(--toggle-border);
+    border-radius: 50px;
+    padding: 6px 14px 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .theme-toggle:hover {
+    color: var(--text);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+  }
+  .theme-toggle .toggle-track {
+    width: 32px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--purple);
+    position: relative;
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  html.light .theme-toggle .toggle-track { background: #f59e0b; }
+  .theme-toggle .toggle-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.3s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+  }
+  html.light .theme-toggle .toggle-thumb { transform: translateX(14px); }
+  .toggle-label-dark { display: inline; }
+  .toggle-label-light { display: none; }
+  html.light .toggle-label-dark { display: none; }
+  html.light .toggle-label-light { display: inline; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   
   body {
@@ -32,7 +128,7 @@
 
   /* ── HERO ── */
   .hero {
-    background: linear-gradient(135deg, #0d0f1a 0%, #111827 60%, #1a1025 100%);
+    background: var(--hero-bg);
     border-bottom: 1px solid var(--border);
     padding: 48px 24px 40px;
     text-align: center;
@@ -76,13 +172,13 @@
     display: inline-flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255,255,255,0.04);
+    background: var(--khmer-sample-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px 20px;
     font-family: 'Noto Sans Khmer', serif;
     font-size: 22px;
-    color: #f0f0f0;
+    color: var(--khmer-sample-color);
     letter-spacing: 2px;
   }
   .khmer-sample .arrow { color: var(--green); font-family: monospace; font-size: 18px; }
@@ -105,7 +201,7 @@
   }
   .analogy-icon { font-size: 36px; flex-shrink: 0; margin-top: 2px; }
   .analogy-card h3 { font-size: 15px; color: #c084fc; font-weight: 600; margin-bottom: 8px; }
-  .analogy-card p { font-size: 13.5px; color: #9ca3af; line-height: 1.7; }
+  .analogy-card p { font-size: 13.5px; color: var(--analogy-p-color); line-height: 1.7; }
   .analogy-card strong { color: var(--text); }
 
   /* ── SECTION ── */
@@ -194,7 +290,7 @@
   }
   .step-card:hover .step-body {
     border-color: rgba(255,255,255,0.12);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px var(--shadow-hover);
   }
 
   .step-header {
@@ -219,7 +315,7 @@
   }
   .step-desc {
     font-size: 13.5px;
-    color: #9ca3af;
+    color: var(--step-desc-color);
     line-height: 1.7;
     margin-bottom: 14px;
   }
@@ -321,7 +417,7 @@
   .tok-purple { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.4); color: #c084fc; }
   .tok-blue   { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); color: #60a5fa; }
   .tok-gold   { background: rgba(234,179,8,0.1);  border-color: rgba(234,179,8,0.4);  color: #fbbf24; }
-  .tok-gray   { background: rgba(107,114,128,0.15); border-color: rgba(107,114,128,0.3); color: #9ca3af; }
+  .tok-gray   { background: var(--tok-gray-bg); border-color: var(--tok-gray-border); color: var(--tok-gray-color); }
 
   .tok-arrow { color: var(--muted); font-size: 16px; }
 
@@ -388,7 +484,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     padding: 12px 16px;
-    background: rgba(0,0,0,0.3);
+    background: var(--code-bg);
     border-radius: 8px;
     border-left: 3px solid;
   }
@@ -515,7 +611,7 @@
     min-height: 80px;
   }
   .demo-step {
-    background: rgba(255,255,255,0.04);
+    background: var(--demo-step-bg);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 10px 16px;
@@ -592,6 +688,15 @@
 </style>
 </head>
 <body>
+
+<!-- ── THEME TOGGLE ── -->
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <div class="toggle-track">
+    <div class="toggle-thumb">🌙</div>
+  </div>
+  <span class="toggle-label-dark">Dark</span>
+  <span class="toggle-label-light">Light</span>
+</button>
 
 <!-- ═══════════════ HERO ═══════════════ -->
 <div class="hero">
@@ -1191,6 +1296,26 @@ function runDemo() {
     setTimeout(() => { div.classList.add('active'); div.style.borderColor = s.color + '60'; div.style.background = s.color + '12'; }, s.delay);
   });
 }
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.classList.toggle('light');
+  const thumb = document.querySelector('.toggle-thumb');
+  thumb.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+// Restore saved preference on load
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light');
+    document.addEventListener('DOMContentLoaded', () => {
+      const thumb = document.querySelector('.toggle-thumb');
+      if (thumb) thumb.textContent = '☀️';
+    });
+  }
+})();
 </script>
 
 </body>
