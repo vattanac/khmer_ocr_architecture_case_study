@@ -781,6 +781,36 @@
     transition: background 0.45s ease, color 0.45s ease, border-color 0.35s ease, box-shadow 0.35s ease;
   }
 
+  /* ── Professor name shimmer animation ── */
+  @keyframes prof-shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes prof-glow {
+    0%, 100% { text-shadow: 0 0 10px rgba(200,160,20,0.4), 0 0 20px rgba(200,160,20,0.2); }
+    50%       { text-shadow: 0 0 20px rgba(220,184,60,0.9), 0 0 40px rgba(200,160,20,0.6), 0 0 60px rgba(200,160,20,0.3); }
+  }
+  .prof-name {
+    font-size: 19px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    background: linear-gradient(
+      90deg,
+      #c8a014 0%,
+      #f5e060 30%,
+      #fff8d0 50%,
+      #f5e060 70%,
+      #c8a014 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: prof-shimmer 2.8s linear infinite,
+               prof-glow    2.8s ease-in-out infinite;
+  }
+
 </style>
 </head>
 <body>
@@ -813,7 +843,7 @@
     <p class="subtitle">An Exploration of Low-Resource, Non-Latin Optical Character Recognition using CNN + Transformer Architecture</p>
     <div class="title-info" style="margin-bottom:18px;display:flex;flex-direction:column;gap:5px;align-items:center;">
       <span style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.65);">Subject: <strong style="color:var(--gold);">IDSE</strong></span>
-      <span style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.65);">Lecture: <strong style="color:var(--gold);">Dr. Chamroeun Khim</strong></span>
+      <span style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.65);">Lecture: </span><span class="prof-name">Dr. Chamroeun Khim</span>
     </div>
     <div class="meta">
       <span>Rina</span>
@@ -1021,6 +1051,20 @@
       <p style="font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:rgba(200,160,20,0.7); font-family:'Source Sans 3',sans-serif;">
         Scan for Case Study &rarr; Research Paper
       </p>
+      <a href="https://ieeexplore.ieee.org/document/10316307" target="_blank" rel="noopener noreferrer"
+        style="
+          font-family:'Source Sans 3',sans-serif;
+          font-size:11px;
+          letter-spacing:1.2px;
+          color:rgba(200,160,20,0.85);
+          text-decoration:none;
+          border-bottom:1px solid rgba(200,160,20,0.35);
+          padding-bottom:1px;
+          transition:color 0.2s, border-color 0.2s;
+        "
+        onmouseover="this.style.color='#c8a014';this.style.borderColor='#c8a014';"
+        onmouseout="this.style.color='rgba(200,160,20,0.85)';this.style.borderColor='rgba(200,160,20,0.35)';"
+      >ieeexplore.ieee.org/document/10316307</a>
     </div>
 
     <span class="slide-num">07 / 07</span>
