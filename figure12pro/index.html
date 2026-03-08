@@ -796,6 +796,77 @@
         <div class="step-header">
           <span class="step-tag" style="color:var(--orange); border-color:var(--orange);">CNN</span>
           <span class="step-name c-orange">Feature Extractor — "The Eyes"</span>
+          <button onclick="openImageModal()" style="
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(249,115,22,0.12);
+            border: 1px solid rgba(249,115,22,0.45);
+            color: #fb923c;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+          "
+          onmouseover="this.style.background='rgba(249,115,22,0.22)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.background='rgba(249,115,22,0.12)'; this.style.transform='translateY(0)';">
+            🖼 View Image
+          </button>
+        </div>
+
+        <!-- Image Modal -->
+        <div id="cnn-image-modal" onclick="closeImageModal()" style="
+          display: none;
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background: rgba(0,0,0,0.75);
+          backdrop-filter: blur(6px);
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        ">
+          <div onclick="event.stopPropagation()" style="
+            background: var(--card);
+            border: 1px solid rgba(249,115,22,0.3);
+            border-radius: 16px;
+            padding: 20px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+          ">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+              <span style="font-size:13px; font-weight:700; color:var(--orange); letter-spacing:0.5px;">🖼 CNN Feature Extractor — Architecture Diagram</span>
+              <button onclick="closeImageModal()" style="
+                background: rgba(255,255,255,0.07);
+                border: 1px solid var(--border);
+                color: var(--muted);
+                border-radius: 6px;
+                width: 28px; height: 28px;
+                cursor: pointer;
+                font-size: 14px;
+                display: flex; align-items: center; justify-content: center;
+                transition: all 0.2s;
+              "
+              onmouseover="this.style.color='var(--text)'; this.style.background='rgba(255,255,255,0.12)';"
+              onmouseout="this.style.color='var(--muted)'; this.style.background='rgba(255,255,255,0.07)';">✕</button>
+            </div>
+            <img src="image.png" alt="CNN Feature Extractor diagram" style="
+              max-width: 100%;
+              max-height: 75vh;
+              object-fit: contain;
+              border-radius: 10px;
+              border: 1px solid var(--border);
+            ">
+          </div>
         </div>
         <p class="step-desc">
           The image is fed into a <strong>Convolutional Neural Network (CNN)</strong> — think of this as the AI's eyes. 
@@ -1304,6 +1375,22 @@ function runDemo() {
     setTimeout(() => { div.classList.add('active'); div.style.borderColor = s.color + '60'; div.style.background = s.color + '12'; }, s.delay);
   });
 }
+
+function openImageModal() {
+  const modal = document.getElementById('cnn-image-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('cnn-image-modal');
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeImageModal();
+});
 
 function toggleTheme() {
   const html = document.documentElement;
