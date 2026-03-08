@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figure 12 — How the AI Reads Khmer Text</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+Khmer:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --card: #141728;
+    --card2: #1a1f35;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf6;
+    --muted: #6b7280;
+    --orange: #f97316;
+    --purple: #a855f7;
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --gold: #eab308;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0d0f1a 0%, #111827 60%, #1a1025 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(168,85,247,0.12), transparent);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(168,85,247,0.15);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #c084fc;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(24px, 5vw, 42px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: #a855f7; }
+  .hero p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+  .khmer-sample {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-family: 'Noto Sans Khmer', serif;
+    font-size: 22px;
+    color: #f0f0f0;
+    letter-spacing: 2px;
+  }
+  .khmer-sample .arrow { color: var(--green); font-family: monospace; font-size: 18px; }
+  .khmer-sample .result { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--gold); }
+
+  /* ── ANALOGY BANNER ── */
+  .analogy {
+    max-width: 900px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  .analogy-card {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(168,85,247,0.08));
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .analogy-icon { font-size: 36px; flex-shrink: 0; margin-top: 2px; }
+  .analogy-card h3 { font-size: 15px; color: #c084fc; font-weight: 600; margin-bottom: 8px; }
+  .analogy-card p { font-size: 13.5px; color: #9ca3af; line-height: 1.7; }
+  .analogy-card strong { color: var(--text); }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 40px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── STEP CARDS (main explainer) ── */
+  .steps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .steps-container::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 60px;
+    bottom: 60px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--orange), var(--purple), var(--green), var(--blue), var(--gold));
+    border-radius: 2px;
+  }
+
+  .step-card {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .step-num {
+    width: 60px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    border: 2px solid;
+    background: var(--card);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .step-card:hover .step-circle { transform: scale(1.15); }
+
+  .step-body {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    transition: all 0.3s;
+  }
+  .step-card:hover .step-body {
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .step-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+  .step-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .step-desc {
+    font-size: 13.5px;
+    color: #9ca3af;
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  /* Visual demo inside step */
+  .demo-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 12px;
+  }
+  .demo-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* Image pixel grid demo */
+  .pixel-grid {
+    display: grid;
+    gap: 2px;
+    width: fit-content;
+  }
+  .px {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+  }
+
+  /* Feature map visual */
+  .feat-map {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+    width: 100%;
+    max-width: 200px;
+  }
+  .feat-cell {
+    height: 14px;
+    border-radius: 2px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+  .feat-cell:nth-child(2n){animation-delay:.3s}
+  .feat-cell:nth-child(3n){animation-delay:.6s}
+  .feat-cell:nth-child(4n){animation-delay:.9s}
+
+  /* Patch strip */
+  .patches {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .patch-item {
+    width: 28px;
+    height: 56px;
+    border-radius: 4px;
+    border: 2px solid rgba(168,85,247,0.5);
+    background: rgba(168,85,247,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .patch-item::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: linear-gradient(180deg, rgba(168,85,247,0.4), rgba(168,85,247,0.1));
+    border-radius: 2px;
+  }
+  .patch-num {
+    position: absolute;
+    bottom: 2px;
+    width: 100%;
+    text-align: center;
+    font-size: 8px;
+    color: #c084fc;
+    font-weight: 700;
+  }
+
+  /* Token sequence */
+  .token-seq {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tok {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+  }
+  .tok-green  { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.4);  color: #4ade80; }
+  .tok-purple { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.4); color: #c084fc; }
+  .tok-blue   { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); color: #60a5fa; }
+  .tok-gold   { background: rgba(234,179,8,0.1);  border-color: rgba(234,179,8,0.4);  color: #fbbf24; }
+  .tok-gray   { background: rgba(107,114,128,0.15); border-color: rgba(107,114,128,0.3); color: #9ca3af; }
+
+  .tok-arrow { color: var(--muted); font-size: 16px; }
+
+  /* Attention vis */
+  .attn-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    max-width: 180px;
+  }
+  .attn-cell {
+    height: 18px;
+    border-radius: 3px;
+    transition: opacity 0.5s;
+  }
+
+  /* Output chars */
+  .char-outputs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .char-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .char-khmer {
+    font-family: 'Noto Sans Khmer', serif;
+    font-size: 22px;
+    line-height: 1;
+    animation: charFade 3s ease-in-out infinite;
+  }
+  .char-conf {
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--green);
+    font-weight: 600;
+  }
+  @keyframes charFade { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .char-box:nth-child(1) .char-khmer { animation-delay: 0s; }
+  .char-box:nth-child(2) .char-khmer { animation-delay: 0.5s; }
+  .char-box:nth-child(3) .char-khmer { animation-delay: 1s; }
+  .char-box:nth-child(4) .char-khmer { animation-delay: 1.5s; }
+  .char-box:nth-child(5) .char-khmer { animation-delay: 2s; }
+
+  /* two-col layout for demo */
+  .demo-two {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .demo-col { flex: 1; min-width: 120px; }
+  .demo-col-label { font-size: 10px; color: var(--muted); margin-bottom: 6px; font-weight: 600; letter-spacing: 1px; }
+
+  /* Flow equation */
+  .flow-eq {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border-left: 3px solid;
+  }
+  .flow-eq .arr { color: var(--muted); }
+
+  /* ── BIG PIPELINE ── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 8px 4px 20px;
+    scroll-snap-type: x mandatory;
+  }
+  .pipe-step {
+    min-width: 140px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scroll-snap-align: start;
+    padding: 0 4px;
+  }
+  .pipe-block {
+    width: 100%;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .pipe-block:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
+  .pipe-sub {
+    font-size: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 400;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+  .pipe-data {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .pipe-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--muted);
+    font-size: 20px;
+    align-self: center;
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* ── FAQ / SIMPLE Q&A ── */
+  .qa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .qa-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .qa-card:hover { border-color: rgba(255,255,255,0.12); }
+  .qa-q {
+    font-size: 13px;
+    font-weight: 700;
+    color: #c084fc;
+    margin-bottom: 8px;
+  }
+  .qa-q::before { content: 'Q '; opacity: 0.5; }
+  .qa-a {
+    font-size: 13px;
+    color: #9ca3af;
+    line-height: 1.7;
+  }
+  .qa-a strong { color: var(--text); }
+
+  /* ── INTERACTIVE DEMO ── */
+  .interactive {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    text-align: center;
+  }
+  .interactive h3 { font-size: 18px; margin-bottom: 8px; }
+  .interactive p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .btn-run {
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-run:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,58,237,0.4); }
+  .btn-run:active { transform: translateY(0); }
+
+  #demo-pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+    min-height: 80px;
+  }
+  .demo-step {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 12px;
+    text-align: left;
+    min-width: 130px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s;
+  }
+  .demo-step.active {
+    opacity: 1;
+    transform: translateY(0);
+    border-color: rgba(168,85,247,0.3);
+    background: rgba(168,85,247,0.08);
+  }
+  .demo-step-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .demo-step-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
+
+  /* COLORS for steps */
+  .c-orange { color: var(--orange); }
+  .c-purple { color: var(--purple); }
+  .c-green  { color: var(--green); }
+  .c-blue   { color: var(--blue); }
+  .c-gold   { color: var(--gold); }
+
+  .b-orange { border-color: var(--orange) !important; background: rgba(249,115,22,0.1) !important; }
+  .b-purple { border-color: var(--purple) !important; background: rgba(168,85,247,0.1) !important; }
+  .b-green  { border-color: var(--green)  !important; background: rgba(34,197,94,0.1)  !important; }
+  .b-blue   { border-color: var(--blue)   !important; background: rgba(59,130,246,0.1)  !important; }
+  .b-gold   { border-color: var(--gold)   !important; background: rgba(234,179,8,0.1)   !important; }
+
+  .pipe-orange { color: #fff; border-color: var(--orange); background: rgba(249,115,22,0.15); }
+  .pipe-purple { color: #fff; border-color: var(--purple); background: rgba(168,85,247,0.15); }
+  .pipe-green  { color: #fff; border-color: var(--green);  background: rgba(34,197,94,0.15); }
+  .pipe-blue   { color: #fff; border-color: var(--blue);   background: rgba(59,130,246,0.15); }
+  .pipe-gold   { color: #fff; border-color: var(--gold);   background: rgba(234,179,8,0.15); }
+
+  .circle-orange { color: var(--orange); border-color: var(--orange); }
+  .circle-purple { color: var(--purple); border-color: var(--purple); }
+  .circle-green  { color: var(--green);  border-color: var(--green); }
+  .circle-blue   { color: var(--blue);   border-color: var(--blue); }
+  .circle-gold   { color: var(--gold);   border-color: var(--gold); }
+
+  /* summary table */
+  .summary-table { width: 100%; border-collapse: collapse; }
+  .summary-table th {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .summary-table td {
+    font-size: 13px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: top;
+  }
+  .summary-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Tooltip */
+  [data-tip] { position: relative; cursor: help; border-bottom: 1px dashed rgba(255,255,255,0.3); }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: #1e2336; border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 11px; color: var(--text);
+    white-space: nowrap; z-index: 99; margin-bottom: 6px; pointer-events: none;
+  }
+
+  @media (max-width: 600px) {
+    .steps-container::before { left: 20px; }
+    .step-num { width: 44px; }
+    .step-circle { width: 32px; height: 32px; font-size: 13px; }
+    .analogy-card { flex-direction: column; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<div class="hero">
+  <div class="hero-badge">Figure 12 Explained</div>
+  <h1>How AI <span>Reads & Understands</span><br>Khmer Text from Images</h1>
+  <p>This architecture is like a very smart reader — it looks at a picture of Khmer script and outputs the actual characters, step by step. Example: <strong style="color:#c084fc;">ប៉ុស្តិ៍សង្កាត់បឹងកក់២</strong> (Sangkat Boeng Kak 2 Post Office)</p>
+  <div class="khmer-sample">
+    <span>ប៉ុស្តិ៍សង្កាត់បឹងកក់២</span>
+    <span class="arrow">→</span>
+    <span class="result">"ប ៉ ុ ស ្ត ិ៍ ស ង ្ក ា ត ់ ..."</span>
+  </div>
+</div>
+
+<!-- ═══════════════ ANALOGY ═══════════════ -->
+<div class="analogy">
+  <div class="analogy-card">
+    <div class="analogy-icon">🧑‍🏫</div>
+    <div>
+      <h3>The Big Analogy — Think of a Smart Student Reading Handwriting</h3>
+      <p>
+        Imagine you show a student a handwritten note in a language they know.<br>
+        1️⃣ Their <strong>eyes scan the page</strong> and spot the overall shapes. <em>(CNN)</em><br>
+        2️⃣ They <strong>split it into small regions</strong>, like reading word by word. <em>(PATCH<sub>ENC</sub>)</em><br>
+        3️⃣ Their brain <strong>connects the regions</strong> to understand context ("this curve + that line = ណ"). <em>(TR<sub>ENC</sub>)</em><br>
+        4️⃣ They <strong>write out each character</strong> one by one, checking what they've written so far. <em>(TR<sub>DEC</sub>)</em>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PIPELINE OVERVIEW ═══════════════ -->
+<div class="section">
+  <div class="section-title">Full Pipeline at a Glance</div>
+  <div class="pipeline">
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-orange">
+        🖼 Image<br><span class="pipe-sub">Input I</span>
+      </div>
+      <div class="pipe-data">H × W pixels</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-orange">
+        CNN<br><span class="pipe-sub">Feature Extractor</span>
+      </div>
+      <div class="pipe-data">F<sub>i,j</sub> ∈ ℝ<sup>D</sup><br>H'×W' feature map</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-purple">
+        PATCH<sub>ENC</sub><br><span class="pipe-sub">Patching Module</span>
+      </div>
+      <div class="pipe-data">P<sub>i</sub> ∈ ℝ<sup>D</sup><br>Sequence of patches</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-green">
+        TR<sub>ENC</sub><br><span class="pipe-sub">Transformer Encoder</span>
+      </div>
+      <div class="pipe-data">T<sub>i</sub> ∈ ℝ<sup>D</sup><br>Contextual features</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-blue">
+        TR<sub>DEC</sub><br><span class="pipe-sub">Transformer Decoder</span>
+      </div>
+      <div class="pipe-data">Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup><br>Character probs</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+
+    <div class="pipe-step">
+      <div class="pipe-block pipe-gold">
+        📝 Text Output<br><span class="pipe-sub">Predicted Chars</span>
+      </div>
+      <div class="pipe-data">Khmer characters<br>one by one</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ DETAILED STEPS ═══════════════ -->
+<div class="section">
+  <div class="section-title">Step-by-Step Deep Dive</div>
+  <div class="steps-container">
+
+    <!-- STEP 1: CNN -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle circle-orange">1</div>
+      </div>
+      <div class="step-body b-orange">
+        <div class="step-header">
+          <span class="step-tag" style="color:var(--orange); border-color:var(--orange);">CNN</span>
+          <span class="step-name c-orange">Feature Extractor — "The Eyes"</span>
+        </div>
+        <p class="step-desc">
+          The image is fed into a <strong>Convolutional Neural Network (CNN)</strong> — think of this as the AI's eyes. 
+          Instead of reading pixels one by one, the CNN scans the whole image with sliding filters, 
+          detecting edges, curves, and strokes. It outputs a <strong>compressed feature map F</strong> 
+          — a grid where each cell encodes "what's interesting at this location."
+        </p>
+        <p class="step-desc">
+          📐 If the input image is 32×128 pixels, the CNN shrinks it to about <strong>8×32 feature cells</strong> 
+          (downsampled 4×), but each cell now holds a rich 512-dimensional description instead of just 1 pixel value.
+        </p>
+        <div class="demo-box">
+          <div class="demo-label">Visual: Image → Feature Map</div>
+          <div class="demo-two">
+            <div class="demo-col">
+              <div class="demo-col-label">Input Image (pixels)</div>
+              <div class="pixel-grid" style="grid-template-columns: repeat(16, 1fr);">
+                <script>
+                  // Generate pixel colors for Khmer-ish grayscale image appearance
+                  const colors = ['#111','#222','#333','#fff','#eee','#ddd','#111','#888','#555','#111','#eee','#fff','#333','#111','#888','#555',
+                                  '#fff','#111','#eee','#222','#fff','#eee','#fff','#fff','#eee','#fff','#222','#ddd','#fff','#eee','#fff','#222'];
+                  document.write(Array.from({length:64}).map((_,i) => {
+                    const g = i % 3 === 0 ? 20 : i % 5 === 0 ? 255 : i % 7 === 0 ? 180 : 80;
+                    return `<div class="px" style="background:rgb(${g},${g},${g})"></div>`;
+                  }).join(''));
+                </script>
+              </div>
+            </div>
+            <div style="align-self:center; color:var(--muted); font-size:24px;">→</div>
+            <div class="demo-col">
+              <div class="demo-col-label">Feature Map F (each cell = pattern)</div>
+              <div class="feat-map">
+                <div class="feat-cell" style="background:#f97316;"></div><div class="feat-cell" style="background:#ea580c;"></div>
+                <div class="feat-cell" style="background:#c2410c;"></div><div class="feat-cell" style="background:#fb923c;"></div>
+                <div class="feat-cell" style="background:#f97316;"></div><div class="feat-cell" style="background:#9a3412;"></div>
+                <div class="feat-cell" style="background:#ea580c;"></div><div class="feat-cell" style="background:#fb923c;"></div>
+                <div class="feat-cell" style="background:#9a3412;"></div><div class="feat-cell" style="background:#f97316;"></div>
+                <div class="feat-cell" style="background:#fb923c;"></div><div class="feat-cell" style="background:#c2410c;"></div>
+                <div class="feat-cell" style="background:#ea580c;"></div><div class="feat-cell" style="background:#f97316;"></div>
+                <div class="feat-cell" style="background:#9a3412;"></div><div class="feat-cell" style="background:#fb923c;"></div>
+                <div class="feat-cell" style="background:#f97316;"></div><div class="feat-cell" style="background:#c2410c;"></div>
+                <div class="feat-cell" style="background:#ea580c;"></div><div class="feat-cell" style="background:#fb923c;"></div>
+                <div class="feat-cell" style="background:#c2410c;"></div><div class="feat-cell" style="background:#f97316;"></div>
+                <div class="feat-cell" style="background:#9a3412;"></div><div class="feat-cell" style="background:#ea580c;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flow-eq" style="border-color:var(--orange); margin-top:12px;">
+          <span class="c-orange">F</span>
+          <span class="arr">=</span>
+          <span>CNN(</span><span class="c-orange">I</span><span>)</span>
+          <span class="arr" style="margin-left:12px;">where</span>
+          <span class="c-orange">F</span> <span style="font-family:'Space Grotesk',sans-serif;">shape: H'×W'×D</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: PATCH ENC -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle circle-purple">2</div>
+      </div>
+      <div class="step-body b-purple">
+        <div class="step-header">
+          <span class="step-tag" style="color:var(--purple); border-color:var(--purple);">PATCH<sub>ENC</sub></span>
+          <span class="step-name c-purple">Patching Module — "Slice the Image into Columns"</span>
+        </div>
+        <p class="step-desc">
+          The feature map is 2D (like a table). But Transformers need a <strong>1D sequence</strong> (like a list of words). 
+          The Patching Module slices the 2D feature map into <strong>narrow vertical strips (patches)</strong>, 
+          then flattens each strip into a single vector.
+        </p>
+        <p class="step-desc">
+          🖼 Example: If the feature map is 8 rows × 32 cols, and patch size is (4, 1), each patch = 4 rows × 1 col. 
+          After flattening + a linear layer, each patch becomes a vector <strong>P<sub>i</sub></strong> in ℝ<sup>D</sup>. 
+          You end up with <strong>32 patches in a sequence</strong> — like 32 "tokens" in a sentence.
+        </p>
+        <div class="demo-box">
+          <div class="demo-label">Visual: Feature Map → Sequence of Patch Vectors</div>
+          <div class="patches">
+            <div class="patch-item"><div class="patch-num">P1</div></div>
+            <div class="patch-item"><div class="patch-num">P2</div></div>
+            <div class="patch-item"><div class="patch-num">P3</div></div>
+            <div class="patch-item"><div class="patch-num">P4</div></div>
+            <div class="patch-item"><div class="patch-num">P5</div></div>
+            <div class="patch-item"><div class="patch-num">P6</div></div>
+            <div class="patch-item"><div class="patch-num">P7</div></div>
+            <div class="patch-item"><div class="patch-num">P8</div></div>
+            <span style="color:var(--muted); align-self:center; font-size:18px;">…</span>
+            <div class="patch-item"><div class="patch-num">P32</div></div>
+          </div>
+          <div style="margin-top:10px; font-size:11px; color:var(--muted);">Each patch = one column of the feature map, projected to a vector P<sub>i</sub> ∈ ℝ<sup>D</sup></div>
+        </div>
+        <div class="flow-eq" style="border-color:var(--purple); margin-top:12px;">
+          <span class="c-purple">P</span>
+          <span class="arr">=</span>
+          <span>PATCH<sub>ENC</sub>(</span><span class="c-orange">F</span><span>)</span>
+          <span class="arr" style="margin-left:8px;">→</span>
+          <span>sequence [P₁, P₂, …, P<sub>N</sub>]</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: TR ENC -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle circle-green">3</div>
+      </div>
+      <div class="step-body b-green">
+        <div class="step-header">
+          <span class="step-tag" style="color:var(--green); border-color:var(--green);">TR<sub>ENC</sub></span>
+          <span class="step-name c-green">Transformer Encoder — "Understanding Context"</span>
+        </div>
+        <p class="step-desc">
+          Now we have a sequence of patches P₁…Pₙ. The Transformer Encoder uses <strong>self-attention</strong>
+          to let every patch "look at" every other patch. This is how the AI understands <em>context</em>: 
+          "this stroke here at P5 is connected to the curve at P7, so together they form the character ណ."
+        </p>
+        <p class="step-desc">
+          🧠 Think of it like a reading comprehension exercise: each word re-reads the entire sentence to understand 
+          its own meaning better. The output <strong>T<sub>i</sub></strong> is a richer, context-aware version of each patch.
+        </p>
+        <div class="demo-box">
+          <div class="demo-label">Visual: Self-Attention — Each patch attends to all others</div>
+          <div class="demo-two">
+            <div class="demo-col">
+              <div class="demo-col-label">Input patches</div>
+              <div class="token-seq">
+                <span class="tok tok-purple">P₁</span>
+                <span class="tok tok-purple">P₂</span>
+                <span class="tok tok-purple">P₃</span>
+                <span class="tok tok-purple">P₄</span>
+                <span style="color:var(--muted)">…</span>
+              </div>
+            </div>
+            <div style="align-self:center; color:var(--muted); font-size:24px;">→</div>
+            <div class="demo-col">
+              <div class="demo-col-label">Contextual features</div>
+              <div class="token-seq">
+                <span class="tok tok-green">T₁</span>
+                <span class="tok tok-green">T₂</span>
+                <span class="tok tok-green">T₃</span>
+                <span class="tok tok-green">T₄</span>
+                <span style="color:var(--muted)">…</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="demo-col-label">Attention map (each row = one patch looking at all others)</div>
+            <div class="attn-grid">
+              <div class="attn-cell" style="background:rgba(34,197,94,0.9);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.2);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.7);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.1);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.5);"></div>
+
+              <div class="attn-cell" style="background:rgba(34,197,94,0.3);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.95);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.4);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.8);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.2);"></div>
+
+              <div class="attn-cell" style="background:rgba(34,197,94,0.5);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.6);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.9);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.3);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.7);"></div>
+
+              <div class="attn-cell" style="background:rgba(34,197,94,0.1);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.7);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.2);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.95);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.4);"></div>
+
+              <div class="attn-cell" style="background:rgba(34,197,94,0.6);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.1);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.5);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.3);"></div>
+              <div class="attn-cell" style="background:rgba(34,197,94,0.9);"></div>
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-top:6px;">Brighter = stronger attention between two patches</div>
+          </div>
+        </div>
+        <div class="flow-eq" style="border-color:var(--green); margin-top:12px;">
+          <span class="c-green">T</span>
+          <span class="arr">=</span>
+          <span>TR<sub>ENC</sub>(</span><span class="c-purple">P</span><span>)</span>
+          <span class="arr" style="margin-left:8px;">→</span>
+          <span>context-aware sequence [T₁…Tₙ]</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: TR DEC -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle circle-blue">4</div>
+      </div>
+      <div class="step-body b-blue">
+        <div class="step-header">
+          <span class="step-tag" style="color:var(--blue); border-color:var(--blue);">TR<sub>DEC</sub></span>
+          <span class="step-name c-blue">Transformer Decoder — "Writing the Answer"</span>
+        </div>
+        <p class="step-desc">
+          The decoder takes two inputs: the contextual features <strong>T</strong> (what the image says) 
+          and the <strong>context sequence Z</strong> (characters already written). 
+          It predicts the <em>next character</em> one at a time — this is called <strong>autoregressive decoding</strong>.
+        </p>
+        <p class="step-desc">
+          ✍️ It's like a translator who reads the original text (T) and writes the translation one word at a time, 
+          always looking back at what they already wrote (Z) to make sure it's consistent.
+          Z = [SOS] kicks it off, the model writes <strong>ប</strong> → <strong>៉</strong> → <strong>ុ</strong> → <strong>ស</strong> → <strong>្ត</strong>… and stops when it writes <strong>[EOS]</strong>.
+        </p>
+        <p class="step-desc">
+          The <strong>Z arrow</strong> you see entering the side of TR<sub>DEC</sub> in the figure represents 
+          this "what I've written so far" feedback loop.
+        </p>
+        <div class="demo-box">
+          <div class="demo-label">Visual: Autoregressive token-by-token output</div>
+          <div class="token-seq" style="margin-bottom:12px; flex-wrap:wrap; gap:4px;">
+            <span class="tok tok-gray">[SOS]</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ប</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="Musiqa diacritic">៉</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="short o vowel">ុ</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ស</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="coeng (subscript) ត">្ត</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="vowel ិ + Toandakhiat silencer ៍">ិ៍</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ស</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ង</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="coeng (subscript) ក">្ក</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="vowel ា">ា</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ត</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="Lek Attak (short syllable mark)">់</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ប</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="vowel ឹ">ឹ</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ង</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="base consonant">ក</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-blue" title="ក + Lek Attak ់ + digit ២">ក់២</span>
+            <span class="tok-arrow">→</span>
+            <span class="tok tok-gray">[EOS]</span>
+          </div>
+          <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px 12px; margin-top:8px;">
+            <div style="font-size:10px; font-weight:700; letter-spacing:1px; color:var(--muted); margin-bottom:8px;">TOKEN BREAKDOWN</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ប</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>៉</strong> <span style="font-family:'JetBrains Mono',monospace;">diacritic</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ុ</strong> <span style="font-family:'JetBrains Mono',monospace;">vowel</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ស</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>្ត</strong> <span style="font-family:'JetBrains Mono',monospace;">coeng+ត</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>ិ៍</strong> <span style="font-family:'JetBrains Mono',monospace;">vowel+silencer</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ស</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ង</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>្ក</strong> <span style="font-family:'JetBrains Mono',monospace;">coeng+ក</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ា</strong> <span style="font-family:'JetBrains Mono',monospace;">vowel</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ត</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>់</strong> <span style="font-family:'JetBrains Mono',monospace;">Lek Attak</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ប</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ឹ</strong> <span style="font-family:'JetBrains Mono',monospace;">vowel</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ង</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#93c5fd;"><strong>ក</strong> <span style="font-family:'JetBrains Mono',monospace;">base</span></span>
+              <span style="font-size:11px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); border-radius:5px; padding:3px 8px; font-family:'Noto Sans Khmer',serif; color:#c084fc;"><strong>ក់២</strong> <span style="font-family:'JetBrains Mono',monospace;">base+Lek+digit</span></span>
+            </div>
+            <div style="margin-top:8px; font-size:11px; color:var(--muted);">🟦 single codepoint &nbsp;|&nbsp; 🟪 multi-codepoint unit — both count as <strong style="color:var(--text);">1 token</strong> each — total: <strong style="color:var(--text);">17 tokens</strong></div>
+          </div>
+        </div>
+        <div class="flow-eq" style="border-color:var(--blue); margin-top:12px;">
+          <span class="c-gold">Ŷ</span>
+          <span class="arr">=</span>
+          <span>TR<sub>DEC</sub>(</span><span class="c-green">T</span>
+          <span>,</span> <span class="c-blue">Z</span><span>)</span>
+          <span class="arr" style="margin-left:8px;">Z =</span>
+          <span>[SOS, y₁, y₂, …, y<sub>L</sub>]</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: OUTPUT -->
+    <div class="step-card">
+      <div class="step-num">
+        <div class="step-circle circle-gold">5</div>
+      </div>
+      <div class="step-body b-gold">
+        <div class="step-header">
+          <span class="step-tag" style="color:var(--gold); border-color:var(--gold);">OUTPUT</span>
+          <span class="step-name c-gold">Predicted Characters — "The Final Answer"</span>
+        </div>
+        <p class="step-desc">
+          At each decoding step, the model outputs <strong>Ŷ<sub>i</sub> ∈ ℝ<sup>C</sup></strong> — a probability 
+          distribution over all <strong>C = 131 Khmer character classes</strong>. The character with the 
+          highest probability is picked (this is called <data-tip="argmax = pick the highest value">argmax</data-tip>).
+        </p>
+        <p class="step-desc">
+          The model is trained using <strong>Cross-Entropy Loss</strong>: for each character position, 
+          it gets penalized when it predicts the wrong character. Over millions of training examples, 
+          it learns to be very accurate.
+        </p>
+        <div class="demo-box">
+          <div class="demo-label">Visual: Token-by-token output with confidence</div>
+          <div class="char-outputs" style="flex-wrap:wrap; gap:10px;">
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ប</div><div class="char-conf">98%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">៉</div><div class="char-conf">94%</div><div style="font-size:9px;color:var(--muted);">diacritic</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ុ</div><div class="char-conf">97%</div><div style="font-size:9px;color:var(--muted);">vowel</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ស</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">្ត</div><div class="char-conf">96%</div><div style="font-size:9px;color:var(--muted);">coeng+ត</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">ិ៍</div><div class="char-conf">92%</div><div style="font-size:9px;color:var(--muted);">vowel+silencer</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ស</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ង</div><div class="char-conf">98%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">្ក</div><div class="char-conf">95%</div><div style="font-size:9px;color:var(--muted);">coeng+ក</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ា</div><div class="char-conf">97%</div><div style="font-size:9px;color:var(--muted);">vowel</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ត</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">់</div><div class="char-conf">96%</div><div style="font-size:9px;color:var(--muted);">Lek Attak</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ប</div><div class="char-conf">98%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ឹ</div><div class="char-conf">95%</div><div style="font-size:9px;color:var(--muted);">vowel</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ង</div><div class="char-conf">99%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#fbbf24; font-size:20px;">ក</div><div class="char-conf">97%</div><div style="font-size:9px;color:var(--muted);">base</div></div>
+            <div class="char-box"><div class="char-khmer" style="color:#c084fc; font-size:20px;">ក់២</div><div class="char-conf">91%</div><div style="font-size:9px;color:var(--muted);">base+Lek+digit</div></div>
+          </div>
+          <div style="margin-top:10px; font-size:11px; color:var(--muted);">🟡 single codepoint &nbsp;|&nbsp; 🟣 multi-codepoint unit &nbsp;— &nbsp;total <strong style="color:var(--text);">17 tokens</strong> from 1 word</div>
+        </div>
+        </div>
+        <div class="flow-eq" style="border-color:var(--gold); margin-top:12px;">
+          <span>Loss =</span>
+          <span class="c-gold">CE(Ŷ, Y)</span>
+          <span class="arr" style="margin-left:8px;">→</span>
+          <span>trains the whole model end-to-end</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /steps -->
+</div>
+
+<!-- ═══════════════ INTERACTIVE DEMO ═══════════════ -->
+<div class="section" style="margin-top: 10px;">
+  <div class="section-title">Try It — Watch Data Flow</div>
+  <div class="interactive">
+    <h3>🔍 Trace a Khmer Image Through the Pipeline</h3>
+    <p>Click "Run Pipeline" to watch the image data transform at each stage, one step at a time.</p>
+    <button class="btn-run" onclick="runDemo()">▶ Run Pipeline</button>
+    <div id="demo-pipeline"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ FAQ ═══════════════ -->
+<div class="section">
+  <div class="section-title">Common Questions</div>
+  <div class="qa-grid">
+    <div class="qa-card">
+      <div class="qa-q">Why use CNN instead of just the Transformer from the start?</div>
+      <div class="qa-a">
+        Images have <strong>too many raw pixels</strong> (e.g. 32×256 = 8,192 pixels). Transformers would 
+        be way too slow processing every pixel. The CNN efficiently compresses this into a small 8×64 
+        feature map first, then the Transformer handles it.
+      </div>
+    </div>
+    <div class="qa-card">
+      <div class="qa-q">What is "D" and why does everything use ℝ<sup>D</sup>?</div>
+      <div class="qa-a">
+        D is the <strong>hidden dimension size</strong> — typically 256 or 512 numbers. Every patch, 
+        every feature, every token is represented as a list of D numbers. This uniform size lets all 
+        layers easily pass data to each other.
+      </div>
+    </div>
+    <div class="qa-card">
+      <div class="qa-q">Why is the patching (2,1), (3,1), or (4,1) and not square?</div>
+      <div class="qa-a">
+        Khmer text is written <strong>horizontally</strong>. Tall narrow patches (k₁ rows × 1 col) 
+        capture each character column naturally — a single Khmer character typically spans 2–4 rows 
+        of features, but only 1–2 columns.
+      </div>
+    </div>
+    <div class="qa-card">
+      <div class="qa-q">What is the Z arrow going into TR<sub>DEC</sub>?</div>
+      <div class="qa-a">
+        Z is the <strong>characters already predicted</strong>: Z = [SOS, ប, ូ, ល, …]. 
+        The decoder uses this to avoid repeating itself and to maintain <strong>grammatical consistency</strong>. 
+        It's like a human writer rereading their own sentence before writing the next word.
+      </div>
+    </div>
+    <div class="qa-card">
+      <div class="qa-q">How does the model know when to stop?</div>
+      <div class="qa-a">
+        The model learns to predict a special <strong>[EOS] (End of Sequence) token</strong> 
+        when it's finished. During training, ground truth text always ends with [EOS], so the 
+        model learns this pattern. At inference, decoding stops as soon as [EOS] is predicted.
+      </div>
+    </div>
+    <div class="qa-card">
+      <div class="qa-q">What are the 131 character classes (C=131)?</div>
+      <div class="qa-a">
+        These are the <strong>131 possible Khmer script characters and symbols</strong> the model 
+        can output, plus special tokens like [SOS], [EOS], and possibly space/punctuation. 
+        At each step, the model assigns a probability to every one of them.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUMMARY TABLE ═══════════════ -->
+<div class="section" style="margin-top:10px;">
+  <div class="section-title">Quick Reference Summary</div>
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden;">
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>What It Does</th>
+          <th>Input</th>
+          <th>Output</th>
+          <th>Analogy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="c-orange" style="font-family:monospace;font-weight:700;">CNN</span></td>
+          <td>Extracts visual features from image</td>
+          <td>Image I (H×W)</td>
+          <td>Feature map F (H'×W'×D)</td>
+          <td>👁 Eyes scanning shapes</td>
+        </tr>
+        <tr>
+          <td><span class="c-purple" style="font-family:monospace;font-weight:700;">PATCH<sub>ENC</sub></span></td>
+          <td>Slices 2D feature map into 1D sequence</td>
+          <td>Feature map F</td>
+          <td>Patch sequence [P₁…Pₙ]</td>
+          <td>✂️ Cutting into strips</td>
+        </tr>
+        <tr>
+          <td><span class="c-green" style="font-family:monospace;font-weight:700;">TR<sub>ENC</sub></span></td>
+          <td>Adds context between all patches</td>
+          <td>Patch sequence P</td>
+          <td>Contextual features T</td>
+          <td>🧠 Reading for comprehension</td>
+        </tr>
+        <tr>
+          <td><span class="c-blue" style="font-family:monospace;font-weight:700;">TR<sub>DEC</sub></span></td>
+          <td>Generates characters one by one</td>
+          <td>T + Z (prev chars)</td>
+          <td>Char probs Ŷ (C classes)</td>
+          <td>✍️ Writing the translation</td>
+        </tr>
+        <tr>
+          <td><span class="c-gold" style="font-family:monospace;font-weight:700;">Output</span></td>
+          <td>Final recognized text</td>
+          <td>Ŷ probabilities</td>
+          <td>Khmer character string</td>
+          <td>📝 The finished text</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function runDemo() {
+  const container = document.getElementById('demo-pipeline');
+  container.innerHTML = '';
+  
+  const steps = [
+    { label: 'Input Image',      val: 'ប៉ុស្តិ៍សង្កាត់បឹងកក់២ (32×256 pixels)', color: '#f97316', delay: 0 },
+    { label: 'CNN Output',       val: 'F shape: 8×64×512', color: '#f97316', delay: 600 },
+    { label: 'Patching (k=4,1)', val: '64 patches × 512-D vectors', color: '#a855f7', delay: 1200 },
+    { label: 'Encoder T',        val: 'Context-aware 64×512', color: '#22c55e', delay: 1800 },
+    { label: 'Decode: token 1',  val: 'Z=[SOS]     → "ប"   base (98%)', color: '#3b82f6', delay: 2400 },
+    { label: 'Decode: token 2',  val: 'Z=[ប]       → "៉"  diacritic (94%)', color: '#3b82f6', delay: 2900 },
+    { label: 'Decode: token 3',  val: 'Z=[ប,៉]     → "ុ"  vowel (97%)', color: '#3b82f6', delay: 3400 },
+    { label: 'Decode: token 4',  val: 'Z=[ប,៉,ុ]   → "ស"  base (99%)', color: '#3b82f6', delay: 3900 },
+    { label: 'Decode: token 5',  val: 'Z=[…ស]      → "្ត" coeng+ត (96%)', color: '#3b82f6', delay: 4400 },
+    { label: 'Decode: token 6',  val: 'Z=[…្ត]     → "ិ៍" vowel+silencer (92%)', color: '#3b82f6', delay: 4900 },
+    { label: 'Decode: token 7',  val: 'Z=[…ិ៍]     → "ស"  base (99%)', color: '#3b82f6', delay: 5400 },
+    { label: 'Decode: tokens…',  val: 'ង → ្ក → ា → ត → ់ → ប → ឹ → ង → ក → ក់២', color: '#3b82f6', delay: 5900 },
+    { label: 'Final Output',     val: 'ប ៉ ុ ស ្ត ិ៍ ស ង ្ក ា ត ់ ប ឹ ង ក ក់២  ✓  (17 tokens)', color: '#eab308', delay: 6600 },
+  ];
+
+  steps.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'demo-step';
+    div.innerHTML = `<div class="demo-step-label" style="color:${s.color};">${s.label}</div><div class="demo-step-val">${s.val}</div>`;
+    container.appendChild(div);
+    setTimeout(() => { div.classList.add('active'); div.style.borderColor = s.color + '60'; div.style.background = s.color + '12'; }, s.delay);
+  });
+}
+</script>
+
+</body>
+</html>
