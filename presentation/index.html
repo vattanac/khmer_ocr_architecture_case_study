@@ -1033,6 +1033,7 @@
         <p>Tiny stacked characters get crushed — the AI cannot read them. Also very slow to process one giant image.</p>
         <div class="verdict">❌ Characters crushed · Slow</div>
         <button class="compare-detail-btn compare-detail-old" onclick="openOldDetail(event)">View Detail ↗</button>
+        <button class="compare-detail-btn compare-detail-old" onclick="openOldImage(event)">Image 🖼</button>
       </div>
       <div class="compare-col new">
         <div class="tag">✓ New Way</div>
@@ -1040,6 +1041,7 @@
         <p>Each piece is processed at full quality. Small characters stay sharp and readable. Results merged at the end — up to 2× faster.</p>
         <div class="verdict">✓ Full quality · Up to 2× faster</div>
         <button class="compare-detail-btn compare-detail-new" onclick="openNewDetail(event)">View Detail ↗</button>
+        <button class="compare-detail-btn compare-detail-new" onclick="openNewImage(event)">Image 🖼</button>
       </div>
     </div>
     <span class="slide-num">05 / 07</span>
@@ -1582,6 +1584,66 @@
   }
   function closeNewDetailOutside(e) {
     if (e.target === document.getElementById('newDetailOverlay')) closeNewDetail();
+  }
+</script>
+
+<!-- OLD WAY IMAGE DIALOG -->
+<div class="demo-overlay" id="oldImageOverlay" onclick="closeOldImageOutside(event)">
+  <div class="demo-dialog" id="oldImageDialog" style="height:auto; max-height:94vh;">
+    <div class="demo-dialog-header">
+      <span class="demo-dialog-title" style="color:#c89040;">⚠ Old Way — Image</span>
+      <button class="demo-close" onclick="closeOldImage()">
+        <span class="x">✕</span> Close
+      </button>
+    </div>
+    <div style="overflow:auto; max-height:calc(94vh - 53px); display:flex; align-items:center; justify-content:center; padding:24px; background:#0f0d09;">
+      <img src="/old-way-1D-feature-sequences/image.png" alt="Old Way" style="max-width:100%; max-height:80vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+    </div>
+  </div>
+</div>
+
+<!-- NEW WAY IMAGE DIALOG -->
+<div class="demo-overlay" id="newImageOverlay" onclick="closeNewImageOutside(event)">
+  <div class="demo-dialog" id="newImageDialog" style="height:auto; max-height:94vh;">
+    <div class="demo-dialog-header">
+      <span class="demo-dialog-title">✓ New Way — Image</span>
+      <button class="demo-close" onclick="closeNewImage()">
+        <span class="x">✕</span> Close
+      </button>
+    </div>
+    <div style="overflow:auto; max-height:calc(94vh - 53px); display:flex; align-items:center; justify-content:center; padding:24px; background:#0f0d09;">
+      <img src="/new-way-feature/image.png" alt="New Way" style="max-width:100%; max-height:80vh; border-radius:6px; box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Old Way Image dialog ── */
+  function openOldImage(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('oldImageOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeOldImage() {
+    document.getElementById('oldImageOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeOldImageOutside(e) {
+    if (e.target === document.getElementById('oldImageOverlay')) closeOldImage();
+  }
+
+  /* ── New Way Image dialog ── */
+  function openNewImage(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('newImageOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeNewImage() {
+    document.getElementById('newImageOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeNewImageOutside(e) {
+    if (e.target === document.getElementById('newImageOverlay')) closeNewImage();
   }
 </script>
 
