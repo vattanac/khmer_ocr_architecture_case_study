@@ -423,6 +423,50 @@
   .compare-col.old .verdict { background: rgba(120,80,10,0.3); color: #c89040; }
   .compare-col.new .verdict { background: rgba(180,140,10,0.25); color: #dcb83c; }
 
+  /* ── Compare column detail buttons ── */
+  .compare-detail-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    border-radius: 5px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.22s ease,
+                color 0.22s ease,
+                transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow 0.22s ease;
+  }
+  .compare-detail-old {
+    color: #c89040;
+    background: rgba(120,80,10,0.22);
+    border: 1.5px solid rgba(160,104,20,0.5);
+  }
+  .compare-detail-old:hover {
+    background: rgba(160,104,20,0.38);
+    color: #e0a850;
+    transform: scale(1.06) translateY(-1px);
+    box-shadow: 0 4px 14px rgba(120,80,10,0.35);
+  }
+  .compare-detail-new {
+    color: var(--ink);
+    background: var(--gold);
+    border: 1.5px solid var(--gold);
+    box-shadow: 0 2px 8px rgba(200,160,20,0.35);
+  }
+  .compare-detail-new:hover {
+    background: var(--gold-light);
+    border-color: var(--gold-light);
+    transform: scale(1.06) translateY(-1px);
+    box-shadow: 0 5px 18px rgba(200,160,20,0.5);
+  }
+  .compare-detail-btn:active { transform: scale(0.96); }
+
   /* === SLIDE 6: RESULTS === */
   .slide-6 { background: #13110a; flex-direction: column; }
   .slide-6 .slide-header { text-align: center; margin-bottom: 44px; }
@@ -988,12 +1032,14 @@
         <h4>Resize the entire image to a fixed width.</h4>
         <p>Tiny stacked characters get crushed — the AI cannot read them. Also very slow to process one giant image.</p>
         <div class="verdict">❌ Characters crushed · Slow</div>
+        <button class="compare-detail-btn compare-detail-old" onclick="openOldDetail(event)">View Detail ↗</button>
       </div>
       <div class="compare-col new">
         <div class="tag">✓ New Way</div>
         <h4>Slice into overlapping sections — P1, P2, P3, P4.</h4>
         <p>Each piece is processed at full quality. Small characters stay sharp and readable. Results merged at the end — up to 2× faster.</p>
         <div class="verdict">✓ Full quality · Up to 2× faster</div>
+        <button class="compare-detail-btn compare-detail-new" onclick="openNewDetail(event)">View Detail ↗</button>
       </div>
     </div>
     <span class="slide-num">05 / 07</span>
@@ -1470,6 +1516,74 @@
   html.day .arch-block { background: rgba(0,0,0,0.04); }
   html.day .arch-label { /* keep stage tints — already visible on light bg */ }
 </style>
+
+<!-- OLD WAY DIALOG -->
+<div class="demo-overlay" id="oldDetailOverlay" onclick="closeOldDetailOutside(event)">
+  <div class="demo-dialog" id="oldDetailDialog">
+    <div class="demo-dialog-header">
+      <span class="demo-dialog-title" style="color:#c89040;">⚠ Old Way — Detail View</span>
+      <button class="demo-close" onclick="closeOldDetail()">
+        <span class="x">✕</span> Close
+      </button>
+    </div>
+    <iframe class="demo-iframe" id="oldDetailFrame" src="" title="Old Way Detail" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
+
+<!-- NEW WAY DIALOG -->
+<div class="demo-overlay" id="newDetailOverlay" onclick="closeNewDetailOutside(event)">
+  <div class="demo-dialog" id="newDetailDialog">
+    <div class="demo-dialog-header">
+      <span class="demo-dialog-title">✓ New Way — Detail View</span>
+      <button class="demo-close" onclick="closeNewDetail()">
+        <span class="x">✕</span> Close
+      </button>
+    </div>
+    <iframe class="demo-iframe" id="newDetailFrame" src="" title="New Way Detail" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
+
+<script>
+  /* ── Old Way dialog ── */
+  function openOldDetail(e) {
+    if (e) e.stopPropagation();
+    const overlay = document.getElementById('oldDetailOverlay');
+    const frame   = document.getElementById('oldDetailFrame');
+    frame.src = 'https://khmer-orc-case-study-oldway-1d-fs.netlify.app/';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeOldDetail() {
+    const overlay = document.getElementById('oldDetailOverlay');
+    const frame   = document.getElementById('oldDetailFrame');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { frame.src = ''; }, 400);
+  }
+  function closeOldDetailOutside(e) {
+    if (e.target === document.getElementById('oldDetailOverlay')) closeOldDetail();
+  }
+
+  /* ── New Way dialog ── */
+  function openNewDetail(e) {
+    if (e) e.stopPropagation();
+    const overlay = document.getElementById('newDetailOverlay');
+    const frame   = document.getElementById('newDetailFrame');
+    frame.src = 'https://khmer-ocr-case-study-newway-2d.netlify.app/';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeNewDetail() {
+    const overlay = document.getElementById('newDetailOverlay');
+    const frame   = document.getElementById('newDetailFrame');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { frame.src = ''; }, 400);
+  }
+  function closeNewDetailOutside(e) {
+    if (e.target === document.getElementById('newDetailOverlay')) closeNewDetail();
+  }
+</script>
 
 <!-- ORIGINAL DIALOG -->
 <div class="demo-overlay" id="originalOverlay" onclick="closeOriginalOutside(event)">
